@@ -4,6 +4,7 @@ export default function Home() {
   const [items, setItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [activeServer, setActiveServer] = useState('vidsrc.to');
 
   useEffect(() => {
     async function loadData() {
@@ -32,6 +33,22 @@ export default function Home() {
     }
   };
 
+  // توليد رابط المشغل بناءً على السيرفر المختار
+  const getEmbedUrl = () => {
+    if (!selectedMedia) return '';
+    const type = selectedMedia.media_type === 'tv' ? 'tv' : 'movie';
+    const id = selectedMedia.id;
+
+    if (activeServer === 'vidsrc.to') {
+      return `https://vidsrc.to/embed/${type}/${id}`;
+    } else if (activeServer === 'vidsrc.me') {
+      return `https://vidsrc.me/embed/${type}?tmdb=${id}`;
+    } else if (activeServer === 'embed.su') {
+      return `https://embed.su/embed/${type}/${id}`;
+    }
+    return `https://vidsrc.to/embed/${type}/${id}`;
+  };
+
   return (
     <div dir="rtl" style={{ backgroundColor: '#090d16', color: '#fff', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #1e293b', paddingBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
@@ -54,19 +71,43 @@ export default function Home() {
         </form>
       </header>
 
+      {/* نافذة المشغل المتقدمة مع أزرار التبديل */}
       {selectedMedia && (
         <div style={{ marginBottom: '40px', backgroundColor: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
             <h2 style={{ margin: 0, color: '#38bdf8' }}>{selectedMedia.title || selectedMedia.name}</h2>
-            <button onClick={() => setSelectedMedia(null)} style={{ background: 'none', border: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
-              ✕ إغلاق المشغّل
-            </button>
+            
+            {/* خيارات أزرار السيرفرات */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: '#94a3b8' }}>السيرفر:</span>
+              <button 
+                onClick={() => setActiveServer('vidsrc.to')} 
+                style={{ padding: '5px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.to' ? '#a855f7' : '#334155', color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>
+                سيرفر 1
+              </button>
+              <button 
+                onClick={() => setActiveServer('vidsrc.me')} 
+                style={{ padding: '5px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.me' ? '#a855f7' : '#334155', color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>
+                سيرفر 2
+              </button>
+              <button 
+                onClick={() => setActiveServer('embed.su')} 
+                style={{ padding: '5px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'embed.su' ? '#a855f7' : '#334155', color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>
+                سيرفر 3
+              </button>
+              
+              <button onClick={() => setSelectedMedia(null)} style={{ background: 'none', border: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', marginRight: '15px' }}>
+                ✕ إغلاق
+              </button>
+            </div>
           </div>
+
           <div style={{ position: 'relative', paddingTop: '56.25%', width: '100%', backgroundColor: '#000', borderRadius: '8px', overflow: 'hidden' }}>
             <iframe
-              src={`https://vidsrc.to/embed/${selectedMedia.media_type === 'tv' ? 'tv' : 'movie'}/${selectedMedia.id}`}
+              src={getEmbedUrl()}
               style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
               allowFullScreen
+              referrerPolicy="origin"
             ></iframe>
           </div>
         </div>
@@ -82,7 +123,7 @@ export default function Home() {
           return (
             <div
               key={item.id}
-              onClick={() => setSelectedMedia(item)}
+              onClick={() => { setSelectedMedia(item); setActiveServer('vidsrc.to'); }}
               style={{ backgroundColor: '#0f172a', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #1e293b' }}
             >
               <img
