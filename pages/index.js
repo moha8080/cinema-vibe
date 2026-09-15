@@ -25,6 +25,7 @@ export default function Home() {
 
   // المشغل والصفحة الفرعية
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [arabicOverview, setArabicOverview] = useState('');
   const [activeServer, setActiveServer] = useState('vidsrc.to');
   const [season, setSeason] = useState(1);
   const [episode, setEpisode] = useState(1);
@@ -110,6 +111,33 @@ export default function Home() {
     fetchHomeData();
   }, []);
 
+  // جلب قصة العمل باللغة العربية عند فتح أي فيلم أو مسلسل
+  useEffect(() => {
+    if (!selectedMedia) return;
+
+    async function fetchArabicDetails() {
+      try {
+        const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+        const isTv = selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv';
+        const type = isTv ? 'tv' : 'movie';
+        
+        const res = await fetch(`https://api.themoviedb.org/3/${type}/${selectedMedia.id}?api_key=${apiKey}&language=ar-SA`);
+        const data = await res.json();
+        
+        if (data && data.overview) {
+          setArabicOverview(data.overview);
+        } else {
+          setArabicOverview(selectedMedia.overview || 'لا تتوفر قصة مترجمة حالياً لهذا العمل.');
+        }
+      } catch (e) {
+        console.error("Error fetching Arabic overview:", e);
+        setArabicOverview(selectedMedia.overview || '');
+      }
+    }
+
+    fetchArabicDetails();
+  }, [selectedMedia]);
+
   // جلب صفحة المكتبة الشاملة للفيلم أو المسلسل
   useEffect(() => {
     if (activeTab === 'home' || activeTab === 'watch') return;
@@ -194,7 +222,7 @@ export default function Home() {
     }
   };
 
-  // فتح صفحة التاصيل للمشاهدة
+  // فتح صفحة التفاصيل للمشاهدة
   const openWatchPage = (item) => {
     setSelectedMedia(item);
     setSeason(1);
@@ -204,22 +232,22 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Embed URL
+  // Embed URL - إجبار الترجمة العربية الافتراضية والمتزامنة
   const getEmbedUrl = () => {
     if (!selectedMedia) return '';
     const isTv = selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv';
     const id = selectedMedia.id;
 
     if (isTv) {
-      if (activeServer === 'vidsrc.to') return `https://vidsrc.to/embed/tv/${id}/${season}/${episode}`;
-      if (activeServer === 'vidsrc.me') return `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+      if (activeServer === 'vidsrc.to') return `https://vidsrc.to/embed/tv/${id}/${season}/${episode}?sub.lang=ar`;
+      if (activeServer === 'vidsrc.me') return `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}&sub.lang=ar`;
       if (activeServer === 'embed.su') return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
     } else {
-      if (activeServer === 'vidsrc.to') return `https://vidsrc.to/embed/movie/${id}`;
-      if (activeServer === 'vidsrc.me') return `https://vidsrc.me/embed/movie?tmdb=${id}`;
+      if (activeServer === 'vidsrc.to') return `https://vidsrc.to/embed/movie/${id}?sub.lang=ar`;
+      if (activeServer === 'vidsrc.me') return `https://vidsrc.me/embed/movie?tmdb=${id}&sub.lang=ar`;
       if (activeServer === 'embed.su') return `https://embed.su/embed/movie/${id}`;
     }
-    return `https://vidsrc.to/embed/movie/${id}`;
+    return `https://vidsrc.to/embed/movie/${id}?sub.lang=ar`;
   };
 
   const heroItem = trending[heroIndex];
@@ -227,7 +255,7 @@ export default function Home() {
   return (
     <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
-      {/* تنسيقات التجاوب الذكية بين الكمبيوتر والجوال */}
+      {/* تنسيقات التجاوب الذكية */}
       <style jsx global>{`
         html, body {
           margin: 0;
@@ -359,12 +387,13 @@ export default function Home() {
               <iframe src={getEmbedUrl()} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }} allowFullScreen referrerPolicy="origin"></iframe>
             </div>
 
-            {selectedMedia.overview && (
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #27272a' }}>
-                <h3 style={{ fontSize: '16px', color: '#f97316', margin: '0 0 8px 0' }}>Overview</h3>
-                <p style={{ fontSize: '14px', color: '#d4d4d8', lineHeight: '1.6', margin: 0 }}>{selectedMedia.overview}</p>
-              </div>
-            )}
+            {/* قصة العمل باللغة العربية */}
+            <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #27272a' }}>
+              <h3 style={{ fontSize: '16px', color: '#f97316', margin: '0 0 8px 0' }}>قصة العمل</h3>
+              <p style={{ fontSize: '14px', color: '#d4d4d8', lineHeight: '1.7', margin: 0 }}>
+                {arabicOverview}
+              </p>
+            </div>
           </div>
         </div>
       ) : searchResults ? (
