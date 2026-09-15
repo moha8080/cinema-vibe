@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
 
 export default function Home() {
-  // البيانات
+  // البيانات الرئيسية
   const [trending, setTrending] = useState([]);
   const [topMovies, setTopMovies] = useState([]);
   const [popularTv, setPopularTv] = useState([]);
   
+  // الوضع الحالي للصفحة: 'home' | 'movies' | 'tv'
+  const [activeTab, setActiveTab] = useState('home');
+  const [pageData, setPageData] = useState([]);
+  const [pageNum, setPageNum] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   // المشغل
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [activeServer, setActiveServer] = useState('vidsrc.to');
@@ -19,9 +25,9 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
 
-  // جلب البيانات الأساسية
+  // جلب بيانات الصفحة الرئيسية عند الفتح
   useEffect(() => {
-    async function fetchData() {
+    async function fetchHomeData() {
       try {
         const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
         if (!apiKey) return;
@@ -40,20 +46,72 @@ export default function Home() {
         if (dataTopMovies.results) setTopMovies(dataTopMovies.results.slice(0, 12));
         if (dataPopularTv.results) setPopularTv(dataPopularTv.results.slice(0, 12));
       } catch (e) {
-        console.error("Error fetching data:", e);
+        console.error("Error fetching home data:", e);
       }
     }
-    fetchData();
+    fetchHomeData();
   }, []);
 
-  // التبديل التلقائي للسلايدر كل 5 ثواني
+  // جلب قائمة الأفلام أو المسلسلات الممتدة حسب القسم المختار
   useEffect(() => {
-    if (trending.length === 0) return;
+    if (activeTab === 'home') return;
+
+    async function fetchTabData() {
+      try {
+        const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+        if (!apiKey) return;
+
+        const endpoint = activeTab === 'movies'
+          ? `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&language=ar-SA&sort_by=popularity.desc&page=1`
+          : `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&language=ar-SA&sort_by=popularity.desc&page=1`;
+
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        if (data && data.results) {
+          setPageData(data.results);
+          setPageNum(1);
+        }
+      } catch (e) {
+        console.error("Error fetching tab data:", e);
+      }
+    }
+
+    setSearchResults(null);
+    fetchTabData();
+  }, [activeTab]);
+
+  // تحميل المزيد عند الضغط على زر "عرض المزيد"
+  const handleLoadMore = async () => {
+    if (activeTab === 'home') return;
+    setIsLoadingMore(true);
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+      const nextPage = pageNum + 1;
+      const endpoint = activeTab === 'movies'
+        ? `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&language=ar-SA&sort_by=popularity.desc&page=${nextPage}`
+        : `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&language=ar-SA&sort_by=popularity.desc&page=${nextPage}`;
+
+      const res = await fetch(endpoint);
+      const data = await res.json();
+      if (data && data.results) {
+        setPageData((prev) => [...prev, ...data.results]);
+        setPageNum(nextPage);
+      }
+    } catch (e) {
+      console.error("Error loading more data:", e);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  // التبديل التلقائي لسلايدر البانر الرئيسي كل 5 ثواني
+  useEffect(() => {
+    if (trending.length === 0 || activeTab !== 'home') return;
     const interval = setInterval(() => {
       setHeroIndex((prev) => (prev + 1) % trending.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [trending]);
+  }, [trending, activeTab]);
 
   // تنفيذ البحث
   const handleSearch = async (e) => {
@@ -75,7 +133,7 @@ export default function Home() {
   // رابط Embed التشغيل
   const getEmbedUrl = () => {
     if (!selectedMedia) return '';
-    const isTv = selectedMedia.media_type === 'tv' || selectedMedia.first_air_date;
+    const isTv = selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv';
     const id = selectedMedia.id;
 
     if (isTv) {
@@ -98,13 +156,19 @@ export default function Home() {
       {/* 1. Navbar علوي فخم */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 40px', backgroundColor: 'rgba(9, 9, 11, 0.85)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
-          <h1 style={{ margin: 0, fontSize: '26px', fontWeight: '900', color: '#f97316', letterSpacing: '1px', cursor: 'pointer' }} onClick={() => setSearchResults(null)}>
+          <h1 style={{ margin: 0, fontSize: '26px', fontWeight: '900', color: '#f97316', letterSpacing: '1px', cursor: 'pointer' }} onClick={() => { setActiveTab('home'); setSearchResults(null); }}>
             CINEMA<span style={{ color: '#ffffff' }}>VIBE</span>
           </h1>
           <div style={{ display: 'flex', gap: '20px', fontSize: '15px', fontWeight: '600' }}>
-            <span style={{ color: '#f97316', cursor: 'pointer' }} onClick={() => setSearchResults(null)}>الرئيسية</span>
-            <span style={{ color: '#a1a1aa', cursor: 'pointer' }}>الأفلام</span>
-            <span style={{ color: '#a1a1aa', cursor: 'pointer' }}>المسلسلات</span>
+            <span style={{ color: activeTab === 'home' && !searchResults ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('home'); setSearchResults(null); }}>
+              الرئيسية
+            </span>
+            <span style={{ color: activeTab === 'movies' && !searchResults ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('movies'); setSearchResults(null); }}>
+              الأفلام 🎬
+            </span>
+            <span style={{ color: activeTab === 'tv' && !searchResults ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('tv'); setSearchResults(null); }}>
+              المسلسلات 📺
+            </span>
           </div>
         </div>
 
@@ -123,7 +187,7 @@ export default function Home() {
         </form>
       </nav>
 
-      {/* 2. المشغل (تأثير المنبثق العلوي المدمج) */}
+      {/* 2. المشغل المدمج */}
       {selectedMedia && (
         <div style={{ padding: '20px 40px', backgroundColor: '#18181b', borderBottom: '2px solid #f97316' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
@@ -133,7 +197,7 @@ export default function Home() {
             </div>
             
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              {(selectedMedia.media_type === 'tv' || selectedMedia.first_air_date) && (
+              {(selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv') && (
                 <div style={{ display: 'flex', gap: '8px', marginLeft: '15px', backgroundColor: '#09090b', padding: '5px 12px', borderRadius: '8px', border: '1px solid #27272a' }}>
                   <label style={{ fontSize: '13px', color: '#f97316' }}>الموسم: 
                     <input type="number" min="1" value={season} onChange={(e) => setSeason(e.target.value)} style={{ width: '45px', background: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', marginRight: '5px', padding: '2px' }} />
@@ -144,7 +208,6 @@ export default function Home() {
                 </div>
               )}
 
-              {/* اختيار السيرفر */}
               <button onClick={() => setActiveServer('vidsrc.to')} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.to' ? '#f97316' : '#27272a', color: activeServer === 'vidsrc.to' ? '#000' : '#fff', fontWeight: 'bold', fontSize: '12px' }}>سيرفر 1</button>
               <button onClick={() => setActiveServer('vidsrc.me')} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.me' ? '#f97316' : '#27272a', color: activeServer === 'vidsrc.me' ? '#000' : '#fff', fontWeight: 'bold', fontSize: '12px' }}>سيرفر 2</button>
               <button onClick={() => setActiveServer('embed.su')} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'embed.su' ? '#f97316' : '#27272a', color: activeServer === 'embed.su' ? '#000' : '#fff', fontWeight: 'bold', fontSize: '12px' }}>سيرفر 3</button>
@@ -165,9 +228,37 @@ export default function Home() {
           <h2 style={{ fontSize: '22px', borderRight: '4px solid #f97316', paddingRight: '12px', marginBottom: '20px' }}>نتائج البحث</h2>
           <MediaGrid items={searchResults} onSelect={(item) => { setSelectedMedia(item); setSeason(1); setEpisode(1); }} />
         </div>
+      ) : activeTab === 'movies' || activeTab === 'tv' ? (
+        /* 4. قائمة الأفلام الشاملة أو المسلسلات الشاملة */
+        <div style={{ padding: '30px 40px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '12px', marginBottom: '25px' }}>
+            {activeTab === 'movies' ? 'مكتبة الأفلام الشاملة 🎬' : 'مكتبة المسلسلات الشاملة 📺'}
+          </h2>
+          <MediaGrid items={pageData} onSelect={(item) => { setSelectedMedia(item); setSeason(1); setEpisode(1); }} />
+          
+          <div style={{ textAlign: 'center', marginTop: '40px' }}>
+            <button
+              onClick={handleLoadMore}
+              disabled={isLoadingMore}
+              style={{
+                padding: '12px 35px',
+                backgroundColor: '#f97316',
+                color: '#000',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '15px',
+                cursor: 'pointer',
+                opacity: isLoadingMore ? 0.6 : 1
+              }}
+            >
+              {isLoadingMore ? 'جاري التحميل...' : 'عرض المزيد من الأعمال ⬇'}
+            </button>
+          </div>
+        </div>
       ) : (
+        /* 5. الصفحة الرئيسية (البانر + الأقسام المختارة) */
         <>
-          {/* 4. السلايدر المتحرك التلقائي (البانر الرئيسي) */}
           {heroItem && (
             <div style={{ position: 'relative', height: '480px', width: '100%', backgroundImage: `linear-gradient(to top, #09090b 10%, transparent 90%), url(https://image.tmdb.org/t/p/original${heroItem.backdrop_path})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'flex-end', padding: '40px', transition: 'background-image 0.8s ease-in-out' }}>
               <div style={{ maxWidth: '600px', zIndex: 2 }}>
@@ -182,7 +273,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* مؤشرات التبديل السفلية */}
               <div style={{ position: 'absolute', bottom: '20px', left: '40px', display: 'flex', gap: '8px' }}>
                 {trending.map((_, idx) => (
                   <div key={idx} onClick={() => setHeroIndex(idx)} style={{ width: idx === heroIndex ? '28px' : '8px', height: '8px', borderRadius: '4px', backgroundColor: idx === heroIndex ? '#f97316' : 'rgba(255,255,255,0.3)', cursor: 'pointer', transition: 'all 0.3s' }}></div>
@@ -191,21 +281,16 @@ export default function Home() {
             </div>
           )}
 
-          {/* 5. الأقسام المنظمة */}
           <div style={{ padding: '20px 40px' }}>
-            
-            {/* قسم الأفلام الأعلى تقييماً */}
             <section style={{ marginBottom: '40px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '12px', marginBottom: '20px' }}>🏆 أفضل الأفلام تقييماً</h2>
               <MediaGrid items={topMovies} onSelect={(item) => { setSelectedMedia(item); setSeason(1); setEpisode(1); }} />
             </section>
 
-            {/* قسم المسلسلات الأكثر مشاهدة */}
             <section style={{ marginBottom: '40px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '12px', marginBottom: '20px' }}>📺 المسلسلات الأكثر مشاهدة وشعبية</h2>
               <MediaGrid items={popularTv} onSelect={(item) => { setSelectedMedia(item); setSeason(1); setEpisode(1); }} />
             </section>
-
           </div>
         </>
       )}
@@ -218,7 +303,7 @@ export default function Home() {
   );
 }
 
-// مكون كروت العرض الاحترافية
+// مكون كروت العرض
 function MediaGrid({ items, onSelect }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '20px' }}>
