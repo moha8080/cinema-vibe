@@ -269,22 +269,22 @@ export default function Home() {
     }
   };
 
-  // Embed URL - إجبار الترجمة العربية الافتراضية والمتزامنة
+  // Embed URL - دعم الجوال والكمبيوتر بفرض الترجمة العربية الإجبارية
   const getEmbedUrl = () => {
     if (!selectedMedia) return '';
     const isTv = selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv';
     const id = selectedMedia.id;
 
     if (isTv) {
-      if (activeServer === 'vidsrc.to') return `https://vidsrc.to/embed/tv/${id}/${season}/${episode}?sub.lang=ar`;
-      if (activeServer === 'vidsrc.me') return `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}&sub.lang=ar`;
-      if (activeServer === 'embed.su') return `https://embed.su/embed/tv/${id}/${season}/${episode}`;
+      if (activeServer === 'vidsrc.to') return `https://vidsrc.to/embed/tv/${id}/${season}/${episode}?sub.lang=ar&ds_lang=ar`;
+      if (activeServer === 'vidsrc.me') return `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}&sub.lang=ar&ds_lang=ar`;
+      if (activeServer === 'embed.su') return `https://embed.su/embed/tv/${id}/${season}/${episode}?sub.lang=ar`;
     } else {
-      if (activeServer === 'vidsrc.to') return `https://vidsrc.to/embed/movie/${id}?sub.lang=ar`;
-      if (activeServer === 'vidsrc.me') return `https://vidsrc.me/embed/movie?tmdb=${id}&sub.lang=ar`;
-      if (activeServer === 'embed.su') return `https://embed.su/embed/movie/${id}`;
+      if (activeServer === 'vidsrc.to') return `https://vidsrc.to/embed/movie/${id}?sub.lang=ar&ds_lang=ar`;
+      if (activeServer === 'vidsrc.me') return `https://vidsrc.me/embed/movie?tmdb=${id}&sub.lang=ar&ds_lang=ar`;
+      if (activeServer === 'embed.su') return `https://embed.su/embed/movie/${id}?sub.lang=ar`;
     }
-    return `https://vidsrc.to/embed/movie/${id}?sub.lang=ar`;
+    return `https://vidsrc.to/embed/movie/${id}?sub.lang=ar&ds_lang=ar`;
   };
 
   const heroItem = trending[heroIndex];
