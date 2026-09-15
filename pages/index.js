@@ -25,7 +25,7 @@ export default function Home() {
 
   // المشغل والصفحة الفرعية
   const [selectedMedia, setSelectedMedia] = useState(null);
-  const [arabicOverview, setArabicOverview] = useState('');
+  const [arabicOverview, setArabicOverview] = useState('جاري تحميل القصة...');
   const [activeServer, setActiveServer] = useState('vidsrc.to');
   const [season, setSeason] = useState(1);
   const [episode, setEpisode] = useState(1);
@@ -111,34 +111,36 @@ export default function Home() {
     fetchHomeData();
   }, []);
 
-  // جلب قصة العمل باللغة العربية عند فتح أي فيلم أو مسلسل
-  useEffect(() => {
-    if (!selectedMedia) return;
+  // فتح صفحة التفاصيل للمشاهدة مع جلب القصة باللغة العربية فوراً
+  const openWatchPage = async (item) => {
+    setSelectedMedia(item);
+    setSeason(1);
+    setEpisode(1);
+    setActiveTab('watch');
+    setShowSearchModal(false);
+    setArabicOverview('جاري تحميل قصة العمل باللغة العربية...');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    async function fetchArabicDetails() {
-      try {
-        const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
-        const isTv = selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv';
-        const type = isTv ? 'tv' : 'movie';
-        
-        const res = await fetch(`https://api.themoviedb.org/3/${type}/${selectedMedia.id}?api_key=${apiKey}&language=ar-SA`);
-        const data = await res.json();
-        
-        if (data && data.overview) {
-          setArabicOverview(data.overview);
-        } else {
-          setArabicOverview(selectedMedia.overview || 'لا تتوفر قصة مترجمة حالياً لهذا العمل.');
-        }
-      } catch (e) {
-        console.error("Error fetching Arabic overview:", e);
-        setArabicOverview(selectedMedia.overview || '');
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+      const isTv = item.media_type === 'tv' || item.first_air_date || activeTab === 'tv';
+      const type = isTv ? 'tv' : 'movie';
+      
+      const res = await fetch(`https://api.themoviedb.org/3/${type}/${item.id}?api_key=${apiKey}&language=ar-SA`);
+      const data = await res.json();
+      
+      if (data && data.overview && data.overview.trim() !== '') {
+        setArabicOverview(data.overview);
+      } else {
+        setArabicOverview('لا تتوفر قصة مترجمة حالياً لهذا العمل باللغة العربية.');
       }
+    } catch (e) {
+      console.error("Error fetching Arabic overview:", e);
+      setArabicOverview('لا تتوفر قصة مترجمة حالياً لهذا العمل.');
     }
+  };
 
-    fetchArabicDetails();
-  }, [selectedMedia]);
-
-  // جلب صفحة المكتبة الشاملة للفيلم أو المسلسل
+  // جلب صفحة المكتبة الشاملة
   useEffect(() => {
     if (activeTab === 'home' || activeTab === 'watch') return;
 
@@ -220,16 +222,6 @@ export default function Home() {
     } catch (e) {
       console.error("Search error:", e);
     }
-  };
-
-  // فتح صفحة التفاصيل للمشاهدة
-  const openWatchPage = (item) => {
-    setSelectedMedia(item);
-    setSeason(1);
-    setEpisode(1);
-    setActiveTab('watch');
-    setShowSearchModal(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Embed URL - إجبار الترجمة العربية الافتراضية والمتزامنة
@@ -454,7 +446,7 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        /* 5. الصفحة الرئيسية المليئة بالقوائم المتعددة لكل التصنيفات */
+        /* 5. الصفحة الرئيسية */
         <>
           {heroItem && (
             <div className="hero-banner" style={{ position: 'relative', width: '100%', backgroundImage: `linear-gradient(to top, #09090b 10%, transparent 90%), url(https://image.tmdb.org/t/p/original${heroItem.backdrop_path})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'flex-end', padding: '24px', transition: 'background-image 0.8s ease-in-out' }}>
