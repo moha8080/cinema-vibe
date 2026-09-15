@@ -5,13 +5,20 @@ export default function Home() {
   const [trending, setTrending] = useState([]);
   const [topMovies, setTopMovies] = useState([]);
   const [popularTv, setPopularTv] = useState([]);
+
+  // أقسام التصنيفات المخصصة
+  const [horrorData, setHorrorData] = useState([]);
+  const [dramaData, setDramaData] = useState([]);
+  const [actionData, setActionData] = useState([]);
+  const [comedyData, setComedyData] = useState([]);
+  const [scifiData, setSciFiData] = useState([]);
+  const [mysteryData, setMysteryData] = useState([]);
+  const [romanceData, setRomanceData] = useState([]);
+  const [adventureData, setAdventureData] = useState([]);
   
   // الوضع الحالي للصفحة: 'home' | 'movies' | 'tv' | 'watch'
   const [activeTab, setActiveTab] = useState('home');
-  const [selectedGenre, setSelectedGenre] = useState('all'); // تصنيف الجانرا (رعب، دراما، إلخ)
-  const [genreMediaType, setGenreMediaType] = useState('movie'); // نوع الميديا داخل التصنيف: 'movie' أو 'tv'
-  const [genreData, setGenreData] = useState([]);
-  
+  const [selectedGenre, setSelectedGenre] = useState('all');
   const [pageData, setPageData] = useState([]);
   const [pageNum, setPageNum] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -30,7 +37,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
 
-  // قائمة تصنيفات متعددة وشاملة (TMDB Genre IDs)
+  // قائمة تصنيفات المكتبة
   const genres = [
     { id: 'all', name: 'الكل' },
     { id: '27', name: 'رعب' },
@@ -47,26 +54,55 @@ export default function Home() {
     { id: '10749', name: 'رومنسي' }
   ];
 
-  // جلب بيانات الصفحة الرئيسية بلغة إنجليزية
+  // جلب كافة الأقسام والتصنيفات للصفحة الرئيسية
   useEffect(() => {
     async function fetchHomeData() {
       try {
         const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
         if (!apiKey) return;
 
-        const [resTrending, resTopMovies, resPopularTv] = await Promise.all([
+        const [
+          resTrending, resTopMovies, resPopularTv,
+          resHorror, resDrama, resAction, resComedy,
+          resSciFi, resMystery, resRomance, resAdventure
+        ] = await Promise.all([
           fetch(`https://api.themoviedb.org/3/trending/all/week?api_key=${apiKey}&language=en-US`),
           fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${apiKey}&language=en-US`),
-          fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${apiKey}&language=en-US`)
+          fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${apiKey}&language=en-US`),
+          fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&language=en-US&with_genres=27&sort_by=popularity.desc`),
+          fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&language=en-US&with_genres=18&sort_by=popularity.desc`),
+          fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&language=en-US&with_genres=28&sort_by=popularity.desc`),
+          fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&language=en-US&with_genres=35&sort_by=popularity.desc`),
+          fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&language=en-US&with_genres=878&sort_by=popularity.desc`),
+          fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&language=en-US&with_genres=9648&sort_by=popularity.desc`),
+          fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&language=en-US&with_genres=10749&sort_by=popularity.desc`),
+          fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&language=en-US&with_genres=12&sort_by=popularity.desc`)
         ]);
 
-        const dataTrending = await resTrending.json();
-        const dataTopMovies = await resTopMovies.json();
-        const dataPopularTv = await resPopularTv.json();
+        const dTrending = await resTrending.json();
+        const dTopMovies = await resTopMovies.json();
+        const dPopularTv = await resPopularTv.json();
+        const dHorror = await resHorror.json();
+        const dDrama = await resDrama.json();
+        const dAction = await resAction.json();
+        const dComedy = await resComedy.json();
+        const dSciFi = await resSciFi.json();
+        const dMystery = await resMystery.json();
+        const dRomance = await resRomance.json();
+        const dAdventure = await resAdventure.json();
 
-        if (dataTrending.results) setTrending(dataTrending.results.slice(0, 10));
-        if (dataTopMovies.results) setTopMovies(dataTopMovies.results.slice(0, 12));
-        if (dataPopularTv.results) setPopularTv(dataPopularTv.results.slice(0, 12));
+        if (dTrending.results) setTrending(dTrending.results.slice(0, 10));
+        if (dTopMovies.results) setTopMovies(dTopMovies.results.slice(0, 12));
+        if (dPopularTv.results) setPopularTv(dPopularTv.results.slice(0, 12));
+
+        if (dHorror.results) setHorrorData(dHorror.results.slice(0, 12));
+        if (dDrama.results) setDramaData(dDrama.results.slice(0, 12));
+        if (dAction.results) setActionData(dAction.results.slice(0, 12));
+        if (dComedy.results) setComedyData(dComedy.results.slice(0, 12));
+        if (dSciFi.results) setSciFiData(dSciFi.results.slice(0, 12));
+        if (dMystery.results) setMysteryData(dMystery.results.slice(0, 12));
+        if (dRomance.results) setRomanceData(dRomance.results.slice(0, 12));
+        if (dAdventure.results) setAdventureData(dAdventure.results.slice(0, 12));
       } catch (e) {
         console.error("Error fetching home data:", e);
       }
@@ -74,33 +110,7 @@ export default function Home() {
     fetchHomeData();
   }, []);
 
-  // جلب البيانات بفلترة التصنيف والنوع (أفلام / مسلسلات)
-  useEffect(() => {
-    if (selectedGenre === 'all') {
-      setGenreData([]);
-      return;
-    }
-
-    async function fetchGenreData() {
-      try {
-        const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
-        if (!apiKey) return;
-
-        const endpoint = `https://api.themoviedb.org/3/discover/${genreMediaType}?api_key=${apiKey}&language=en-US&sort_by=popularity.desc&with_genres=${selectedGenre}&page=1`;
-        const res = await fetch(endpoint);
-        const data = await res.json();
-        if (data && data.results) {
-          setGenreData(data.results);
-        }
-      } catch (e) {
-        console.error("Error fetching genre data:", e);
-      }
-    }
-
-    fetchGenreData();
-  }, [selectedGenre, genreMediaType]);
-
-  // جلب قائمة الأفلام أو المسلسلات لمكتبة الأفلام/المسلسلات
+  // جلب صفحة المكتبة الشاملة للفيلم أو المسلسل
   useEffect(() => {
     if (activeTab === 'home' || activeTab === 'watch') return;
 
@@ -197,7 +207,7 @@ export default function Home() {
   // Embed URL
   const getEmbedUrl = () => {
     if (!selectedMedia) return '';
-    const isTv = selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv' || (selectedGenre !== 'all' && genreMediaType === 'tv');
+    const isTv = selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv';
     const id = selectedMedia.id;
 
     if (isTv) {
@@ -217,7 +227,7 @@ export default function Home() {
   return (
     <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
-      {/* تنسيقات التجاوب الذكية */}
+      {/* تنسيقات التجاوب الذكية بين الكمبيوتر والجوال */}
       <style jsx global>{`
         html, body {
           margin: 0;
@@ -313,7 +323,7 @@ export default function Home() {
             onClick={() => setActiveTab('home')}
             style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '20px', padding: '10px 18px', borderRadius: '8px', backgroundColor: '#27272a', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
           >
-            ← العودة للرئيسية
+            العودة للرئيسية
           </button>
 
           <div style={{ backgroundColor: '#18181b', borderRadius: '12px', padding: '20px', border: '1px solid #27272a' }}>
@@ -321,12 +331,12 @@ export default function Home() {
               <div>
                 <h2 style={{ margin: 0, color: '#f97316', fontSize: '24px' }}>{selectedMedia.title || selectedMedia.name}</h2>
                 <p style={{ margin: '6px 0 0 0', color: '#a1a1aa', fontSize: '14px' }}>
-                  {(selectedMedia.release_date || selectedMedia.first_air_date || '').slice(0, 4)} | ⭐ {selectedMedia.vote_average?.toFixed(1)}
+                  {(selectedMedia.release_date || selectedMedia.first_air_date || '').slice(0, 4)} | {selectedMedia.vote_average?.toFixed(1)}
                 </p>
               </div>
               
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between' }}>
-                {(selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv' || (selectedGenre !== 'all' && genreMediaType === 'tv')) && (
+                {(selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv') && (
                   <div style={{ display: 'flex', gap: '10px', backgroundColor: '#09090b', padding: '8px 12px', borderRadius: '8px', border: '1px solid #27272a' }}>
                     <label style={{ fontSize: '13px', color: '#f97316' }}>الموسم: 
                       <input type="number" min="1" value={season} onChange={(e) => setSeason(e.target.value)} style={{ width: '45px', background: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', marginRight: '4px', padding: '3px', textAlign: 'center' }} />
@@ -415,7 +425,7 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        /* 5. الصفحة الرئيسية */
+        /* 5. الصفحة الرئيسية المليئة بالقوائم المتعددة لكل التصنيفات */
         <>
           {heroItem && (
             <div className="hero-banner" style={{ position: 'relative', width: '100%', backgroundImage: `linear-gradient(to top, #09090b 10%, transparent 90%), url(https://image.tmdb.org/t/p/original${heroItem.backdrop_path})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'flex-end', padding: '24px', transition: 'background-image 0.8s ease-in-out' }}>
@@ -426,7 +436,7 @@ export default function Home() {
                 
                 <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
                   <button onClick={() => openWatchPage(heroItem)} style={{ padding: '10px 22px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>
-                    ▶ Watch Now
+                    Watch Now
                   </button>
                 </div>
               </div>
@@ -441,101 +451,115 @@ export default function Home() {
 
           <div style={{ padding: '20px 24px' }}>
             
-            {/* شريط التصنيفات المتعددة */}
-            <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#a1a1aa', marginBottom: '12px' }}>تصنيف المحتوى:</h2>
-              <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '8px' }}>
-                {genres.map((g) => (
-                  <button
-                    key={g.id}
-                    onClick={() => { setSelectedGenre(g.id); setGenreMediaType('movie'); }}
-                    style={{
-                      padding: '8px 18px',
-                      borderRadius: '20px',
-                      border: '1px solid #3f3f46',
-                      backgroundColor: selectedGenre === g.id ? '#f97316' : '#18181b',
-                      color: selectedGenre === g.id ? '#000' : '#fff',
-                      fontSize: '13px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {g.name}
-                  </button>
-                ))}
+            {/* قسم أفضل الأفلام تقييماً */}
+            <section style={{ marginBottom: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفضل الأفلام تقييماً</h2>
+                <button onClick={() => setActiveTab('movies')} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                  عرض المزيد
+                </button>
               </div>
-            </div>
+              <MediaGrid items={topMovies} onSelect={openWatchPage} />
+            </section>
 
-            {/* عند اختيار تصنيف محدد: يظهر زر التبديل بين الأفلام والمسلسلات */}
-            {selectedGenre !== 'all' ? (
-              <section style={{ marginBottom: '32px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
-                  <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>
-                    تصنيف {genres.find(g => g.id === selectedGenre)?.name}: {genreMediaType === 'movie' ? 'الأفلام' : 'المسلسلات'}
-                  </h2>
+            {/* قسم المسلسلات الأكثر مشاهدة */}
+            <section style={{ marginBottom: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>المسلسلات الأكثر مشاهدة</h2>
+                <button onClick={() => setActiveTab('tv')} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                  عرض المزيد
+                </button>
+              </div>
+              <MediaGrid items={popularTv} onSelect={openWatchPage} />
+            </section>
 
-                  {/* خيارات التوصل والفصل بين الأفلام والمسلسلات */}
-                  <div style={{ display: 'flex', gap: '8px', backgroundColor: '#18181b', padding: '4px', borderRadius: '8px', border: '1px solid #27272a' }}>
-                    <button
-                      onClick={() => setGenreMediaType('movie')}
-                      style={{
-                        padding: '6px 16px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        backgroundColor: genreMediaType === 'movie' ? '#f97316' : 'transparent',
-                        color: genreMediaType === 'movie' ? '#000' : '#a1a1aa'
-                      }}
-                    >
-                      أفلام
-                    </button>
-                    <button
-                      onClick={() => setGenreMediaType('tv')}
-                      style={{
-                        padding: '6px 16px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        backgroundColor: genreMediaType === 'tv' ? '#f97316' : 'transparent',
-                        color: genreMediaType === 'tv' ? '#000' : '#a1a1aa'
-                      }}
-                    >
-                      مسلسلات
-                    </button>
-                  </div>
-                </div>
+            {/* قائمة أفلام ومسلسلات الرعب */}
+            <section style={{ marginBottom: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الرعب</h2>
+                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('27'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                  عرض المزيد
+                </button>
+              </div>
+              <MediaGrid items={horrorData} onSelect={openWatchPage} />
+            </section>
 
-                <MediaGrid items={genreData} onSelect={openWatchPage} />
-              </section>
-            ) : (
-              /* القوائم الافتراضية الرئيسية */
-              <>
-                <section style={{ marginBottom: '32px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفضل الأفلام تقييماً</h2>
-                    <button onClick={() => setActiveTab('movies')} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                      عرض المزيد
-                    </button>
-                  </div>
-                  <MediaGrid items={topMovies} onSelect={openWatchPage} />
-                </section>
+            {/* قائمة أفلام ومسلسلات الأكشن */}
+            <section style={{ marginBottom: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الأكشن</h2>
+                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('28'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                  عرض المزيد
+                </button>
+              </div>
+              <MediaGrid items={actionData} onSelect={openWatchPage} />
+            </section>
 
-                <section style={{ marginBottom: '32px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>المسلسلات الأكثر مشاهدة</h2>
-                    <button onClick={() => setActiveTab('tv')} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                      عرض المزيد
-                    </button>
-                  </div>
-                  <MediaGrid items={popularTv} onSelect={openWatchPage} />
-                </section>
-              </>
-            )}
+            {/* قائمة أفلام ومسلسلات الدراما */}
+            <section style={{ marginBottom: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الدراما</h2>
+                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('18'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                  عرض المزيد
+                </button>
+              </div>
+              <MediaGrid items={dramaData} onSelect={openWatchPage} />
+            </section>
+
+            {/* قائمة أفلام ومسلسلات الخيال العلمي */}
+            <section style={{ marginBottom: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الخيال العلمي</h2>
+                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('878'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                  عرض المزيد
+                </button>
+              </div>
+              <MediaGrid items={scifiData} onSelect={openWatchPage} />
+            </section>
+
+            {/* قائمة أفلام ومسلسلات الكوميديا */}
+            <section style={{ marginBottom: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الكوميديا</h2>
+                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('35'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                  عرض المزيد
+                </button>
+              </div>
+              <MediaGrid items={comedyData} onSelect={openWatchPage} />
+            </section>
+
+            {/* قائمة أفلام ومسلسلات الغموض والجريمة */}
+            <section style={{ marginBottom: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الغموض والجريمة</h2>
+                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('9648'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                  عرض المزيد
+                </button>
+              </div>
+              <MediaGrid items={mysteryData} onSelect={openWatchPage} />
+            </section>
+
+            {/* قائمة أفلام ومسلسلات الرومانسية */}
+            <section style={{ marginBottom: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الرومانسية</h2>
+                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('10749'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                  عرض المزيد
+                </button>
+              </div>
+              <MediaGrid items={romanceData} onSelect={openWatchPage} />
+            </section>
+
+            {/* قائمة أفلام ومسلسلات المغامرة */}
+            <section style={{ marginBottom: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات المغامرة والعائلية</h2>
+                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('12'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                  عرض المزيد
+                </button>
+              </div>
+              <MediaGrid items={adventureData} onSelect={openWatchPage} />
+            </section>
 
           </div>
         </>
@@ -576,7 +600,7 @@ function MediaGrid({ items, onSelect }) {
                 style={{ width: '100%', objectFit: 'cover', display: 'block' }}
               />
               <span style={{ position: 'absolute', top: '6px', left: '6px', backgroundColor: 'rgba(0,0,0,0.85)', color: '#fbbf24', fontSize: '10px', fontWeight: 'bold', padding: '2px 5px', borderRadius: '3px' }}>
-                ⭐ {item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}
+                {item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}
               </span>
             </div>
             <div style={{ padding: '8px' }}>
