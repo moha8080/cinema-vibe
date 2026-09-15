@@ -10,11 +10,12 @@ export default function Home() {
     async function loadData() {
       try {
         const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+        if (!apiKey) return;
         const res = await fetch(`https://api.themoviedb.org/3/trending/all/week?api_key=${apiKey}&language=ar-SA`);
         const data = await res.json();
-        if (data.results) setItems(data.results);
+        if (data && data.results) setItems(data.results);
       } catch (e) {
-        console.error(e);
+        console.error("Error loading data:", e);
       }
     }
     loadData();
@@ -22,18 +23,17 @@ export default function Home() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
+    if (!searchQuery || !searchQuery.trim()) return;
     try {
       const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
       const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&language=ar-SA&query=${encodeURIComponent(searchQuery)}`);
       const data = await res.json();
-      if (data.results) setItems(data.results);
+      if (data && data.results) setItems(data.results);
     } catch (e) {
-      console.error(e);
+      console.error("Error searching:", e);
     }
   };
 
-  // توليد رابط المشغل بناءً على السيرفر المختار
   const getEmbedUrl = () => {
     if (!selectedMedia) return '';
     const type = selectedMedia.media_type === 'tv' ? 'tv' : 'movie';
@@ -71,32 +71,33 @@ export default function Home() {
         </form>
       </header>
 
-      {/* نافذة المشغل المتقدمة مع أزرار التبديل */}
       {selectedMedia && (
         <div style={{ marginBottom: '40px', backgroundColor: '#0f172a', padding: '20px', borderRadius: '12px', border: '1px solid #1e293b' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
             <h2 style={{ margin: 0, color: '#38bdf8' }}>{selectedMedia.title || selectedMedia.name}</h2>
             
-            {/* خيارات أزرار السيرفرات */}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: '#94a3b8' }}>السيرفر:</span>
               <button 
+                type="button"
                 onClick={() => setActiveServer('vidsrc.to')} 
                 style={{ padding: '5px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.to' ? '#a855f7' : '#334155', color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>
                 سيرفر 1
               </button>
               <button 
+                type="button"
                 onClick={() => setActiveServer('vidsrc.me')} 
                 style={{ padding: '5px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.me' ? '#a855f7' : '#334155', color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>
                 سيرفر 2
               </button>
               <button 
+                type="button"
                 onClick={() => setActiveServer('embed.su')} 
                 style={{ padding: '5px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'embed.su' ? '#a855f7' : '#334155', color: '#fff', fontSize: '12px', fontWeight: 'bold' }}>
                 سيرفر 3
               </button>
               
-              <button onClick={() => setSelectedMedia(null)} style={{ background: 'none', border: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', marginRight: '15px' }}>
+              <button type="button" onClick={() => setSelectedMedia(null)} style={{ background: 'none', border: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', marginRight: '15px' }}>
                 ✕ إغلاق
               </button>
             </div>
@@ -118,8 +119,8 @@ export default function Home() {
       </h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '20px' }}>
-        {items.map((item) => {
-          if (!item.poster_path) return null;
+        {items && items.map((item) => {
+          if (!item || !item.poster_path) return null;
           return (
             <div
               key={item.id}
@@ -128,7 +129,7 @@ export default function Home() {
             >
               <img
                 src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
-                alt={item.title || item.name}
+                alt={item.title || item.name || 'Poster'}
                 style={{ width: '100%', height: '240px', objectFit: 'cover' }}
               />
               <div style={{ padding: '10px' }}>
