@@ -347,7 +347,7 @@ export default function Home() {
           </button>
 
           <div style={{ backgroundColor: '#18181b', borderRadius: '12px', padding: '20px', border: '1px solid #27272a' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
               <div>
                 <h2 style={{ margin: 0, color: '#f97316', fontSize: '24px' }}>{selectedMedia.title || selectedMedia.name}</h2>
                 <p style={{ margin: '6px 0 0 0', color: '#a1a1aa', fontSize: '14px' }}>
@@ -355,18 +355,41 @@ export default function Home() {
                 </p>
               </div>
               
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
+                {/* الخانة المتناسقة لاختيار الموسم والحلقة */}
                 {(selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv') && (
-                  <div style={{ display: 'flex', gap: '10px', backgroundColor: '#09090b', padding: '8px 12px', borderRadius: '8px', border: '1px solid #27272a' }}>
-                    <label style={{ fontSize: '13px', color: '#f97316' }}>الموسم: 
-                      <input type="number" min="1" value={season} onChange={(e) => setSeason(e.target.value)} style={{ width: '45px', background: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', marginRight: '4px', padding: '3px', textAlign: 'center' }} />
-                    </label>
-                    <label style={{ fontSize: '13px', color: '#f97316' }}>الحلقة: 
-                      <input type="number" min="1" value={episode} onChange={(e) => setEpisode(e.target.value)} style={{ width: '45px', background: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', marginRight: '4px', padding: '3px', textAlign: 'center' }} />
-                    </label>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: '#09090b', padding: '8px 16px', borderRadius: '10px', border: '1px solid #27272a' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '13px', color: '#f97316', fontWeight: 'bold' }}>الموسم:</span>
+                      <select 
+                        value={season} 
+                        onChange={(e) => setSeason(Number(e.target.value))}
+                        style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '6px', padding: '5px 10px', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
+                      >
+                        {[...Array(20).keys()].map(i => (
+                          <option key={i + 1} value={i + 1}>{i + 1}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={{ width: '1px', height: '20px', backgroundColor: '#27272a' }}></div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '13px', color: '#f97316', fontWeight: 'bold' }}>الحلقة:</span>
+                      <select 
+                        value={episode} 
+                        onChange={(e) => setEpisode(Number(e.target.value))}
+                        style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '6px', padding: '5px 10px', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
+                      >
+                        {[...Array(50).keys()].map(i => (
+                          <option key={i + 1} value={i + 1}>{i + 1}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 )}
 
+                {/* أزرار السيرفرات */}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => setActiveServer('vidsrc.to')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.to' ? '#f97316' : '#27272a', color: activeServer === 'vidsrc.to' ? '#000' : '#fff', fontWeight: 'bold', fontSize: '13px' }}>سيرفر 1</button>
                   <button onClick={() => setActiveServer('vidsrc.me')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.me' ? '#f97316' : '#27272a', color: activeServer === 'vidsrc.me' ? '#000' : '#fff', fontWeight: 'bold', fontSize: '13px' }}>سيرفر 2</button>
@@ -446,7 +469,7 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        /* 5. الصفحة الرئيسية */
+        /* 5. الصفحة الرئيسية المليئة بالقوائم المتعددة لكل التصنيفات */
         <>
           {heroItem && (
             <div className="hero-banner" style={{ position: 'relative', width: '100%', backgroundImage: `linear-gradient(to top, #09090b 10%, transparent 90%), url(https://image.tmdb.org/t/p/original${heroItem.backdrop_path})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'flex-end', padding: '24px', transition: 'background-image 0.8s ease-in-out' }}>
