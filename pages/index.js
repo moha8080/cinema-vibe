@@ -131,7 +131,7 @@ export default function Home() {
         if (tvData.overview && tvData.overview.trim() !== '') {
           setArabicOverview(tvData.overview);
         } else {
-          setArabicOverview('لا تتوفر قصة مترجمة حالياً لهذا العمل باللغة العربية.');
+          setArabicOverview('لا تتوفر قصة حالياً لهذا العمل.');
         }
 
         fetchEpisodeCount(item.id, 1, apiKey);
@@ -146,7 +146,7 @@ export default function Home() {
         if (data && data.overview && data.overview.trim() !== '') {
           setArabicOverview(data.overview);
         } else {
-          setArabicOverview('لا تتوفر قصة مترجمة حالياً لهذا العمل باللغة العربية.');
+          setArabicOverview('لا تتوفر قصة حالياً لهذا العمل  .');
         }
       } catch (e) {
         setArabicOverview('لا تتوفر قصة مترجمة حالياً لهذا العمل.');
@@ -439,7 +439,13 @@ export default function Home() {
 
       <footer style={{ borderTop: '1px solid #27272a', padding: '24px', textAlign: 'center', color: '#71717a', fontSize: '13px', backgroundColor: '#121215' }}>
         © 2026 CINEMA VIBE - All rights reserved
-      </footer>
+     {/* Footer */}
+<footer style={{ borderTop: '1px solid #27272a', padding: '24px 20px', textAlign: 'center', backgroundColor: '#09090b', color: '#71717a', fontSize: '13px', marginTop: '40px' }}>
+  <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+    <p style={{ margin: 0 }}>جميع الحقوق محفوظة © 2026 CINEMA VIBE</p>
+    <div style={{ display: 'flex', gap: '20px' }}>
+      <a href="/privacy" style={{ color: '#f97316', textDecoration: 'none', fontWeight: 'bold' }}>سياسة الخصوصية</a>
+      <a href="/contact" style={{ color: '#f97316', textDecoration: 'none', fontWeight: 'bold' }}>اتصل بنا / اطلب فيلم</a>
     </div>
-  );
-}
+  </div>
+</footer>
