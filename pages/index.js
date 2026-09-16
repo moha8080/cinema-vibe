@@ -103,7 +103,7 @@ export default function Home() {
   const [romanceData, setRomanceData] = useState([]);
   const [adventureData, setAdventureData] = useState([]);
   
-  // الوضع الحالي للصفحة: 'home' | 'movies' | 'tv' | 'watch'
+  // الوضع الحالي للصفحة: 'home' | 'movies' | 'tv' | 'watch' | 'privacy' | 'contact'
   const [activeTab, setActiveTab] = useState('home');
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [pageData, setPageData] = useState([]);
@@ -126,6 +126,10 @@ export default function Home() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
+
+  // حالة نموذج اتصل بنا
+  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+  const [contactSent, setContactSent] = useState(false);
 
   // قائمة تصنيفات المكتبة
   const genres = [
@@ -200,7 +204,7 @@ export default function Home() {
     fetchHomeData();
   }, []);
 
-  // فتح صفحة التفاصيل للمشاهدة وتحديد عدد المواسم والحلقات الدقيقة
+  // فتح صفحة التفاصيل للمشاهدة
   const openWatchPage = async (item) => {
     setSelectedMedia(item);
     setSeason(1);
@@ -250,7 +254,6 @@ export default function Home() {
     }
   };
 
-  // جلب عدد الحلقات لموسم معين
   const fetchEpisodeCount = async (tvId, seasonNum, apiKey) => {
     try {
       const seasonRes = await fetch(`https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNum}?api_key=${apiKey}`);
@@ -262,7 +265,6 @@ export default function Home() {
     }
   };
 
-  // عند تغيير الموسم يدوياً من قبل المستخدم
   const handleSeasonChange = (newSeason) => {
     setSeason(newSeason);
     setEpisode(1);
@@ -274,7 +276,7 @@ export default function Home() {
 
   // جلب صفحة المكتبة الشاملة
   useEffect(() => {
-    if (activeTab === 'home' || activeTab === 'watch') return;
+    if (activeTab === 'home' || activeTab === 'watch' || activeTab === 'privacy' || activeTab === 'contact') return;
 
     async function fetchTabData() {
       try {
@@ -303,7 +305,6 @@ export default function Home() {
     fetchTabData();
   }, [activeTab, selectedGenre]);
 
-  // تحميل المزيد
   const handleLoadMore = async () => {
     if (activeTab === 'home' || activeTab === 'watch') return;
     setIsLoadingMore(true);
@@ -330,7 +331,6 @@ export default function Home() {
     }
   };
 
-  // التبديل التلقائي للبانر
   useEffect(() => {
     if (trending.length === 0 || activeTab !== 'home') return;
     const interval = setInterval(() => {
@@ -339,7 +339,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [trending, activeTab]);
 
-  // البحث
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) {
@@ -356,7 +355,6 @@ export default function Home() {
     }
   };
 
-  // Embed URL - دعم الجوال والكمبيوتر بفرض الترجمة العربية الإجبارية
   const getEmbedUrl = () => {
     if (!selectedMedia) return '';
     const isTv = selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv';
@@ -377,9 +375,8 @@ export default function Home() {
   const heroItem = trending[heroIndex];
 
   return (
-    <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
       
-      {/* تنسيقات التجاوب الذكية */}
       <style jsx global>{`
         html, body {
           margin: 0;
@@ -420,23 +417,22 @@ export default function Home() {
       {/* 1. Navbar العلوي */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', backgroundColor: 'rgba(9, 9, 11, 0.95)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '900', color: '#f97316', letterSpacing: '1px', cursor: 'pointer' }} onClick={() => { setActiveTab('home'); setSearchResults(null); setSelectedGenre('all'); }}>
+          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '900', color: '#f97316', letterSpacing: '1px', cursor: 'pointer' }} onClick={() => { setActiveTab('home'); setSearchResults(null); setSelectedGenre('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
             CINEMA<span style={{ color: '#ffffff' }}>VIBE</span>
           </h1>
           <div style={{ display: 'flex', gap: '16px', fontSize: '15px', fontWeight: '600' }}>
-            <span style={{ color: activeTab === 'home' && !searchResults ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('home'); setSearchResults(null); setSelectedGenre('all'); }}>
+            <span style={{ color: activeTab === 'home' && !searchResults ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('home'); setSearchResults(null); setSelectedGenre('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
               الرئيسية
             </span>
-            <span style={{ color: activeTab === 'movies' && !searchResults ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('movies'); setSearchResults(null); setSelectedGenre('all'); }}>
+            <span style={{ color: activeTab === 'movies' && !searchResults ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('movies'); setSearchResults(null); setSelectedGenre('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
               الأفلام
             </span>
-            <span style={{ color: activeTab === 'tv' && !searchResults ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('tv'); setSearchResults(null); setSelectedGenre('all'); }}>
+            <span style={{ color: activeTab === 'tv' && !searchResults ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('tv'); setSearchResults(null); setSelectedGenre('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
               المسلسلات
             </span>
           </div>
         </div>
 
-        {/* أيقونة البحث */}
         <button 
           onClick={() => setShowSearchModal(!showSearchModal)}
           style={{ background: 'none', border: 'none', color: '#f4f4f5', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -468,283 +464,378 @@ export default function Home() {
         </div>
       )}
 
-      {/* 2. صفحة المشاهدة المخصصة */}
-      {activeTab === 'watch' && selectedMedia ? (
-        <div style={{ padding: '20px 24px', maxWidth: '1100px', margin: '0 auto' }}>
-          <button 
-            onClick={() => setActiveTab('home')}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '20px', padding: '10px 18px', borderRadius: '8px', backgroundColor: '#27272a', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
-          >
-            العودة للرئيسية
-          </button>
+      {/* المحتوى الرئيسي للموقع (ياخذ مساحة مرنة لضمان نزول الفوتر للأسفل) */}
+      <div style={{ flex: 1 }}>
+        
+        {/* صفحة المشاهدة */}
+        {activeTab === 'watch' && selectedMedia ? (
+          <div style={{ padding: '20px 24px', maxWidth: '1100px', margin: '0 auto' }}>
+            <button 
+              onClick={() => setActiveTab('home')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '20px', padding: '10px 18px', borderRadius: '8px', backgroundColor: '#27272a', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
+            >
+              العودة للرئيسية
+            </button>
 
-          <div style={{ backgroundColor: '#18181b', borderRadius: '12px', padding: '20px', border: '1px solid #27272a' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
-              <div>
-                <h2 style={{ margin: 0, color: '#f97316', fontSize: '24px' }}>{selectedMedia.title || selectedMedia.name}</h2>
-                <p style={{ margin: '6px 0 0 0', color: '#a1a1aa', fontSize: '14px' }}>
-                  {(selectedMedia.release_date || selectedMedia.first_air_date || '').slice(0, 4)} | ⭐ {selectedMedia.vote_average?.toFixed(1)}
+            <div style={{ backgroundColor: '#18181b', borderRadius: '12px', padding: '20px', border: '1px solid #27272a' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
+                <div>
+                  <h2 style={{ margin: 0, color: '#f97316', fontSize: '24px' }}>{selectedMedia.title || selectedMedia.name}</h2>
+                  <p style={{ margin: '6px 0 0 0', color: '#a1a1aa', fontSize: '14px' }}>
+                    {(selectedMedia.release_date || selectedMedia.first_air_date || '').slice(0, 4)} | ⭐ {selectedMedia.vote_average?.toFixed(1)}
+                  </p>
+                </div>
+                
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between' }}>
+                  
+                  {(selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv') && (
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: '#09090b', padding: '8px 14px', borderRadius: '8px', border: '1px solid #27272a' }}>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '13px', color: '#f97316', fontWeight: 'bold' }}>الموسم:</span>
+                        <select 
+                          value={season} 
+                          onChange={(e) => handleSeasonChange(Number(e.target.value))}
+                          style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', padding: '4px 8px', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
+                        >
+                          {availableSeasons.map(s => (
+                            <option key={s} value={s}>الموسم {s}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div style={{ width: '1px', height: '18px', backgroundColor: '#27272a' }}></div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '13px', color: '#f97316', fontWeight: 'bold' }}>الحلقة:</span>
+                        <select 
+                          value={episode} 
+                          onChange={(e) => setEpisode(Number(e.target.value))}
+                          style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', padding: '4px 8px', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
+                        >
+                          {availableEpisodes.map(ep => (
+                            <option key={ep} value={ep}>الحلقة {ep}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => setActiveServer('vidsrc.to')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.to' ? '#f97316' : '#27272a', color: activeServer === 'vidsrc.to' ? '#000' : '#fff', fontWeight: 'bold', fontSize: '13px' }}>سيرفر 1</button>
+                    <button onClick={() => setActiveServer('vidsrc.me')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.me' ? '#f97316' : '#27272a', color: activeServer === 'vidsrc.me' ? '#000' : '#fff', fontWeight: 'bold', fontSize: '13px' }}>سيرفر 2</button>
+                    <button onClick={() => setActiveServer('embed.su')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'embed.su' ? '#f97316' : '#27272a', color: activeServer === 'embed.su' ? '#000' : '#fff', fontWeight: 'bold', fontSize: '13px' }}>سيرفر 3</button>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ position: 'relative', paddingTop: '56.25%', width: '100%', backgroundColor: '#000', borderRadius: '10px', overflow: 'hidden', border: '1px solid #27272a' }}>
+                <iframe src={getEmbedUrl()} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }} allowFullScreen referrerPolicy="origin"></iframe>
+              </div>
+
+              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #27272a' }}>
+                <h3 style={{ fontSize: '16px', color: '#f97316', margin: '0 0 8px 0' }}>قصة العمل</h3>
+                <p style={{ fontSize: '14px', color: '#d4d4d8', lineHeight: '1.7', margin: 0 }}>
+                  {arabicOverview}
                 </p>
               </div>
-              
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between' }}>
-                
-                {/* قائمة المواسم والحلقات الديناميكية للمسلسلات فقط */}
-                {(selectedMedia.media_type === 'tv' || selectedMedia.first_air_date || activeTab === 'tv') && (
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: '#09090b', padding: '8px 14px', borderRadius: '8px', border: '1px solid #27272a' }}>
-                    
-                    {/* اختيار الموسم */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '13px', color: '#f97316', fontWeight: 'bold' }}>الموسم:</span>
-                      <select 
-                        value={season} 
-                        onChange={(e) => handleSeasonChange(Number(e.target.value))}
-                        style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', padding: '4px 8px', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
-                      >
-                        {availableSeasons.map(s => (
-                          <option key={s} value={s}>الموسم {s}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div style={{ width: '1px', height: '18px', backgroundColor: '#27272a' }}></div>
-
-                    {/* اختيار الحلقة */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '13px', color: '#f97316', fontWeight: 'bold' }}>الحلقة:</span>
-                      <select 
-                        value={episode} 
-                        onChange={(e) => setEpisode(Number(e.target.value))}
-                        style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '4px', padding: '4px 8px', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
-                      >
-                        {availableEpisodes.map(ep => (
-                          <option key={ep} value={ep}>الحلقة {ep}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                  </div>
-                )}
-
-                {/* أزرار السيرفرات */}
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => setActiveServer('vidsrc.to')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.to' ? '#f97316' : '#27272a', color: activeServer === 'vidsrc.to' ? '#000' : '#fff', fontWeight: 'bold', fontSize: '13px' }}>سيرفر 1</button>
-                  <button onClick={() => setActiveServer('vidsrc.me')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'vidsrc.me' ? '#f97316' : '#27272a', color: activeServer === 'vidsrc.me' ? '#000' : '#fff', fontWeight: 'bold', fontSize: '13px' }}>سيرفر 2</button>
-                  <button onClick={() => setActiveServer('embed.su')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', backgroundColor: activeServer === 'embed.su' ? '#f97316' : '#27272a', color: activeServer === 'embed.su' ? '#000' : '#fff', fontWeight: 'bold', fontSize: '13px' }}>سيرفر 3</button>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ position: 'relative', paddingTop: '56.25%', width: '100%', backgroundColor: '#000', borderRadius: '10px', overflow: 'hidden', border: '1px solid #27272a' }}>
-              <iframe src={getEmbedUrl()} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }} allowFullScreen referrerPolicy="origin"></iframe>
-            </div>
-
-            {/* قصة العمل باللغة العربية */}
-            <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #27272a' }}>
-              <h3 style={{ fontSize: '16px', color: '#f97316', margin: '0 0 8px 0' }}>قصة العمل</h3>
-              <p style={{ fontSize: '14px', color: '#d4d4d8', lineHeight: '1.7', margin: 0 }}>
-                {arabicOverview}
-              </p>
             </div>
           </div>
-        </div>
-      ) : searchResults ? (
-        /* 3. نتائج البحث */
-        <div style={{ padding: '20px 24px' }}>
-          <h2 style={{ fontSize: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', marginBottom: '20px' }}>نتائج البحث</h2>
-          <MediaGrid items={searchResults} onSelect={openWatchPage} />
-        </div>
-      ) : activeTab === 'movies' || activeTab === 'tv' ? (
-        /* 4. المكتبة الشاملة */
-        <div style={{ padding: '20px 24px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '12px', marginBottom: '20px' }}>
-            {activeTab === 'movies' ? 'مكتبة الأفلام' : 'مكتبة المسلسلات'}
-          </h2>
+        ) : searchResults ? (
+          /* نتائج البحث */
+          <div style={{ padding: '20px 24px' }}>
+            <h2 style={{ fontSize: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', marginBottom: '20px' }}>نتائج البحث</h2>
+            <MediaGrid items={searchResults} onSelect={openWatchPage} />
+          </div>
+        ) : activeTab === 'movies' || activeTab === 'tv' ? (
+          /* المكتبة الشاملة للأفلام والمسلسلات */
+          <div style={{ padding: '20px 24px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '12px', marginBottom: '20px' }}>
+              {activeTab === 'movies' ? 'مكتبة الأفلام' : 'مكتبة المسلسلات'}
+            </h2>
 
-          <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '24px' }}>
-            {genres.map((g) => (
+            <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '24px' }}>
+              {genres.map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => setSelectedGenre(g.id)}
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: '20px',
+                    border: '1px solid #3f3f46',
+                    backgroundColor: selectedGenre === g.id ? '#f97316' : '#18181b',
+                    color: selectedGenre === g.id ? '#000' : '#fff',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {g.name}
+                </button>
+              ))}
+            </div>
+
+            <MediaGrid items={pageData} onSelect={openWatchPage} />
+            
+            <div style={{ textAlign: 'center', marginTop: '30px' }}>
               <button
-                key={g.id}
-                onClick={() => setSelectedGenre(g.id)}
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
                 style={{
-                  padding: '8px 18px',
-                  borderRadius: '20px',
-                  border: '1px solid #3f3f46',
-                  backgroundColor: selectedGenre === g.id ? '#f97316' : '#18181b',
-                  color: selectedGenre === g.id ? '#000' : '#fff',
-                  fontSize: '13px',
+                  padding: '12px 30px',
+                  backgroundColor: '#f97316',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '8px',
                   fontWeight: 'bold',
+                  fontSize: '14px',
                   cursor: 'pointer',
-                  whiteSpace: 'nowrap'
+                  opacity: isLoadingMore ? 0.6 : 1
                 }}
               >
-                {g.name}
+                {isLoadingMore ? 'جاري التحميل...' : 'عرض المزيد'}
               </button>
-            ))}
+            </div>
           </div>
+        ) : activeTab === 'privacy' ? (
+          /* صفحة سياسة الخصوصية */
+          <div style={{ padding: '40px 24px', maxWidth: '800px', margin: '0 auto', lineHeight: '1.8' }}>
+            <h2 style={{ fontSize: '28px', color: '#f97316', marginBottom: '20px', borderBottom: '2px solid #27272a', paddingBottom: '10px' }}>سياسة الخصوصية</h2>
+            <p style={{ color: '#d4d4d8', fontSize: '15px' }}>مرحباً بك في موقع <strong>CinemaVibe</strong>. نحن نعتبر خصوصية زوارنا ذات أهمية بالغ الأهمية. توضح وثيقة سياسة الخصوصية هذه أنواع معلومات الشخصية التي يتم جمعها وكيفية استخدامها.</p>
+            
+            <h3 style={{ color: '#f97316', fontSize: '18px', marginTop: '24px' }}>ملفات تعريف الارتباط (Cookies)</h3>
+            <p style={{ color: '#d4d4d8', fontSize: '15px' }}>نستخدم ملفات تعريف الارتباط لتخزين المعلومات مثل تفضيلاتك الشخصية عند زيارة الموقع، وذلك لتسهيل تصفحك وتخصيص تجربة المستخدم.</p>
 
-          <MediaGrid items={pageData} onSelect={openWatchPage} />
-          
-          <div style={{ textAlign: 'center', marginTop: '30px' }}>
-            <button
-              onClick={handleLoadMore}
-              disabled={isLoadingMore}
-              style={{
-                padding: '12px 30px',
-                backgroundColor: '#f97316',
-                color: '#000',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                cursor: 'pointer',
-                opacity: isLoadingMore ? 0.6 : 1
-              }}
-            >
-              {isLoadingMore ? 'جاري التحميل...' : 'عرض المزيد'}
-            </button>
+            <h3 style={{ color: '#f97316', fontSize: '18px', marginTop: '24px' }}>ملفات السجل (Log Files)</h3>
+            <p style={{ color: '#d4d4d8', fontSize: '15px' }}>مثل معظم مواقع الويب الأخرى، يجمع موقع CinemaVibe بيانات ملفات السجل والتي تشمل عناوين بروتوكول الإنترنت (IP)، نوع المتصفح، مزود خدمة الإنترنت، وتاريخ/وقت الزيارة.</p>
+
+            <h3 style={{ color: '#f97316', fontSize: '18px', marginTop: '24px' }}>إخلاء المسؤولية</h3>
+            <p style={{ color: '#d4d4d8', fontSize: '15px' }}>موقع CinemaVibe لا يقوم باستضافة أي ملفات فيديو على خوادمه الخاصة، بل جميع المحتويات مرفوعة على مصادر خارجية عامة ومجانية، ونحن نعرضها فقط للمشاهدة المباشرة.</p>
           </div>
-        </div>
-      ) : (
-        /* 5. الصفحة الرئيسية المليئة بالقوائم المتعددة لكل التصنيفات */
-        <>
-          {heroItem && (
-            <div className="hero-banner" style={{ position: 'relative', width: '100%', backgroundImage: `linear-gradient(to top, #09090b 10%, transparent 90%), url(https://image.tmdb.org/t/p/original${heroItem.backdrop_path})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'flex-end', padding: '24px', transition: 'background-image 0.8s ease-in-out' }}>
-              <div style={{ maxWidth: '650px', zIndex: 2 }}>
-                <span style={{ backgroundColor: '#f97316', color: '#000', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase' }}>رائج الآن</span>
-                <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '10px 0', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>{heroItem.title || heroItem.name}</h1>
-                <p style={{ color: '#d4d4d8', fontSize: '13px', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>{heroItem.overview}</p>
-                
-                <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                  <button onClick={() => openWatchPage(heroItem)} style={{ padding: '10px 22px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>
-                    شاهد الآن
-                  </button>
+        ) : activeTab === 'contact' ? (
+          /* صفحة اتصل بنا */
+          <div style={{ padding: '40px 24px', maxWidth: '600px', margin: '0 auto' }}>
+            <h2 style={{ fontSize: '28px', color: '#f97316', marginBottom: '10px', textAlign: 'center' }}>اتصل بنا</h2>
+            <p style={{ color: '#a1a1aa', textAlign: 'center', marginBottom: '30px', fontSize: '14px' }}>يسعدنا تواصلك معنا، أرسل استفسارك أو اقتراحك وسنرد عليك في أقرب وقت.</p>
+            
+            {contactSent ? (
+              <div style={{ backgroundColor: '#18181b', border: '1px solid #f97316', padding: '24px', borderRadius: '10px', textAlign: 'center', color: '#f97316', fontWeight: 'bold' }}>
+                تم إرسال رسالتك بنجاح! شكراً لتواصلك معنا.
+              </div>
+            ) : (
+              <form onSubmit={(e) => { e.preventDefault(); setContactSent(true); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#18181b', padding: '24px', borderRadius: '12px', border: '1px solid #27272a' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#a1a1aa', marginBottom: '6px' }}>الاسم الكامل</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #3f3f46', backgroundColor: '#09090b', color: '#fff', outline: 'none' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#a1a1aa', marginBottom: '6px' }}>البريد الإلكتروني</label>
+                  <input 
+                    type="email" 
+                    required
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #3f3f46', backgroundColor: '#09090b', color: '#fff', outline: 'none' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#a1a1aa', marginBottom: '6px' }}>الرسالة</label>
+                  <textarea 
+                    rows={4}
+                    required
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #3f3f46', backgroundColor: '#09090b', color: '#fff', outline: 'none', resize: 'vertical' }}
+                  ></textarea>
+                </div>
+                <button type="submit" style={{ padding: '12px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>
+                  إرسال الرسالة
+                </button>
+              </form>
+            )}
+          </div>
+        ) : (
+          /* الصفحة الرئيسية الكاملة */
+          <>
+            {heroItem && (
+              <div className="hero-banner" style={{ position: 'relative', width: '100%', backgroundImage: `linear-gradient(to top, #09090b 10%, transparent 90%), url(https://image.tmdb.org/t/p/original${heroItem.backdrop_path})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'flex-end', padding: '24px', transition: 'background-image 0.8s ease-in-out' }}>
+                <div style={{ maxWidth: '650px', zIndex: 2 }}>
+                  <span style={{ backgroundColor: '#f97316', color: '#000', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase' }}>رائج الآن</span>
+                  <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '10px 0', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>{heroItem.title || heroItem.name}</h1>
+                  <p style={{ color: '#d4d4d8', fontSize: '13px', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>{heroItem.overview}</p>
+                  
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                    <button onClick={() => openWatchPage(heroItem)} style={{ padding: '10px 22px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>
+                      شاهد الآن
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ position: 'absolute', bottom: '16px', left: '24px', display: 'flex', gap: '6px' }}>
+                  {trending.map((_, idx) => (
+                    <div key={idx} onClick={() => setHeroIndex(idx)} style={{ width: idx === heroIndex ? '24px' : '6px', height: '6px', borderRadius: '3px', backgroundColor: idx === heroIndex ? '#f97316' : 'rgba(255,255,255,0.3)', cursor: 'pointer', transition: 'all 0.3s' }}></div>
+                  ))}
                 </div>
               </div>
+            )}
 
-              <div style={{ position: 'absolute', bottom: '16px', left: '24px', display: 'flex', gap: '6px' }}>
-                {trending.map((_, idx) => (
-                  <div key={idx} onClick={() => setHeroIndex(idx)} style={{ width: idx === heroIndex ? '24px' : '6px', height: '6px', borderRadius: '3px', backgroundColor: idx === heroIndex ? '#f97316' : 'rgba(255,255,255,0.3)', cursor: 'pointer', transition: 'all 0.3s' }}></div>
-                ))}
-              </div>
+            <div style={{ padding: '20px 24px' }}>
+              
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفضل الأفلام تقييماً</h2>
+                  <button onClick={() => setActiveTab('movies')} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                    عرض المزيد
+                  </button>
+                </div>
+                <MediaGrid items={topMovies} onSelect={openWatchPage} />
+              </section>
+
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>المسلسلات الأكثر مشاهدة</h2>
+                  <button onClick={() => setActiveTab('tv')} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                    عرض المزيد
+                  </button>
+                </div>
+                <MediaGrid items={popularTv} onSelect={openWatchPage} />
+              </section>
+
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الرعب</h2>
+                  <button onClick={() => { setActiveTab('movies'); setSelectedGenre('27'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                    عرض المزيد
+                  </button>
+                </div>
+                <MediaGrid items={horrorData} onSelect={openWatchPage} />
+              </section>
+
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الأكشن</h2>
+                  <button onClick={() => { setActiveTab('movies'); setSelectedGenre('28'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                    عرض المزيد
+                  </button>
+                </div>
+                <MediaGrid items={actionData} onSelect={openWatchPage} />
+              </section>
+
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الدراما</h2>
+                  <button onClick={() => { setActiveTab('movies'); setSelectedGenre('18'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                    عرض المزيد
+                  </button>
+                </div>
+                <MediaGrid items={dramaData} onSelect={openWatchPage} />
+              </section>
+
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الخيال العلمي</h2>
+                  <button onClick={() => { setActiveTab('movies'); setSelectedGenre('878'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                    عرض المزيد
+                  </button>
+                </div>
+                <MediaGrid items={scifiData} onSelect={openWatchPage} />
+              </section>
+
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الكوميديا</h2>
+                  <button onClick={() => { setActiveTab('movies'); setSelectedGenre('35'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                    عرض المزيد
+                  </button>
+                </div>
+                <MediaGrid items={comedyData} onSelect={openWatchPage} />
+              </section>
+
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الغموض</h2>
+                  <button onClick={() => { setActiveTab('movies'); setSelectedGenre('9648'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                    عرض المزيد
+                  </button>
+                </div>
+                <MediaGrid items={mysteryData} onSelect={openWatchPage} />
+              </section>
+
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات رومنسية</h2>
+                  <button onClick={() => { setActiveTab('movies'); setSelectedGenre('10749'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                    عرض المزيد
+                  </button>
+                </div>
+                <MediaGrid items={romanceData} onSelect={openWatchPage} />
+              </section>
+
+              <section style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات المغامرة</h2>
+                  <button onClick={() => { setActiveTab('movies'); setSelectedGenre('12'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                    عرض المزيد
+                  </button>
+                </div>
+                <MediaGrid items={adventureData} onSelect={openWatchPage} />
+              </section>
+
             </div>
-          )}
+          </>
+        )}
 
-          <div style={{ padding: '20px 24px' }}>
-            
-            {/* قسم أفضل الأفلام تقييماً */}
-            <section style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفضل الأفلام تقييماً</h2>
-                <button onClick={() => setActiveTab('movies')} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                  عرض المزيد
-                </button>
-              </div>
-              <MediaGrid items={topMovies} onSelect={openWatchPage} />
-            </section>
+      </div>
 
-            {/* قسم المسلسلات الأكثر مشاهدة */}
-            <section style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>المسلسلات الأكثر مشاهدة</h2>
-                <button onClick={() => setActiveTab('tv')} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                  عرض المزيد
-                </button>
-              </div>
-              <MediaGrid items={popularTv} onSelect={openWatchPage} />
-            </section>
+      {/* 6. الفوتر (Footer) الاحترافي */}
+      <footer style={{ backgroundColor: '#121214', borderTop: '1px solid #27272a', padding: '30px 24px', marginTop: '40px', color: '#a1a1aa' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
+            <div>
+              <h2 style={{ margin: '0 0 6px 0', fontSize: '20px', fontWeight: '900', color: '#f97316' }}>
+                CINEMA<span style={{ color: '#ffffff' }}>VIBE</span>
+              </h2>
+              <p style={{ margin: 0, fontSize: '13px', color: '#71717a' }}>وجهتك الأولى لمشاهدة أحدث الأفلام والمسلسلات مترجمة.</p>
+            </div>
 
-            {/* قائمة أفلام ومسلسلات الرعب */}
-            <section style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الرعب</h2>
-                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('27'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                  عرض المزيد
-                </button>
-              </div>
-              <MediaGrid items={horrorData} onSelect={openWatchPage} />
-            </section>
-
-            {/* قائمة أفلام ومسلسلات الأكشن */}
-            <section style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الأكشن</h2>
-                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('28'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                  عرض المزيد
-                </button>
-              </div>
-              <MediaGrid items={actionData} onSelect={openWatchPage} />
-            </section>
-
-            {/* قائمة أفلام ومسلسلات الدراما */}
-            <section style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الدراما</h2>
-                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('18'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                  عرض المزيد
-                </button>
-              </div>
-              <MediaGrid items={dramaData} onSelect={openWatchPage} />
-            </section>
-
-            {/* قائمة أفلام ومسلسلات الخيال العلمي */}
-            <section style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الخيال العلمي</h2>
-                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('878'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                  عرض المزيد
-                </button>
-              </div>
-              <MediaGrid items={scifiData} onSelect={openWatchPage} />
-            </section>
-
-            {/* قائمة أفلام ومسلسلات الكوميديا */}
-            <section style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الكوميديا</h2>
-                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('35'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                  عرض المزيد
-                </button>
-              </div>
-              <MediaGrid items={comedyData} onSelect={openWatchPage} />
-            </section>
-
-            {/* قائمة الغموض */}
-            <section style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الغموض</h2>
-                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('9648'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                  عرض المزيد
-                </button>
-              </div>
-              <MediaGrid items={mysteryData} onSelect={openWatchPage} />
-            </section>
-
-            {/* قائمة الرومنسي */}
-            <section style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات رومنسية</h2>
-                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('10749'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                  عرض المزيد
-                </button>
-              </div>
-              <MediaGrid items={romanceData} onSelect={openWatchPage} />
-            </section>
-
-            {/* قائمة المغامرة */}
-            <section style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات المغامرة</h2>
-                <button onClick={() => { setActiveTab('movies'); setSelectedGenre('12'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                  عرض المزيد
-                </button>
-              </div>
-              <MediaGrid items={adventureData} onSelect={openWatchPage} />
-            </section>
-
+            <div style={{ display: 'flex', gap: '20px', fontSize: '14px', fontWeight: 'bold' }}>
+              <span 
+                style={{ cursor: 'pointer', color: activeTab === 'home' ? '#f97316' : '#a1a1aa' }} 
+                onClick={() => { setActiveTab('home'); setSearchResults(null); setSelectedGenre('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              >
+                الرئيسية
+              </span>
+              <span 
+                style={{ cursor: 'pointer', color: activeTab === 'privacy' ? '#f97316' : '#a1a1aa' }} 
+                onClick={() => { setActiveTab('privacy'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              >
+                سياسة الخصوصية
+              </span>
+              <span 
+                style={{ cursor: 'pointer', color: activeTab === 'contact' ? '#f97316' : '#a1a1aa' }} 
+                onClick={() => { setActiveTab('contact'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              >
+                اتصل بنا
+              </span>
+            </div>
           </div>
-        </>
-      )}
+
+          <div style={{ borderTop: '1px solid #27272a', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', fontSize: '12px', color: '#71717a' }}>
+            <span>جميع الحقوق محفوظة © {new Date().getFullYear()} CinemaVibe</span>
+            <span>موقع غير ربحي لعرض الأفلام والمسلسلات</span>
+          </div>
+
+        </div>
+      </footer>
 
     </div>
   );
