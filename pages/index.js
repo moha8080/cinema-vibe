@@ -439,7 +439,6 @@ export default function Home() {
 
       <footer style={{ borderTop: '1px solid #27272a', padding: '24px', textAlign: 'center', color: '#71717a', fontSize: '13px', backgroundColor: '#121215' }}>
         © 2026 CINEMA VIBE - All rights reserved
-     {/* Footer */}
 <footer style={{ borderTop: '1px solid #27272a', padding: '24px 20px', textAlign: 'center', backgroundColor: '#09090b', color: '#71717a', fontSize: '13px', marginTop: '40px' }}>
   <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
     <p style={{ margin: 0 }}>جميع الحقوق محفوظة © 2026 CINEMA VIBE</p>
