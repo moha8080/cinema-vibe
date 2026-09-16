@@ -14,13 +14,13 @@ export default function Home() {
     fetch(`${BASE_URL}/trending/all/week?api_key=${API_KEY}&language=ar-SA`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.results) {
+        if (data && data.results) {
           setMovies(data.results);
         }
         setLoading(false);
       })
       .catch((err) => {
-        console.error(err);
+        console.error("Error fetching data:", err);
         setLoading(false);
       });
   }, []);
@@ -30,10 +30,14 @@ export default function Home() {
     if (!searchQuery.trim()) return;
     setLoading(true);
 
-    const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&language=ar-SA&query=${encodeURIComponent(searchQuery)}`);
-    const data = await res.json();
-    if (data.results) {
-      setMovies(data.results);
+    try {
+      const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&language=ar-SA&query=${encodeURIComponent(searchQuery)}`);
+      const data = await res.json();
+      if (data && data.results) {
+        setMovies(data.results);
+      }
+    } catch (err) {
+      console.error("Search error:", err);
     }
     setLoading(false);
   };
@@ -41,11 +45,13 @@ export default function Home() {
   return (
     <div style={{ backgroundColor: '#09090b', color: '#ffffff', minHeight: '100vh', fontFamily: 'sans-serif' }} dir="rtl">
       <Head>
-        <title>سينما فيب - Cinema Vibe | مشاهدة الأفلام والمسلسلات</title>
+        <title>سينما فيب - Cinema Vibe</title>
       </Head>
 
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', backgroundColor: '#121215', borderBottom: '1px solid #27272a' }}>
-        <h1 style={{ color: '#f97316', fontSize: '22px', fontWeight: 'bold', margin: 0, cursor: 'pointer' }} onClick={() => window.location.reload()}>CINEMA VIBE</h1>
+        <h1 style={{ color: '#f97316', fontSize: '22px', fontWeight: 'bold', margin: 0, cursor: 'pointer' }} onClick={() => window.location.reload()}>
+          CINEMA<span style={{ color: '#fff' }}>VIBE</span>
+        </h1>
         <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px' }}>
           <input 
             type="text" 
@@ -54,7 +60,7 @@ export default function Home() {
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #27272a', backgroundColor: '#18181b', color: '#fff', outline: 'none', width: '220px' }}
           />
-          <button type="submit" style={{ padding: '8px 16px', backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>بحث</button>
+          <button type="submit" style={{ padding: '8px 16px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>بحث</button>
         </form>
       </header>
 
@@ -63,6 +69,8 @@ export default function Home() {
 
         {loading ? (
           <p style={{ textAlign: 'center', color: '#a1a1aa', marginTop: '50px' }}>جاري تحميل المحتوى...</p>
+        ) : movies.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#ef4444', marginTop: '50px' }}>لم يتم العثور على نتائج أو أن السيرفر لا يستجيب حالياً.</p>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
             {movies.map((item) => {
@@ -96,7 +104,7 @@ export default function Home() {
           <div style={{ backgroundColor: '#121215', width: '100%', maxWidth: '800px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #27272a', position: 'relative' }}>
             <button 
               onClick={() => setSelectedMovie(null)}
-              style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontWeight: 'bold', zIndex: 10 }}
+              style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontWeight: 'bold', zIndex: 10 }}
             >
               ✕
             </button>
@@ -116,13 +124,7 @@ export default function Home() {
       )}
 
       <footer style={{ borderTop: '1px solid #27272a', padding: '24px 20px', textAlign: 'center', backgroundColor: '#09090b', color: '#71717a', fontSize: '13px', marginTop: '60px' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
-          <p style={{ margin: 0 }}>جميع الحقوق محفوظة © 2026 CINEMA VIBE</p>
-          <div style={{ display: 'flex', gap: '24px' }}>
-            <a href="/privacy" style={{ color: '#f97316', textDecoration: 'none', fontWeight: 'bold' }}>سياسة الخصوصية</a>
-            <a href="/contact" style={{ color: '#f97316', textDecoration: 'none', fontWeight: 'bold' }}>اتصل بنا / اطلب فيلم</a>
-          </div>
-        </div>
+        <p style={{ margin: 0 }}>جميع الحقوق محفوظة © 2026 CINEMA VIBE</p>
       </footer>
     </div>
   );
