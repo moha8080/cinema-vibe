@@ -1,5 +1,92 @@
 import { useState, useEffect } from 'react';
 
+// مكون عرض الشبكة للبطاقات
+function MediaGrid({ items, onSelect }) {
+  if (!items || items.length === 0) {
+    return <p style={{ color: '#a1a1aa', textAlign: 'center', padding: '20px' }}>لا توجد عناوين متاحة حالياً...</p>;
+  }
+
+  return (
+    <div className="media-grid">
+      {items.map((item) => {
+        const title = item.title || item.name;
+        const posterPath = item.poster_path 
+          ? `https://image.tmdb.org/t/p/w500${item.poster_path}` 
+          : 'https://via.placeholder.com/500x750?text=No+Image';
+        const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+        const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+
+        return (
+          <div 
+            key={item.id} 
+            onClick={() => onSelect(item)}
+            style={{ 
+              backgroundColor: '#18181b', 
+              borderRadius: '8px', 
+              overflow: 'hidden', 
+              cursor: 'pointer', 
+              border: '1px solid #27272a',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 10px 20px rgba(249, 115, 22, 0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div style={{ position: 'relative', width: '100%' }} className="poster-img">
+              <img 
+                src={posterPath} 
+                alt={title} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                loading="lazy"
+              />
+              <span style={{ 
+                position: 'absolute', 
+                top: '8px', 
+                left: '8px', 
+                backgroundColor: 'rgba(0, 0, 0, 0.75)', 
+                color: '#f97316', 
+                padding: '2px 6px', 
+                borderRadius: '4px', 
+                fontSize: '11px', 
+                fontWeight: 'bold',
+                backdropFilter: 'blur(4px)'
+              }}>
+                ⭐ {rating}
+              </span>
+            </div>
+            <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1 }}>
+              <h3 style={{ 
+                fontSize: '14px', 
+                fontWeight: 'bold', 
+                margin: '0 0 4px 0', 
+                color: '#fff', 
+                whiteSpace: 'nowrap', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis' 
+              }}>
+                {title}
+              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#a1a1aa' }}>
+                <span>{year}</span>
+                <span style={{ color: '#f97316', fontWeight: 'bold' }}>
+                  {item.media_type === 'tv' || item.first_air_date ? 'مسلسل' : 'فيلم'}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Home() {
   // البيانات الرئيسية
   const [trending, setTrending] = useState([]);
@@ -368,7 +455,7 @@ export default function Home() {
           <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', maxWidth: '600px', margin: '0 auto' }}>
             <input
               type="text"
-              placeholder="Search movies or TV shows..."
+              placeholder="ابحث عن فيلم أو مسلسل..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
@@ -396,7 +483,7 @@ export default function Home() {
               <div>
                 <h2 style={{ margin: 0, color: '#f97316', fontSize: '24px' }}>{selectedMedia.title || selectedMedia.name}</h2>
                 <p style={{ margin: '6px 0 0 0', color: '#a1a1aa', fontSize: '14px' }}>
-                  {(selectedMedia.release_date || selectedMedia.first_air_date || '').slice(0, 4)} | {selectedMedia.vote_average?.toFixed(1)}
+                  {(selectedMedia.release_date || selectedMedia.first_air_date || '').slice(0, 4)} | ⭐ {selectedMedia.vote_average?.toFixed(1)}
                 </p>
               </div>
               
@@ -471,7 +558,7 @@ export default function Home() {
         /* 4. المكتبة الشاملة */
         <div style={{ padding: '20px 24px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '12px', marginBottom: '20px' }}>
-            {activeTab === 'movies' ? 'Movies Library' : 'TV Shows Library'}
+            {activeTab === 'movies' ? 'مكتبة الأفلام' : 'مكتبة المسلسلات'}
           </h2>
 
           <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '24px' }}>
@@ -514,7 +601,7 @@ export default function Home() {
                 opacity: isLoadingMore ? 0.6 : 1
               }}
             >
-              {isLoadingMore ? 'Loading...' : 'عرض المزيد'}
+              {isLoadingMore ? 'جاري التحميل...' : 'عرض المزيد'}
             </button>
           </div>
         </div>
@@ -524,13 +611,13 @@ export default function Home() {
           {heroItem && (
             <div className="hero-banner" style={{ position: 'relative', width: '100%', backgroundImage: `linear-gradient(to top, #09090b 10%, transparent 90%), url(https://image.tmdb.org/t/p/original${heroItem.backdrop_path})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'flex-end', padding: '24px', transition: 'background-image 0.8s ease-in-out' }}>
               <div style={{ maxWidth: '650px', zIndex: 2 }}>
-                <span style={{ backgroundColor: '#f97316', color: '#000', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase' }}>Trending</span>
+                <span style={{ backgroundColor: '#f97316', color: '#000', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase' }}>رائج الآن</span>
                 <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '10px 0', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>{heroItem.title || heroItem.name}</h1>
                 <p style={{ color: '#d4d4d8', fontSize: '13px', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>{heroItem.overview}</p>
                 
                 <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
                   <button onClick={() => openWatchPage(heroItem)} style={{ padding: '10px 22px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>
-                    Watch Now
+                    شاهد الآن
                   </button>
                 </div>
               </div>
@@ -622,10 +709,10 @@ export default function Home() {
               <MediaGrid items={comedyData} onSelect={openWatchPage} />
             </section>
 
-            {/* قائمة أفلام ومسلسلات الغموض والجريمة */}
+            {/* قائمة الغموض */}
             <section style={{ marginBottom: '32px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الغموض والجريمة</h2>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الغموض</h2>
                 <button onClick={() => { setActiveTab('movies'); setSelectedGenre('9648'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
                   عرض المزيد
                 </button>
@@ -633,10 +720,10 @@ export default function Home() {
               <MediaGrid items={mysteryData} onSelect={openWatchPage} />
             </section>
 
-            {/* قائمة أفلام ومسلسلات الرومانسية */}
+            {/* قائمة الرومنسي */}
             <section style={{ marginBottom: '32px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات الرومانسية</h2>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات رومنسية</h2>
                 <button onClick={() => { setActiveTab('movies'); setSelectedGenre('10749'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
                   عرض المزيد
                 </button>
@@ -644,10 +731,10 @@ export default function Home() {
               <MediaGrid items={romanceData} onSelect={openWatchPage} />
             </section>
 
-            {/* قائمة أفلام ومسلسلات المغامرة */}
+            {/* قائمة المغامرة */}
             <section style={{ marginBottom: '32px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات المغامرة والعائلية</h2>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>أفلام ومسلسلات المغامرة</h2>
                 <button onClick={() => { setActiveTab('movies'); setSelectedGenre('12'); }} style={{ backgroundColor: 'transparent', border: '1px solid #f97316', color: '#f97316', padding: '5px 14px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
                   عرض المزيد
                 </button>
@@ -659,55 +746,6 @@ export default function Home() {
         </>
       )}
 
-      {/* Footer */}
-      <footer style={{ borderTop: '1px solid #27272a', padding: '20px', textAlign: 'center', color: '#71717a', fontSize: '12px' }}>
-        © 2026 CINEMA VIBE - All rights reserved
-      </footer>
-    </div>
-  );
-}
-
-// مكون الشبكة العارضة للبطاقات
-function MediaGrid({ items, onSelect }) {
-  return (
-    <div className="media-grid">
-      {items && items.map((item) => {
-        if (!item || !item.poster_path) return null;
-        return (
-          <div
-            key={item.id}
-            onClick={() => onSelect(item)}
-            style={{
-              backgroundColor: '#18181b',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              cursor: 'pointer',
-              border: '1px solid #27272a',
-              transition: 'transform 0.2s, border-color 0.2s',
-            }}
-          >
-            <div style={{ position: 'relative' }}>
-              <img
-                src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
-                alt={item.title || item.name}
-                className="poster-img"
-                style={{ width: '100%', objectFit: 'cover', display: 'block' }}
-              />
-              <span style={{ position: 'absolute', top: '6px', left: '6px', backgroundColor: 'rgba(0,0,0,0.85)', color: '#fbbf24', fontSize: '10px', fontWeight: 'bold', padding: '2px 5px', borderRadius: '3px' }}>
-                {item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}
-              </span>
-            </div>
-            <div style={{ padding: '8px' }}>
-              <h3 style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#f4f4f5' }}>
-                {item.title || item.name}
-              </h3>
-              <p style={{ margin: '4px 0 0 0', fontSize: '10px', color: '#71717a' }}>
-                {(item.release_date || item.first_air_date || '').slice(0, 4)}
-              </p>
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
