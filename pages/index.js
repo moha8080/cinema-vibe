@@ -30,7 +30,8 @@ export default function Home() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [selectedMedia, setSelectedMedia] = useState(null);
   
-  const [selectedServer, setSelectedServer] = useState('vidsrc-cc');
+  // تحديث السيرفر الافتراضي ليطرح مصادر متعددة وقوية
+  const [selectedServer, setSelectedServer] = useState('multiembed');
 
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
@@ -174,7 +175,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [trending]);
 
-  // جلب البيانات عندما يتغير التصنيف في صفحات (الأفلام / المسلسلات)
   useEffect(() => {
     if (activeTab !== 'movies-hub' && activeTab !== 'tv-hub') return;
     
@@ -277,7 +277,7 @@ export default function Home() {
     setSelectedMedia(item);
     setSelectedSeason(1);
     setSelectedEpisode(1);
-    setSelectedServer('vidsrc-cc');
+    setSelectedServer('multiembed'); // البدء بالسيرفر المتعدد الموثوق
     setActiveTab('watch');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -294,30 +294,37 @@ export default function Home() {
 
   const heroItem = trending[heroIndex];
 
+  // دالة توليد روابط السيرفرات القوية التي تحتوي بداخلها على مصادر وسيرفرات متعددة مع دعم الترجمة العربية
   const getEmbedUrl = (media, server) => {
     if (!media) return '';
     const isTv = media.media_type === 'tv' || media.first_air_date;
     const id = media.id;
 
     switch (server) {
-      case 'vidsrc-cc':
-        return isTv ? `https://vidsrc.cc/v2/embed/tv/${id}/${selectedSeason}/${selectedEpisode}?sub.lang=ar` : `https://vidsrc.cc/v2/embed/movie/${id}?sub.lang=ar`;
-      case 'vidsrc-icu':
-        return isTv ? `https://vidsrc.icu/embed/tv/${id}/${selectedSeason}/${selectedEpisode}?sub.lang=ar` : `https://vidsrc.icu/embed/movie/${id}?sub.lang=ar`;
       case 'multiembed':
+        // سيرفر يضم بداخله عدة مصادر تبديل فيديو تلقائية ومترجم
         return `https://multiembed.mov/?video_id=${id}&tmdb=1${isTv ? `&s=${selectedSeason}&e=${selectedEpisode}` : ''}&sub.lang=ar`;
-      case 'player-vid':
-        return isTv ? `https://vidsrc.vip/embed/tv/${id}/${selectedSeason}/${selectedEpisode}?sub.lang=ar` : `https://vidsrc.vip/embed/movie/${id}?sub.lang=ar`;
+      case 'vidsrc-su':
+        // سيرفر رئيسي مشهور يحتوي على مشغل متعدد الخوادم الفرعية بداخله
+        return isTv ? `https://vidsrc.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://vidsrc.su/embed/movie/${id}`;
+      case 'embed-su':
+        return isTv ? `https://embed.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://embed.su/embed/movie/${id}`;
+      case 'vidsrc-xyz':
+        return isTv ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${selectedSeason}&episode=${selectedEpisode}` : `https://vidsrc.xyz/embed/movie?tmdb=${id}`;
+      case '2embed':
+        return isTv ? `https://www.2embed.cc/embedtv/${id}&s=${selectedSeason}&e=${selectedEpisode}` : `https://www.2embed.cc/embed/${id}`;
       default:
-        return isTv ? `https://vidsrc.cc/v2/embed/tv/${id}/${selectedSeason}/${selectedEpisode}?sub.lang=ar` : `https://vidsrc.cc/v2/embed/movie/${id}?sub.lang=ar`;
+        return `https://multiembed.mov/?video_id=${id}&tmdb=1${isTv ? `&s=${selectedSeason}&e=${selectedEpisode}` : ''}&sub.lang=ar`;
     }
   };
 
+  // قائمة السيرفرات المحدثة التي توفر مصادر متعددة وبدائل قوية
   const serversList = [
-    { id: 'vidsrc-cc', name: 'سيرفر فايبر الأساسي' },
-    { id: 'vidsrc-icu', name: 'سيرفر سينما برو' },
-    { id: 'multiembed', name: 'سيرفر متعدد المصادر' },
-    { id: 'player-vid', name: 'سيرفر البديل السريع' }
+    { id: 'multiembed', name: '✨ سيرفر متعدد المصادر (الأفضل)' },
+    { id: 'vidsrc-su', name: '🚀 سيرفر VidSrc Su (سريع جداً)' },
+    { id: 'embed-su', name: '🌐 سيرفر Embed Su (بديل قوي)' },
+    { id: 'vidsrc-xyz', name: '⚡ سيرفر VidSrc Xyz' },
+    { id: '2embed', name: '🔌 سيرفر 2Embed البديل' }
   ];
 
   const HorizontalRow = ({ title, items, rowRef, onSeeMore }) => {
@@ -593,7 +600,7 @@ export default function Home() {
           )}
 
           <div style={{ marginBottom: '16px', backgroundColor: '#121215', padding: '14px 18px', borderRadius: '10px', border: '1px solid #27272a' }}>
-            <span style={{ fontSize: '13px', color: '#a1a1aa', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>اختر سيرفر التشغيل عالي الدقة:</span>
+            <span style={{ fontSize: '13px', color: '#a1a1aa', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>اختر سيرفر أو مصدر التشغيل (إذا واجهتك مشكلة، جرب سيرفر آخر):</span>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {serversList.map((srv) => (
                 <button 
@@ -738,7 +745,7 @@ export default function Home() {
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #09090b 5%, rgba(9,9,11,0.6) 50%, transparent 100%)' }} />
               <div style={{ position: 'absolute', bottom: '24px', right: '24px', left: '24px', maxWidth: '700px' }}>
                 <span style={{ backgroundColor: '#f97316', color: '#000', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block', marginBottom: '8px' }}>
-                  الأكثر شيوعاً اليوم 
+                  الأكثر شيوعاً اليوم 🔥
                 </span>
                 <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#fff', margin: '0 0 8px 0', direction: 'ltr', textAlign: 'left' }}>
                   {heroItem.title || heroItem.name}
