@@ -355,10 +355,10 @@ export default function Home() {
 
   // قائمة السيرفرات الجديدة البديلة النشطة
   const serversList = [
-    { id: 'embedsu', name: 'سيرفر Embed.su (ممتاز وسريع)' },
-    { id: 'twouembed', name: 'سيرفر 2Embed' },
-    { id: 'multiembed', name: 'سيرفر MultiEmbed' },
-    { id: 'smashy', name: 'سيرفر SmashyStream' }
+    { id: 'embedsu', name: 'سيرفر 1' },
+    { id: 'twouembed', name: 'سيرفر 2' },
+    { id: 'multiembed', name: 'سيرفر 3 ' },
+    { id: 'smashy', name: 'سيرفر 4 ' }
   ];
 
   const HorizontalRow = ({ title, items, rowRef, onSeeMore }) => {
