@@ -3,6 +3,23 @@ import Head from 'next/head';
 
 const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
+// قائمة التصنيفات الشاملة (أكثر من 10 تصنيفات مع معرفات TMDB المقابلة للأفلام والمسلسلات)
+const GENRES = [
+  { id: 'all', name: 'الكل / الشائع', movieGenre: '0', tvGenre: '0' },
+  { id: 'action', name: 'أكشن ومغامرة', movieGenre: '28', tvGenre: '10759' },
+  { id: 'drama', name: 'دراما مؤثرة', movieGenre: '18', tvGenre: '18' },
+  { id: 'horror', name: 'رعب وإثارة', movieGenre: '27', tvGenre: '10765' },
+  { id: 'comedy', name: 'كوميديا وضاحكة', movieGenre: '35', tvGenre: '35' },
+  { id: 'scifi', name: 'خيال علمي وفضاء', movieGenre: '878', tvGenre: '10765' },
+  { id: 'crime', name: 'جريمة وتصحيح', movieGenre: '80', tvGenre: '80' },
+  { id: 'mystery', name: 'غموض وتحقيق', movieGenre: '9648', tvGenre: '9648' },
+  { id: 'romance', name: 'رومانسية وعاطفة', movieGenre: '10749', tvGenre: '18' },
+  { id: 'animation', name: 'رسوم متحركة / أنمي', movieGenre: '16', tvGenre: '16' },
+  { id: 'documentary', name: 'وثائقي ومعرفي', movieGenre: '99', tvGenre: '99' },
+  { id: 'family', name: 'عائلي ومغامرات أطفال', movieGenre: '10751', tvGenre: '10762' },
+  { id: 'history', name: 'تاريخ وحروب', movieGenre: '36,10752', tvGenre: '10768' },
+];
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,7 +37,7 @@ export default function Home() {
   const [tvDetails, setTvDetails] = useState(null);
   const [episodesList, setEpisodesList] = useState([]);
 
-  // القوائم المدمجة
+  // القوائم للرئيسية
   const [topRatedMixed, setTopRatedMixed] = useState([]);
   const [actionMixed, setActionMixed] = useState([]);
   const [horrorThrillerMixed, setHorrorThrillerMixed] = useState([]);
@@ -32,7 +49,13 @@ export default function Home() {
   const [oscarsMixed, setOscarsMixed] = useState([]);
   const [thisMonthMixed, setThisMonthMixed] = useState([]);
 
-  // حالات صفحة الكتالوج والصفحات الإضافية
+  // حالات صفحات الأفلام / المسلسلات مع التصنيفات الجانبية
+  const [hubGenre, setHubGenre] = useState('all');
+  const [hubItems, setHubItems] = useState([]);
+  const [hubPage, setHubPage] = useState(1);
+  const [hasMoreHub, setHasMoreHub] = useState(true);
+
+  // حالات الكتالوج العام
   const [catalogTitle, setCatalogTitle] = useState('');
   const [catalogItems, setCatalogItems] = useState([]);
   const [catalogEndpoint, setCatalogEndpoint] = useState('');
@@ -40,7 +63,7 @@ export default function Home() {
   const [catalogPage, setCatalogPage] = useState(1);
   const [hasMoreCatalog, setHasMoreCatalog] = useState(true);
 
-  // مراجع لتحريك الصفوف أفقياً تلقائياً كل 5 ثوانٍ
+  // مراجع للتحريك التلقائي في الرئيسية
   const rowRefs = {
     thisMonth: useRef(null),
     oscars: useRef(null),
@@ -102,7 +125,7 @@ export default function Home() {
     fetchData();
   }, []);
 
-  // تمرير تلقائي للصفوف الأفقية كل 5 ثوانٍ
+  // تمرير تلقائي للصفوف الأفقية في الرئيسية كل 5 ثوانٍ
   useEffect(() => {
     const interval = setInterval(() => {
       Object.values(rowRefs).forEach((ref) => {
@@ -150,6 +173,54 @@ export default function Home() {
     }, 6000);
     return () => clearInterval(interval);
   }, [trending]);
+
+  // جلب البيانات عندما يتغير التصنيف في صفحات (الأفلام / المسلسلات)
+  useEffect(() => {
+    if (activeTab !== 'movies-hub' && activeTab !== 'tv-hub') return;
+    
+    const fetchHubContent = async () => {
+      setHubPage(1);
+      const endpoint = activeTab === 'movies-hub' ? 'movie' : 'tv';
+      const selectedObj = GENRES.find(g => g.id === hubGenre) || GENRES[0];
+      const genreId = activeTab === 'movies-hub' ? selectedObj.movieGenre : selectedObj.tvGenre;
+
+      try {
+        let url = `https://api.themoviedb.org/3/discover/${endpoint}?api_key=${API_KEY}&language=en-US&page=1`;
+        if (genreId && genreId !== '0') {
+          url += `&with_genres=${genreId}`;
+        }
+        const res = await fetch(url);
+        const data = await res.json();
+        setHubItems(data.results || []);
+        setHasMoreHub(data.page < data.total_pages);
+      } catch (err) {
+        console.error('Error fetching hub content:', err);
+      }
+    };
+
+    fetchHubContent();
+  }, [activeTab, hubGenre]);
+
+  const loadMoreHubItems = async () => {
+    const nextPage = hubPage + 1;
+    const endpoint = activeTab === 'movies-hub' ? 'movie' : 'tv';
+    const selectedObj = GENRES.find(g => g.id === hubGenre) || GENRES[0];
+    const genreId = activeTab === 'movies-hub' ? selectedObj.movieGenre : selectedObj.tvGenre;
+
+    try {
+      let url = `https://api.themoviedb.org/3/discover/${endpoint}?api_key=${API_KEY}&language=en-US&page=${nextPage}`;
+      if (genreId && genreId !== '0') {
+        url += `&with_genres=${genreId}`;
+      }
+      const res = await fetch(url);
+      const data = await res.json();
+      setHubItems(prev => [...prev, ...(data.results || [])]);
+      setHubPage(nextPage);
+      setHasMoreHub(nextPage < data.total_pages);
+    } catch (err) {
+      console.error('Error loading more hub items:', err);
+    }
+  };
 
   const openCatalog = async (endpointType, genreId, title) => {
     setCatalogTitle(title);
@@ -338,7 +409,7 @@ export default function Home() {
 
   const MediaGrid = ({ items, onSelect }) => {
     if (!items || items.length === 0) {
-      return <p style={{ color: '#a1a1aa', textAlign: 'center', padding: '20px' }}>لا توجد عناوين متاحة حالياً...</p>;
+      return <p style={{ color: '#a1a1aa', textAlign: 'center', padding: '40px' }}>لا توجد عناوين متاحة لهذا التصنيف حالياً...</p>;
     }
 
     return (
@@ -389,6 +460,45 @@ export default function Home() {
         * { box-sizing: border-box; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* تنسيق متجاوب لتصميم الهับ (أفلام / مسلسلات) مع القائمة الجانبية على اليمين */
+        .hub-container {
+          display: flex;
+          flex-direction: row;
+          gap: 24px;
+          max-width: 1300px;
+          margin: 0 auto;
+          padding: 24px;
+        }
+        .hub-sidebar {
+          width: 240px;
+          min-width: 240px;
+          background-color: #121215;
+          border: 1px solid #27272a;
+          border-radius: 12px;
+          padding: 16px;
+          height: fit-content;
+          position: sticky;
+          top: 80px;
+        }
+        .hub-content {
+          flex: 1;
+          min-width: 0;
+        }
+        @media (max-width: 900px) {
+          .hub-container {
+            flex-direction: column;
+          }
+          .hub-sidebar {
+            width: 100%;
+            position: relative;
+            top: 0;
+            display: flex;
+            overflow-x: auto;
+            gap: 8px;
+            padding: 12px;
+          }
+        }
       `}</style>
 
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(9, 9, 11, 0.95)', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -398,8 +508,8 @@ export default function Home() {
           </h1>
           <div style={{ display: 'flex', gap: '16px', fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap' }}>
             <span style={{ color: activeTab === 'home' && !searchQuery ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('home'); setSearchResults(null); }}>الرئيسية</span>
-            <span style={{ color: activeTab === 'movies-hub' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('movies-hub'); setSearchResults(null); }}>الأفلام</span>
-            <span style={{ color: activeTab === 'tv-hub' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('tv-hub'); setSearchResults(null); }}>المسلسلات</span>
+            <span style={{ color: activeTab === 'movies-hub' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('movies-hub'); setHubGenre('all'); setSearchResults(null); }}>الأفلام</span>
+            <span style={{ color: activeTab === 'tv-hub' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('tv-hub'); setHubGenre('all'); setSearchResults(null); }}>المسلسلات</span>
           </div>
         </div>
         <button 
@@ -507,89 +617,76 @@ export default function Home() {
           </div>
         </div>
       ) : searchResults ? (
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>نتائج البحث</h2>
             <button onClick={() => setSearchResults(null)} style={{ background: 'none', border: 'none', color: '#f97316', cursor: 'pointer', fontWeight: 'bold' }}>إلغاء البحث</button>
           </div>
           <MediaGrid items={searchResults} onSelect={openWatchPage} />
         </div>
-      ) : activeTab === 'movies-hub' ? (
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '22px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0, color: '#fff' }}>قسم الأفلام الشاملة</h2>
-          </div>
-          
-          <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>أفلام الأكشن والمغامرة</h3>
-              <button 
-                onClick={() => openCatalog('movie', '28', 'أفلام الأكشن والمغامرة')}
-                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', padding: '6px 14px', borderRadius: '6px' }}
-              >
-                عرض المزيد
-              </button>
+      ) : activeTab === 'movies-hub' || activeTab === 'tv-hub' ? (
+        <div className="hub-container">
+          {/* القائمة الجانبية للتصنيفات (على اليمين وتتضمن أكثر من 10 تصنيفات) */}
+          <div className="hub-sidebar no-scrollbar">
+            <h3 style={{ fontSize: '15px', color: '#f97316', margin: '0 0 12px 0', borderBottom: '1px solid #27272a', paddingBottom: '8px', fontWeight: 'bold' }}>
+              {activeTab === 'movies-hub' ? 'تصنيفات الأفلام' : 'تصنيفات المسلسلات'}
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {GENRES.map((genre) => {
+                const isSelected = hubGenre === genre.id;
+                return (
+                  <button
+                    key={genre.id}
+                    onClick={() => setHubGenre(genre.id)}
+                    style={{
+                      textAlign: 'right',
+                      background: isSelected ? 'rgba(249, 115, 22, 0.15)' : 'transparent',
+                      border: isSelected ? '1px solid #f97316' : '1px solid transparent',
+                      color: isSelected ? '#f97316' : '#d4d4d8',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      fontWeight: isSelected ? 'bold' : 'normal',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {genre.name}
+                  </button>
+                );
+              })}
             </div>
-            <MediaGrid items={actionMixed.filter(item => item.media_type === 'movie' || !item.first_air_date).slice(0, 10)} onSelect={openWatchPage} />
-          </section>
-
-          <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>أفلام الدراما</h3>
-              <button 
-                onClick={() => openCatalog('movie', '18', 'أفلام الدراما')}
-                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', padding: '6px 14px', borderRadius: '6px' }}
-              >
-                عرض المزيد
-              </button>
-            </div>
-            <MediaGrid items={dramaMixed.filter(item => item.media_type === 'movie' || !item.first_air_date).slice(0, 10)} onSelect={openWatchPage} />
-          </section>
-
-          <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>أفلام الكوميديا</h3>
-              <button 
-                onClick={() => openCatalog('movie', '35', 'أفلام الكوميديا')}
-                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', padding: '6px 14px', borderRadius: '6px' }}
-              >
-                عرض المزيد
-              </button>
-            </div>
-            <MediaGrid items={comedyMixed.filter(item => item.media_type === 'movie' || !item.first_air_date).slice(0, 10)} onSelect={openWatchPage} />
-          </section>
-        </div>
-      ) : activeTab === 'tv-hub' ? (
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '22px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0, color: '#fff' }}>قسم المسلسلات الشاملة</h2>
           </div>
 
-          <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>مسلسلات الدراما</h3>
-              <button 
-                onClick={() => openCatalog('tv', '18', 'مسلسلات الدراما')}
-                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', padding: '6px 14px', borderRadius: '6px' }}
-              >
-                عرض المزيد
-              </button>
-            </div>
-            <MediaGrid items={dramaMixed.filter(item => item.media_type === 'tv' || item.first_air_date).slice(0, 10)} onSelect={openWatchPage} />
-          </section>
+          {/* محتوى الشبكة الرئيسي */}
+          <div className="hub-content">
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', borderRight: '4px solid #f97316', paddingRight: '10px', marginBottom: '20px' }}>
+              {GENRES.find(g => g.id === hubGenre)?.name || 'العروض'}
+            </h2>
 
-          <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>مسلسلات التشويق والإثارة</h3>
-              <button 
-                onClick={() => openCatalog('tv', '10768', 'مسلسلات التشويق والإثارة')}
-                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', padding: '6px 14px', borderRadius: '6px' }}
-              >
-                عرض المزيد
-              </button>
-            </div>
-            <MediaGrid items={suspenseMixed.filter(item => item.media_type === 'tv' || item.first_air_date).slice(0, 10)} onSelect={openWatchPage} />
-          </section>
+            <MediaGrid items={hubItems} onSelect={openWatchPage} />
+
+            {hasMoreHub && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '35px', marginBottom: '20px' }}>
+                <button 
+                  onClick={loadMoreHubItems}
+                  style={{ 
+                    backgroundColor: '#f97316', 
+                    color: '#000', 
+                    border: 'none', 
+                    padding: '12px 32px', 
+                    borderRadius: '8px', 
+                    fontWeight: 'bold', 
+                    fontSize: '15px', 
+                    cursor: 'pointer' 
+                  }}
+                >
+                  عرض المزيد
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       ) : activeTab === 'catalog' ? (
         <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -613,8 +710,7 @@ export default function Home() {
                   borderRadius: '8px', 
                   fontWeight: 'bold', 
                   fontSize: '15px', 
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
+                  cursor: 'pointer'
                 }}
               >
                 عرض المزيد من النتائج
@@ -639,7 +735,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* القوائم الأفقية المتسلسلة والمتحركة تلقائياً، مع زر "عرض المزيد" لكل قائمة */}
+          {/* الترتيب الأساسي والمنسق للالصفحة الرئيسية بالكامل */}
           <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '1200px', margin: '0 auto' }}>
             
             <HorizontalRow 
@@ -694,7 +790,7 @@ export default function Home() {
             <HorizontalRow 
               title="الأكشن والمغامرات" 
               items={actionMixed} 
-              rowRefs={rowRefs.action} 
+              rowRef={rowRefs.action} 
               onSeeMore={() => openCatalog('movie', '28', 'الأكشن والمغامرات')} 
             />
 
