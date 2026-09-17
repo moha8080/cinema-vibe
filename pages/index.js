@@ -1,36 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
-import MaintenancePage from './MaintenancePage'; // <--- أضف هذا السطر هنا
-
-const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
-
-// ==========================================
-// 🛠️ زر الطوارئ:
-// إذا أردت إغلاق الموقع للصيانة: اجعلها true
-// إذا أردت فتح الموقع للجميع: اجعلها false
-// ==========================================
-const MAINTENANCE_MODE = false; 
-const SECRET_ADMIN_KEY = 'my_secret_key_123'; // الكود السري الخاص بك
-
-export default function Home() {
-  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('unlock') === SECRET_ADMIN_KEY) {
-      localStorage.setItem('cinema_admin_unlocked', 'true');
-      setIsAdminUnlocked(true);
-    } else if (localStorage.getItem('cinema_admin_unlocked') === 'true') {
-      setIsAdminUnlocked(true);
-    }
-  }, []);
-
-  if (MAINTENANCE_MODE && !isAdminUnlocked) {
-    return <MaintenancePage />;
-  }
-
-import { useState, useEffect, useRef } from 'react';
-import Head from 'next/head';
 
 const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
