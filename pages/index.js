@@ -146,11 +146,11 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [trending]);
 
-  const openCatalog = async (type, genreId, title) => {
+  const openCatalog = async (endpointType, genreId, title) => {
     setCatalogTitle(title);
     setActiveTab('catalog');
     try {
-      let url = `https://api.themoviedb.org/3/discover/${type}?api_key=${API_KEY}&language=en-US`;
+      let url = `https://api.themoviedb.org/3/discover/${endpointType}?api_key=${API_KEY}&language=en-US`;
       if (genreId && genreId !== '0') {
         url += `&with_genres=${genreId}`;
       }
@@ -223,19 +223,29 @@ export default function Home() {
     { id: 'player-vid', name: 'سيرفر البديل السريع' }
   ];
 
-  // مكون عرض الصف الأفقي الواحد المتناسق
+  // مكون عرض الصف الأفقي الواحد المتناسق مع زر "عرض المزيد" داخل رأس القائمة
   const HorizontalRow = ({ title, items, rowRef, onSeeMore }) => {
     if (!items || items.length === 0) return null;
 
     return (
-      <div style={{ marginBottom: '28px' }}>
+      <div style={{ marginBottom: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingRight: '4px', paddingLeft: '4px' }}>
           <h2 style={{ fontSize: '17px', fontWeight: 'bold', borderRight: '3px solid #f97316', paddingRight: '8px', margin: 0, color: '#fff' }}>
             {title}
           </h2>
           <button 
             onClick={onSeeMore} 
-            style={{ background: 'none', border: 'none', color: '#f97316', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', padding: '4px 8px' }}
+            style={{ 
+              backgroundColor: 'rgba(249, 115, 22, 0.1)', 
+              border: '1px solid #f97316', 
+              color: '#f97316', 
+              fontSize: '12px', 
+              fontWeight: 'bold', 
+              cursor: 'pointer', 
+              padding: '6px 14px',
+              borderRadius: '6px',
+              transition: 'all 0.2s'
+            }}
           >
             عرض المزيد
           </button>
@@ -307,7 +317,7 @@ export default function Home() {
     }
 
     return (
-      <div style={{ display: 'grid', gridTemplateCoordinates: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '14px' }}>
         {items.map((item) => {
           const title = item.title || item.name;
           const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Image';
@@ -535,7 +545,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* القوائم الأفقية المتسلسلة والمتحركة تلقائياً */}
+          {/* القوائم الأفقية المتسلسلة والمتحركة تلقائياً، مع زر "عرض المزيد" لكل قائمة */}
           <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             
             <HorizontalRow 
