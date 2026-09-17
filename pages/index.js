@@ -30,6 +30,7 @@ export default function Home() {
   }
 
   // ... (باقي كود موقعك الطبيعي والأفلام والمسلسلات والتصنيفات كما هو تماماً في الأسفل)
+  
 import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 
