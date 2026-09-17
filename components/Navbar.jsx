@@ -1,6 +1,16 @@
 import React from 'react';
 
-export default function Navbar({ activeTab, setActiveTab, setSearchResults, setSelectedGenre, showSearchModal, setShowSearchModal, searchQuery, setSearchQuery, handleSearch }) {
+export default function Navbar({ 
+  activeTab, 
+  setActiveTab, 
+  setSearchResults, 
+  setSelectedGenre, 
+  showSearchModal, 
+  setShowSearchModal, 
+  searchQuery, 
+  setSearchQuery, 
+  handleSearch 
+}) {
   return (
     <>
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', backgroundColor: 'rgba(9, 9, 11, 0.95)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -21,7 +31,7 @@ export default function Navbar({ activeTab, setActiveTab, setSearchResults, setS
           </div>
         </div>
 
-        {/* أيقونة البحث */}
+        {/* زر فتح واجهة البحث */}
         <button 
           onClick={() => setShowSearchModal(!showSearchModal)}
           style={{ background: 'none', border: 'none', color: '#f4f4f5', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -34,7 +44,7 @@ export default function Navbar({ activeTab, setActiveTab, setSearchResults, setS
         </button>
       </nav>
 
-      {/* مربع البحث */}
+      {/* حقل البحث الفوري */}
       {showSearchModal && (
         <div style={{ padding: '16px 24px', backgroundColor: '#18181b', borderBottom: '1px solid #27272a' }}>
           <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', maxWidth: '600px', margin: '0 auto' }}>
