@@ -55,7 +55,7 @@ export default function Home() {
   const [hubPage, setHubPage] = useState(1);
   const [hasMoreHub, setHasMoreHub] = useState(true);
 
-  // حالات الكتالوج العام
+  // حالات الكتالوج العام (عند الضغط على عرض المزيد في أي قسم بالرئيسية)
   const [catalogTitle, setCatalogTitle] = useState('');
   const [catalogItems, setCatalogItems] = useState([]);
   const [catalogEndpoint, setCatalogEndpoint] = useState('');
@@ -457,17 +457,11 @@ export default function Home() {
         <meta name="keywords" content="سينما فايب, أفلام مترجمة, مسلسلات أونلاين, مشاهدة أفلام, Cinema Vibe, سينما الحارة" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="robots" content="index, follow" />
-        
-        {/* دعم اللغة العربية واتجاه الصفحة */}
         <meta httpEquiv="content-language" content="ar" />
-
-        {/* Open Graph / Social Media Preview (عند مشاركة الرابط في واتساب وتويتر) */}
         <meta property="og:title" content="سينما فايب | Cinema Vibe" />
         <meta property="og:description" content="منصتك المفضلة لمشاهدة أحدث الأفلام والمسلسلات مترجمة أونلاين." />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="ar_AR" />
-
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="سينما فايب | Cinema Vibe" />
         <meta name="twitter:description" content="منصتك المفضلة لمشاهدة أحدث الأفلام والمسلسلات مترجمة أونلاين." />
@@ -479,7 +473,6 @@ export default function Home() {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* تنسيق متجاوب لتصميم الهับ (أفلام / مسلسلات) مع القائمة الجانبية على اليمين */
         .hub-container {
           display: flex;
           flex-direction: row;
@@ -642,9 +635,34 @@ export default function Home() {
           </div>
           <MediaGrid items={searchResults} onSelect={openWatchPage} />
         </div>
+      ) : activeTab === 'catalog' ? (
+        <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: 'bold', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0, color: '#fff' }}>
+              {catalogTitle}
+            </h2>
+            <button 
+              onClick={() => setActiveTab('home')} 
+              style={{ backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
+            >
+              العودة للرئيسية
+            </button>
+          </div>
+          <MediaGrid items={catalogItems} onSelect={openWatchPage} />
+          
+          {hasMoreCatalog && (
+            <div style={{ textAlign: 'center', marginTop: '30px' }}>
+              <button 
+                onClick={loadMoreCatalogItems}
+                style={{ backgroundColor: '#f97316', color: '#000', border: 'none', padding: '12px 28px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+              >
+                تحميل المزيد
+              </button>
+            </div>
+          )}
+        </div>
       ) : activeTab === 'movies-hub' || activeTab === 'tv-hub' ? (
         <div className="hub-container">
-          {/* القائمة الجانبية للتصنيفات (على اليمين وتتضمن أكثر من 10 تصنيفات) */}
           <div className="hub-sidebar no-scrollbar">
             <h3 style={{ fontSize: '15px', color: '#f97316', margin: '0 0 12px 0', borderBottom: '1px solid #27272a', paddingBottom: '8px', fontWeight: 'bold' }}>
               {activeTab === 'movies-hub' ? 'تصنيفات الأفلام' : 'تصنيفات المسلسلات'}
@@ -720,7 +738,7 @@ export default function Home() {
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #09090b 5%, rgba(9,9,11,0.6) 50%, transparent 100%)' }} />
               <div style={{ position: 'absolute', bottom: '24px', right: '24px', left: '24px', maxWidth: '700px' }}>
                 <span style={{ backgroundColor: '#f97316', color: '#000', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block', marginBottom: '8px' }}>
-                  الأكثر شيوعاً اليوم 🔥
+                  الأكثر شيوعاً اليوم 
                 </span>
                 <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#fff', margin: '0 0 8px 0', direction: 'ltr', textAlign: 'left' }}>
                   {heroItem.title || heroItem.name}
