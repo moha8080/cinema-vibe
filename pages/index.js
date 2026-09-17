@@ -515,36 +515,80 @@ export default function Home() {
           <MediaGrid items={searchResults} onSelect={openWatchPage} />
         </div>
       ) : activeTab === 'movies-hub' ? (
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          <h2 style={{ fontSize: '22px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>قسم الأفلام الشاملة</h2>
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '22px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0, color: '#fff' }}>قسم الأفلام الشاملة</h2>
+          </div>
           
           <section>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#fff' }}>أفلام الأكشن والمغامرة</h3>
-            <MediaGrid items={actionMixed.filter(item => item.media_type === 'movie' || !item.first_air_date)} onSelect={openWatchPage} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>أفلام الأكشن والمغامرة</h3>
+              <button 
+                onClick={() => openCatalog('movie', '28', 'أفلام الأكشن والمغامرة')}
+                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', padding: '6px 14px', borderRadius: '6px' }}
+              >
+                عرض المزيد
+              </button>
+            </div>
+            <MediaGrid items={actionMixed.filter(item => item.media_type === 'movie' || !item.first_air_date).slice(0, 10)} onSelect={openWatchPage} />
           </section>
 
           <section>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#fff' }}>أفلام الدراما</h3>
-            <MediaGrid items={dramaMixed.filter(item => item.media_type === 'movie' || !item.first_air_date)} onSelect={openWatchPage} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>أفلام الدراما</h3>
+              <button 
+                onClick={() => openCatalog('movie', '18', 'أفلام الدراما')}
+                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', padding: '6px 14px', borderRadius: '6px' }}
+              >
+                عرض المزيد
+              </button>
+            </div>
+            <MediaGrid items={dramaMixed.filter(item => item.media_type === 'movie' || !item.first_air_date).slice(0, 10)} onSelect={openWatchPage} />
           </section>
 
           <section>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#fff' }}>أفلام الكوميديا</h3>
-            <MediaGrid items={comedyMixed.filter(item => item.media_type === 'movie' || !item.first_air_date)} onSelect={openWatchPage} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>أفلام الكوميديا</h3>
+              <button 
+                onClick={() => openCatalog('movie', '35', 'أفلام الكوميديا')}
+                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', padding: '6px 14px', borderRadius: '6px' }}
+              >
+                عرض المزيد
+              </button>
+            </div>
+            <MediaGrid items={comedyMixed.filter(item => item.media_type === 'movie' || !item.first_air_date).slice(0, 10)} onSelect={openWatchPage} />
           </section>
         </div>
       ) : activeTab === 'tv-hub' ? (
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          <h2 style={{ fontSize: '22px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>قسم المسلسلات الشاملة</h2>
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '22px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0, color: '#fff' }}>قسم المسلسلات الشاملة</h2>
+          </div>
 
           <section>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#fff' }}>مسلسلات الدراما</h3>
-            <MediaGrid items={dramaMixed.filter(item => item.media_type === 'tv' || item.first_air_date)} onSelect={openWatchPage} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>مسلسلات الدراما</h3>
+              <button 
+                onClick={() => openCatalog('tv', '18', 'مسلسلات الدراما')}
+                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', padding: '6px 14px', borderRadius: '6px' }}
+              >
+                عرض المزيد
+              </button>
+            </div>
+            <MediaGrid items={dramaMixed.filter(item => item.media_type === 'tv' || item.first_air_date).slice(0, 10)} onSelect={openWatchPage} />
           </section>
 
           <section>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#fff' }}>مسلسلات التشويق والإثارة</h3>
-            <MediaGrid items={suspenseMixed.filter(item => item.media_type === 'tv' || item.first_air_date)} onSelect={openWatchPage} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>مسلسلات التشويق والإثارة</h3>
+              <button 
+                onClick={() => openCatalog('tv', '10768', 'مسلسلات التشويق والإثارة')}
+                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', padding: '6px 14px', borderRadius: '6px' }}
+              >
+                عرض المزيد
+              </button>
+            </div>
+            <MediaGrid items={suspenseMixed.filter(item => item.media_type === 'tv' || item.first_air_date).slice(0, 10)} onSelect={openWatchPage} />
           </section>
         </div>
       ) : activeTab === 'catalog' ? (
@@ -596,7 +640,7 @@ export default function Home() {
           )}
 
           {/* القوائم الأفقية المتسلسلة والمتحركة تلقائياً، مع زر "عرض المزيد" لكل قائمة */}
-          <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '1200px', margin: '0 auto' }}>
             
             <HorizontalRow 
               title="أفضل الأفلام والمسلسلات هذا الشهر" 
@@ -613,69 +657,64 @@ export default function Home() {
             />
 
             <HorizontalRow 
-              title="أفضل الأعمال تقييماً" 
+              title="الأعلى تقييماً" 
               items={topRatedMixed} 
               rowRef={rowRefs.topRated} 
-              onSeeMore={() => openCatalog('movie', '0', 'أفضل الأعمال تقييماً')} 
+              onSeeMore={() => openCatalog('movie', '0', 'الأعلى تقييماً')} 
             />
 
             <HorizontalRow 
-              title="قائمة الدراما" 
+              title="أفلام ومسلسلات الدراما" 
               items={dramaMixed} 
               rowRef={rowRefs.drama} 
-              onSeeMore={() => openCatalog('movie', '18', 'قائمة الدراما')} 
+              onSeeMore={() => openCatalog('movie', '18', 'أفلام ومسلسلات الدراما')} 
             />
 
             <HorizontalRow 
-              title="قائمة الغموض" 
+              title="أفلام ومسلسلات الغموض" 
               items={mysteryMixed} 
               rowRef={rowRefs.mystery} 
-              onSeeMore={() => openCatalog('movie', '9648', 'قائمة الغموض')} 
+              onSeeMore={() => openCatalog('movie', '9648', 'أفلام ومسلسلات الغموض')} 
             />
 
             <HorizontalRow 
-              title="قائمة الكوميديا" 
+              title="الكوميديا والضحك" 
               items={comedyMixed} 
               rowRef={rowRefs.comedy} 
-              onSeeMore={() => openCatalog('movie', '35', 'قائمة الكوميديا')} 
+              onSeeMore={() => openCatalog('movie', '35', 'الكوميديا والضحك')} 
             />
 
             <HorizontalRow 
-              title="قائمة التشويق والإثارة" 
+              title="الإثارة والتشويق" 
               items={suspenseMixed} 
               rowRef={rowRefs.suspense} 
-              onSeeMore={() => openCatalog('movie', '53', 'قائمة التشويق والإثارة')} 
+              onSeeMore={() => openCatalog('movie', '53', 'الإثارة والتشويق')} 
             />
 
             <HorizontalRow 
-              title="الأكشن والمغامرة" 
+              title="الأكشن والمغامرات" 
               items={actionMixed} 
-              rowRef={rowRefs.action} 
-              onSeeMore={() => openCatalog('movie', '28', 'الأكشن والمغامرة')} 
+              rowRefs={rowRefs.action} 
+              onSeeMore={() => openCatalog('movie', '28', 'الأكشن والمغامرات')} 
             />
 
             <HorizontalRow 
-              title="أفلام ومسلسلات الرعب والإثارة" 
+              title="الرعب والغموض" 
               items={horrorThrillerMixed} 
               rowRef={rowRefs.horror} 
-              onSeeMore={() => openCatalog('movie', '27', 'أفلام ومسلسلات الرعب والإثارة')} 
+              onSeeMore={() => openCatalog('movie', '27', 'الرعب والغموض')} 
             />
 
             <HorizontalRow 
-              title="الخيال العلمي والفانتازيا" 
+              title="خيال علمي ومغامرة" 
               items={sciFiAdventureMixed} 
               rowRef={rowRefs.scifi} 
-              onSeeMore={() => openCatalog('movie', '12,878', 'الخيال العلمي والفانتازيا')} 
+              onSeeMore={() => openCatalog('movie', '878', 'خيال علمي ومغامرة')} 
             />
 
           </div>
         </>
       )}
-
-      <footer style={{ backgroundColor: '#121215', borderTop: '1px solid #27272a', padding: '24px', textAlign: 'center', color: '#a1a1aa', fontSize: '14px', marginTop: '40px' }}>
-        <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: '#f97316' }}>CINEMA VIBE</p>
-        <p style={{ margin: 0 }}>جميع الحقوق محفوظة 2026</p>
-      </footer>
     </div>
   );
 }
