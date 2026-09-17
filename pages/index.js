@@ -32,8 +32,13 @@ export default function Home() {
   const [oscarsMixed, setOscarsMixed] = useState([]);
   const [thisMonthMixed, setThisMonthMixed] = useState([]);
 
+  // حالات صفحة الكتالوج والصفحات الإضافية
   const [catalogTitle, setCatalogTitle] = useState('');
   const [catalogItems, setCatalogItems] = useState([]);
+  const [catalogEndpoint, setCatalogEndpoint] = useState('');
+  const [catalogGenre, setCatalogGenre] = useState('');
+  const [catalogPage, setCatalogPage] = useState(1);
+  const [hasMoreCatalog, setHasMoreCatalog] = useState(true);
 
   // مراجع لتحريك الصفوف أفقياً تلقائياً كل 5 ثوانٍ
   const rowRefs = {
@@ -148,19 +153,40 @@ export default function Home() {
 
   const openCatalog = async (endpointType, genreId, title) => {
     setCatalogTitle(title);
+    setCatalogEndpoint(endpointType);
+    setCatalogGenre(genreId);
+    setCatalogPage(1);
     setActiveTab('catalog');
     try {
-      let url = `https://api.themoviedb.org/3/discover/${endpointType}?api_key=${API_KEY}&language=en-US`;
+      let url = `https://api.themoviedb.org/3/discover/${endpointType}?api_key=${API_KEY}&language=en-US&page=1`;
       if (genreId && genreId !== '0') {
         url += `&with_genres=${genreId}`;
       }
       const res = await fetch(url);
       const data = await res.json();
       setCatalogItems(data.results || []);
+      setHasMoreCatalog(data.page < data.total_pages);
     } catch (err) {
       console.error('Error fetching catalog:', err);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const loadMoreCatalogItems = async () => {
+    const nextPage = catalogPage + 1;
+    try {
+      let url = `https://api.themoviedb.org/3/discover/${catalogEndpoint}?api_key=${API_KEY}&language=en-US&page=${nextPage}`;
+      if (catalogGenre && catalogGenre !== '0') {
+        url += `&with_genres=${catalogGenre}`;
+      }
+      const res = await fetch(url);
+      const data = await res.json();
+      setCatalogItems(prev => [...prev, ...(data.results || [])]);
+      setCatalogPage(nextPage);
+      setHasMoreCatalog(nextPage < data.total_pages);
+    } catch (err) {
+      console.error('Error loading more catalog items:', err);
+    }
   };
 
   const handleSearch = async (e) => {
@@ -223,7 +249,6 @@ export default function Home() {
     { id: 'player-vid', name: 'سيرفر البديل السريع' }
   ];
 
-  // مكون عرض الصف الأفقي الواحد المتناسق مع زر "عرض المزيد" داخل رأس القائمة
   const HorizontalRow = ({ title, items, rowRef, onSeeMore }) => {
     if (!items || items.length === 0) return null;
 
@@ -523,10 +548,35 @@ export default function Home() {
           </section>
         </div>
       ) : activeTab === 'catalog' ? (
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
           <button onClick={() => setActiveTab('home')} style={{ marginBottom: '20px', backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>العودة للرئيسية</button>
-          <h2 style={{ fontSize: '22px', borderRight: '4px solid #f97316', paddingRight: '10px', marginBottom: '20px' }}>{catalogTitle}</h2>
+          
+          <h2 style={{ fontSize: '22px', borderRight: '4px solid #f97316', paddingRight: '10px', marginBottom: '20px', color: '#fff' }}>
+            {catalogTitle}
+          </h2>
+
           <MediaGrid items={catalogItems} onSelect={openWatchPage} />
+
+          {hasMoreCatalog && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '35px', marginBottom: '20px' }}>
+              <button 
+                onClick={loadMoreCatalogItems}
+                style={{ 
+                  backgroundColor: '#f97316', 
+                  color: '#000', 
+                  border: 'none', 
+                  padding: '12px 32px', 
+                  borderRadius: '8px', 
+                  fontWeight: 'bold', 
+                  fontSize: '15px', 
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                عرض المزيد من النتائج
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <>
