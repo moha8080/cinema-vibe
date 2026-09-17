@@ -12,6 +12,7 @@ export default function Home() {
   const [trending, setTrending] = useState([]);
   const [heroIndex, setHeroIndex] = useState(0);
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [selectedServer, setSelectedServer] = useState(1); // نظام السيرفرات المتعددة
 
   const [topMovies, setTopMovies] = useState([]);
   const [popularTv, setPopularTv] = useState([]);
@@ -95,11 +96,31 @@ export default function Home() {
 
   const openWatchPage = (item) => {
     setSelectedMedia(item);
+    setSelectedServer(1); // إعادة ضبط السيرفر الافتراضي عند فتح فيلم جديد
     setActiveTab('watch');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const heroItem = trending[heroIndex];
+
+  // تحديد روابط السيرفرات المختلفة بناءً على نوع العرض (فيلم أو مسلسل)
+  const getEmbedUrl = (media, serverId) => {
+    if (!media) return '';
+    const isTv = media.media_type === 'tv' || media.first_air_date;
+    const type = isTv ? 'tv' : 'movie';
+    const id = media.id;
+
+    switch (serverId) {
+      case 1:
+        return `https://vidsrc.me/embed/${type}?tmdb=${id}&sub.lang=ar`;
+      case 2:
+        return `https://vidsrc.to/embed/${type}/${id}`;
+      case 3:
+        return `https://multiembed.mov/?video_id=${id}&tmdb=1${isTv ? '&s=1&e=1' : ''}`;
+      default:
+        return `https://vidsrc.me/embed/${type}?tmdb=${id}&sub.lang=ar`;
+    }
+  };
 
   const MediaGrid = ({ items, onSelect }) => {
     if (!items || items.length === 0) {
@@ -200,10 +221,37 @@ export default function Home() {
       {activeTab === 'watch' && selectedMedia ? (
         <div style={{ padding: '30px 24px', maxWidth: '1000px', margin: '0 auto' }}>
           <button onClick={() => setActiveTab('home')} style={{ marginBottom: '20px', backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>← العودة للرئيسية</button>
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316', marginBottom: '15px' }}>{selectedMedia.title || selectedMedia.name}</h2>
-          <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden', border: '1px solid #27272a' }}>
-            <iframe src={`https://vidsrc.me/embed/${selectedMedia.media_type === 'tv' || selectedMedia.first_air_date ? 'tv' : 'movie'}?tmdb=${selectedMedia.id}&sub.lang=ar`} style={{ width: '100%', height: '100%', border: 'none' }} allowFullScreen title="مشغل الفيديو" />
+          
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316', marginBottom: '12px' }}>{selectedMedia.title || selectedMedia.name}</h2>
+          
+          {/* أزرار اختيار السيرفرات */}
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '14px', color: '#a1a1aa', fontWeight: 'bold' }}>اختر السيرفر:</span>
+            {[1, 2, 3].map((srv) => (
+              <button 
+                key={srv} 
+                onClick={() => setSelectedServer(srv)}
+                style={{ 
+                  padding: '8px 16px', 
+                  borderRadius: '6px', 
+                  border: 'none', 
+                  fontWeight: 'bold', 
+                  cursor: 'pointer', 
+                  backgroundColor: selectedServer === srv ? '#f97316' : '#27272a',
+                  color: selectedServer === srv ? '#000' : '#fff',
+                  transition: '0.2s'
+                }}
+              >
+                سيرفر {srv} {srv === 1 ? '(رئيسي)' : srv === 2 ? '(احتياطي 1)' : '(احتياطي 2)'}
+              </button>
+            ))}
           </div>
+
+          {/* مشغل الفيديو (Iframe) */}
+          <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden', border: '1px solid #27272a' }}>
+            <iframe src={getEmbedUrl(selectedMedia, selectedServer)} style={{ width: '100%', height: '100%', border: 'none' }} allowFullScreen title="مشغل الفيديو" />
+          </div>
+
           <p style={{ marginTop: '20px', lineHeight: '1.6', color: '#d4d4d8' }}>{selectedMedia.overview}</p>
         </div>
       ) : searchResults ? (
