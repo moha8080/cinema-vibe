@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 
-const API_KEY = 'ضع_مفتاح_التيمديبي_هنا';
+const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('home');
