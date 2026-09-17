@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
-import MaintenancePage from './MaintenancePage'; // استدعاء ملف الصيانة الخارجي
+import MaintenancePage from './MaintenancePage'; // <--- أضف هذا السطر هنا
 
 const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
 // ==========================================
-// 🛠️ زر الطوارئ: اجعلها true لإغلاق الموقع وإظهار صفحة الصيانة للجميع
-// اجعلها false لفتح الموقع والتعديلات للجميع
+// 🛠️ زر الطوارئ:
+// إذا أردت إغلاق الموقع للصيانة: اجعلها true
+// إذا أردت فتح الموقع للجميع: اجعلها false
 // ==========================================
 const MAINTENANCE_MODE = false; 
-const SECRET_ADMIN_KEY = 'my_secret_key_123'; // الكود السري الخاص بك لفتح الموقع لمتصفحك فقط أثناء الصيانة
+const SECRET_ADMIN_KEY = 'my_secret_key_123'; // الكود السري الخاص بك
 
 export default function Home() {
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
@@ -24,12 +25,11 @@ export default function Home() {
     }
   }, []);
 
-  // 🛑 إذا كانت الصيانة مفعلة ولم تفتحها برابطك السري، اعرض ملف الصيانة الخارجي فوراً
+  // <--- أضف هذا الشرط هنا مباشرة قبل باقي الأكواد:
   if (MAINTENANCE_MODE && !isAdminUnlocked) {
     return <MaintenancePage />;
   }
 
- 
 import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 
