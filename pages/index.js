@@ -25,7 +25,6 @@ export default function Home() {
     }
   }, []);
 
-  // <--- أضف هذا الشرط هنا مباشرة قبل باقي الأكواد:
   if (MAINTENANCE_MODE && !isAdminUnlocked) {
     return <MaintenancePage />;
   }
