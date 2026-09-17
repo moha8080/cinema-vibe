@@ -30,8 +30,8 @@ export default function Home() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [selectedMedia, setSelectedMedia] = useState(null);
   
-  // تحديث السيرفر الافتراضي للسيرفرات الأولى
-  const [selectedServer, setSelectedServer] = useState('vidsrc');
+  // تحديث السيرفر الافتراضي للسيرفرات البديلة الجديدة
+  const [selectedServer, setSelectedServer] = useState('embedsu');
 
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
@@ -277,7 +277,7 @@ export default function Home() {
     setSelectedMedia(item);
     setSelectedSeason(1);
     setSelectedEpisode(1);
-    setSelectedServer('vidsrc');
+    setSelectedServer('embedsu');
     setActiveTab('watch');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -294,30 +294,30 @@ export default function Home() {
 
   const heroItem = trending[heroIndex];
 
-  // دالة توليد روابط السيرفرات الأولى التي أضفتها في بداية المشروع
+  // دالة توليد روابط السيرفرات البديلة الجديدة (Embed.su, 2Embed, MultiEmbed, SmashyStream)
   const getEmbedUrl = (media, server) => {
     if (!media) return '';
     const isTv = media.media_type === 'tv' || media.first_air_date;
     const id = media.id;
 
     switch (server) {
-      case 'vidsrc':
-        return isTv ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=${selectedSeason}&episode=${selectedEpisode}` : `https://vidsrc.me/embed/movie?tmdb=${id}`;
-      case '2embed':
+      case 'embedsu':
+        return isTv ? `https://embed.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://embed.su/embed/movie/${id}`;
+      case 'twouembed':
         return isTv ? `https://www.2embed.cc/embedtv/${id}&s=${selectedSeason}&e=${selectedEpisode}` : `https://www.2embed.cc/embed/${id}`;
       case 'multiembed':
         return isTv ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${selectedSeason}&e=${selectedEpisode}` : `https://multiembed.mov/?video_id=${id}&tmdb=1`;
       case 'smashy':
         return isTv ? `https://player.smashy.stream/tv/${id}?s=${selectedSeason}&e=${selectedEpisode}` : `https://player.smashy.stream/movie/${id}`;
       default:
-        return isTv ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=${selectedSeason}&episode=${selectedEpisode}` : `https://vidsrc.me/embed/movie?tmdb=${id}`;
+        return isTv ? `https://embed.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://embed.su/embed/movie/${id}`;
     }
   };
 
-  // قائمة السيرفرات الأولى الأصلية
+  // قائمة السيرفرات الجديدة البديلة النشطة
   const serversList = [
-    { id: 'vidsrc', name: 'سيرفر VidSrc' },
-    { id: '2embed', name: 'سيرفر 2Embed' },
+    { id: 'embedsu', name: 'سيرفر Embed.su (ممتاز وسريع)' },
+    { id: 'twouembed', name: 'سيرفر 2Embed' },
     { id: 'multiembed', name: 'سيرفر MultiEmbed' },
     { id: 'smashy', name: 'سيرفر SmashyStream' }
   ];
@@ -456,17 +456,7 @@ export default function Home() {
       <Head>
         <title>سينما فايب | مشاهدة أحدث الأفلام والمسلسلات مترجمة اونلاين</title>
         <meta name="description" content="استمتع بمشاهدة وتحميل أحدث الأفلام والمسلسلات العربية والعالمية بجودات عالية مترجمة حصرياً على سينما فايب - Cinema Vibe." />
-        <meta name="keywords" content="سينما فايب, أفلام مترجمة, مسلسلات أونلاين, مشاهدة أفلام, Cinema Vibe, سينما الحارة" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="robots" content="index, follow" />
-        <meta httpEquiv="content-language" content="ar" />
-        <meta property="og:title" content="سينما فايب | Cinema Vibe" />
-        <meta property="og:description" content="منصتك المفضلة لمشاهدة أحدث الأفلام والمسلسلات مترجمة أونلاين." />
-        <meta property="og:type" content="website" />
-        <meta property="og:locale" content="ar_AR" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="سينما فايب | Cinema Vibe" />
-        <meta name="twitter:description" content="منصتك المفضلة لمشاهدة أحدث الأفلام والمسلسلات مترجمة أونلاين." />
       </Head>
 
       <style jsx global>{`
