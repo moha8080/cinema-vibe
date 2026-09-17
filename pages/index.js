@@ -1,5 +1,37 @@
 import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
+import MaintenancePage from './MaintenancePage'; // استدعاء ملف الصيانة الخارجي
+
+const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
+
+// ==========================================
+// 🛠️ زر الطوارئ: اجعلها true لإغلاق الموقع وإظهار صفحة الصيانة للجميع
+// اجعلها false لفتح الموقع والتعديلات للجميع
+// ==========================================
+const MAINTENANCE_MODE = false; 
+const SECRET_ADMIN_KEY = 'my_secret_key_123'; // الكود السري الخاص بك لفتح الموقع لمتصفحك فقط أثناء الصيانة
+
+export default function Home() {
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('unlock') === SECRET_ADMIN_KEY) {
+      localStorage.setItem('cinema_admin_unlocked', 'true');
+      setIsAdminUnlocked(true);
+    } else if (localStorage.getItem('cinema_admin_unlocked') === 'true') {
+      setIsAdminUnlocked(true);
+    }
+  }, []);
+
+  // 🛑 إذا كانت الصيانة مفعلة ولم تفتحها برابطك السري، اعرض ملف الصيانة الخارجي فوراً
+  if (MAINTENANCE_MODE && !isAdminUnlocked) {
+    return <MaintenancePage />;
+  }
+
+  // ... (باقي كود موقعك الطبيعي والأفلام والمسلسلات والتصنيفات كما هو تماماً في الأسفل)
+import { useState, useEffect, useRef } from 'react';
+import Head from 'next/head';
 
 const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
