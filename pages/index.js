@@ -26,16 +26,10 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState(null);
   const [showSearchModal, setShowSearchModal] = useState(false);
   
-  // حالات ميزة "اختر سهرة اليوم"
-  const [showNightPickerModal, setShowNightPickerModal] = useState(false);
-  const [nightMediaType, setNightMediaType] = useState('movie'); // 'movie' or 'tv'
-  const [nightGenreId, setNightGenreId] = useState('all');
-  const [nightPickedItem, setNightPickedItem] = useState(null);
-  const [nightLoading, setNightLoading] = useState(false);
-  
   const [trending, setTrending] = useState([]);
   const [heroIndex, setHeroIndex] = useState(0);
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [mediaExtendedDetails, setMediaExtendedDetails] = useState(null);
   
   // تحديث السيرفر الافتراضي للسيرفرات البديلة الجديدة
   const [selectedServer, setSelectedServer] = useState('embedsu');
@@ -132,37 +126,6 @@ export default function Home() {
 
     fetchData();
   }, []);
-
-  // دالة اختيار سهرة اليوم (فيلم أو مسلسل بناءً على التصنيف المختار)
-  const pickNightMedia = async () => {
-    setNightLoading(true);
-    setNightPickedItem(null);
-    try {
-      const selectedObj = GENRES.find(g => g.id === nightGenreId) || GENRES[0];
-      const genreId = nightMediaType === 'movie' ? selectedObj.movieGenre : selectedObj.tvGenre;
-      
-      let url = `https://api.themoviedb.org/3/discover/${nightMediaType}?api_key=${API_KEY}&language=en-US&sort_by=vote_average.desc&vote_count.gte=500&page=1`;
-      if (genreId && genreId !== '0') {
-        url += `&with_genres=${genreId}`;
-      }
-
-      const res = await fetch(url);
-      const data = await res.json();
-      const results = data.results || [];
-
-      if (results.length > 0) {
-        // اختيار عشوائي من بين أفضل النتائج تقييماً
-        const randomIndex = Math.floor(Math.random() * Math.min(results.length, 15));
-        const picked = results[randomIndex];
-        // تعيين نوع الميديا صراحة لضمان عمل المشغل
-        setNightPickedItem({ ...picked, media_type: nightMediaType });
-      }
-    } catch (err) {
-      console.error('Error picking night media:', err);
-    } finally {
-      setNightLoading(false);
-    }
-  };
 
   // تمرير تلقائي للصفوف الأفقية في الرئيسية كل 5 ثوانٍ
   useEffect(() => {
@@ -317,23 +280,40 @@ export default function Home() {
     setSelectedEpisode(1);
     setSelectedServer('embedsu');
     setActiveTab('watch');
-    setShowNightPickerModal(false);
+    setMediaExtendedDetails(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
+    const isTv = item.media_type === 'tv' || item.first_air_date;
+    const mediaType = isTv ? 'tv' : 'movie';
+
     try {
-      const res = await fetch(`https://api.themoviedb.org/3/${item.media_type || (item.first_air_date ? 'tv' : 'movie')}/${item.id}?api_key=${API_KEY}&language=ar-SA`);
-      const data = await res.json();
+      // جلب التفاصيل الكاملة متضمنة الطاقم والمخرجين والبلد والوصف بالعربية
+      const [detailsRes, creditsRes] = await Promise.all([
+        fetch(`https://api.themoviedb.org/3/${mediaType}/${item.id}?api_key=${API_KEY}&language=ar-SA`),
+        fetch(`https://api.themoviedb.org/3/${mediaType}/${item.id}/credits?api_key=${API_KEY}&language=en-US`)
+      ]);
+      
+      const data = await detailsRes.json();
+      const creditsData = await creditsRes.json();
+
       if (data.overview) {
         setSelectedMedia(prev => ({ ...prev, overview: data.overview }));
       }
+      
+      setMediaExtendedDetails({
+        ...data,
+        cast: creditsData.cast || [],
+        crew: creditsData.crew || []
+      });
+
     } catch (err) {
-      console.error('Error fetching arabic overview:', err);
+      console.error('Error fetching extended details:', err);
     }
   };
 
   const heroItem = trending[heroIndex];
 
-  // دالة توليد روابط السيرفرات البديلة الجديدة (Embed.su, 2Embed, MultiEmbed, SmashyStream)
+  // دالة توليد روابط السيرفرات البديلة الجديدة
   const getEmbedUrl = (media, server) => {
     if (!media) return '';
     const isTv = media.media_type === 'tv' || media.first_air_date;
@@ -353,12 +333,11 @@ export default function Home() {
     }
   };
 
-  // قائمة السيرفرات الجديدة البديلة النشطة
   const serversList = [
-    { id: 'embedsu', name: 'سيرفر 1' },
-    { id: 'twouembed', name: 'سيرفر 2' },
-    { id: 'multiembed', name: 'سيرفر 3 ' },
-    { id: 'smashy', name: 'سيرفر 4 ' }
+    { id: 'embedsu', name: 'سيرفر Embed.su (ممتاز وسريع)' },
+    { id: 'twouembed', name: 'سيرفر 2Embed' },
+    { id: 'multiembed', name: 'سيرفر MultiEmbed' },
+    { id: 'smashy', name: 'سيرفر SmashyStream' }
   ];
 
   const HorizontalRow = ({ title, items, rowRef, onSeeMore }) => {
@@ -554,122 +533,14 @@ export default function Home() {
             <span style={{ color: activeTab === 'tv-hub' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('tv-hub'); setHubGenre('all'); setSearchResults(null); }}>المسلسلات</span>
           </div>
         </div>
-
-        {/* أزرار التحكم (اختر سهرة اليوم + زر البحث) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button
-            onClick={() => {
-              setShowNightPickerModal(true);
-              if (!nightPickedItem) pickNightMedia();
-            }}
-            style={{ 
-              backgroundColor: 'rgba(249, 115, 22, 0.15)', 
-              border: '1px solid #f97316', 
-              color: '#f97316', 
-              fontSize: '13px', 
-              fontWeight: 'bold', 
-              padding: '7px 14px', 
-              borderRadius: '20px', 
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <span>🍿</span> سهرة اليوم من اختيارنا
-          </button>
-
-          <button 
-            onClick={() => setShowSearchModal(!showSearchModal)} 
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: '38px', height: '38px', minWidth: '38px', color: '#f97316', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-            aria-label="Search"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </button>
-        </div>
+        <button 
+          onClick={() => setShowSearchModal(!showSearchModal)} 
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: '38px', height: '38px', minWidth: '38px', color: '#f97316', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          aria-label="Search"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
       </nav>
-
-      {/* نافذة اختيار سهرة اليوم (Night Picker Modal) */}
-      {showNightPickerModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ backgroundColor: '#121215', border: '1px solid #27272a', borderRadius: '14px', width: '100%', maxWidth: '450px', padding: '24px', position: 'relative', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', color: '#f97316', fontWeight: 'bold' }}>✨ محتار وش تتابع الليلة؟</h3>
-              <button onClick={() => setShowNightPickerModal(false)} style={{ background: 'none', border: 'none', color: '#a1a1aa', fontSize: '18px', cursor: 'pointer' }}>✕</button>
-            </div>
-
-            <p style={{ fontSize: '13px', color: '#a1a1aa', marginBottom: '16px' }}>حدد النوع والتصنيف ودعنا نرشح لك أفضل عمل تقييماً للمشاهدة الآن:</p>
-
-            {/* خيار نوع المحتوى (فيلم / مسلسل) */}
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
-              <button 
-                onClick={() => setNightMediaType('movie')}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: nightMediaType === 'movie' ? '1px solid #f97316' : '1px solid #27272a', backgroundColor: nightMediaType === 'movie' ? 'rgba(249,115,22,0.15)' : '#18181b', color: nightMediaType === 'movie' ? '#f97316' : '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}
-              >
-                🎬 فيلم سهرة
-              </button>
-              <button 
-                onClick={() => setNightMediaType('tv')}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: nightMediaType === 'tv' ? '1px solid #f97316' : '1px solid #27272a', backgroundColor: nightMediaType === 'tv' ? 'rgba(249,115,22,0.15)' : '#18181b', color: nightMediaType === 'tv' ? '#f97316' : '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}
-              >
-                📺 مسلسل سهرة
-              </button>
-            </div>
-
-            {/* خيار التصنيف */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ fontSize: '12px', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>اختر المزاج أو التصنيف:</label>
-              <select 
-                value={nightGenreId} 
-                onChange={(e) => setNightGenreId(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px', backgroundColor: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '8px', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
-              >
-                {GENRES.map(g => (
-                  <option key={g.id} value={g.id}>{g.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* زر توليد الترشيح */}
-            <button 
-              onClick={pickNightMedia}
-              disabled={nightLoading}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: '#f97316', color: '#000', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', marginBottom: '16px' }}
-            >
-              {nightLoading ? 'جاري البحث عن السهرة المثالية...' : '🎲 اختر لي سهرة الآن'}
-            </button>
-
-            {/* عرض النتيجة المرشحة إذا وجدت */}
-            {nightPickedItem && (
-              <div style={{ display: 'flex', gap: '12px', backgroundColor: '#18181b', padding: '12px', borderRadius: '10px', border: '1px solid #3f3f46', alignItems: 'center' }}>
-                <img 
-                  src={nightPickedItem.poster_path ? `https://image.tmdb.org/t/p/w500${nightPickedItem.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Image'} 
-                  alt={nightPickedItem.title || nightPickedItem.name} 
-                  style={{ width: '60px', height: '85px', objectFit: 'cover', borderRadius: '6px' }} 
-                />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', direction: 'ltr', textAlign: 'left' }}>
-                    {nightPickedItem.title || nightPickedItem.name}
-                  </h4>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#eab308', marginBottom: '8px' }}>
-                    <span>★ {nightPickedItem.vote_average ? nightPickedItem.vote_average.toFixed(1) : 'N/A'}</span>
-                    <span style={{ color: '#a1a1aa' }}>• {(nightPickedItem.release_date || nightPickedItem.first_air_date || '').slice(0, 4)}</span>
-                  </div>
-                  <button 
-                    onClick={() => openWatchPage(nightPickedItem)}
-                    style={{ padding: '6px 12px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
-                  >
-                    شاهد الآن 🎬
-                  </button>
-                </div>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
 
       {showSearchModal && (
         <div style={{ padding: '16px 24px', backgroundColor: '#18181b', borderBottom: '1px solid #27272a' }}>
@@ -681,10 +552,10 @@ export default function Home() {
       )}
 
       {activeTab === 'watch' && selectedMedia ? (
-        <div style={{ padding: '30px 24px', maxWidth: '1000px', margin: '0 auto' }}>
-          <button onClick={() => setActiveTab('home')} style={{ marginBottom: '20px', backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>العودة للرئيسية</button>
+        <div style={{ padding: '30px 16px', maxWidth: '1000px', margin: '0 auto' }}>
+          <button onClick={() => setActiveTab('home')} style={{ marginBottom: '20px', backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}>العودة للرئيسية</button>
           
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316', marginBottom: '16px', direction: 'ltr', textAlign: 'left' }}>
+          <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#f97316', marginBottom: '16px', direction: 'ltr', textAlign: 'left' }}>
             {selectedMedia.title || selectedMedia.name}
           </h2>
 
@@ -759,11 +630,95 @@ export default function Home() {
             <iframe src={getEmbedUrl(selectedMedia, selectedServer)} style={{ width: '100%', height: '100%', border: 'none' }} allowFullScreen title="مشغل الفيديو" />
           </div>
 
-          <div style={{ marginTop: '20px', backgroundColor: '#121215', padding: '18px', borderRadius: '10px', border: '1px solid #27272a' }}>
-            <h3 style={{ fontSize: '15px', color: '#f97316', margin: '0 0 8px 0', fontWeight: 'bold' }}>قصة العمل:</h3>
-            <p style={{ margin: 0, lineHeight: '1.7', color: '#d4d4d8', fontSize: '14px' }}>
-              {selectedMedia.overview || 'لا يتوفر وصف تفصيلي حالياً لهذا العنوان باللغة العربية.'}
-            </p>
+          {/* صندوق المعلومات والمواصفات التفصيلية الجديدة والمطورة */}
+          <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+            
+            {/* القصة والنبذة */}
+            <div style={{ backgroundColor: '#121215', padding: '20px', borderRadius: '12px', border: '1px solid #27272a', gridColumn: '1 / -1' }}>
+              <h3 style={{ fontSize: '16px', color: '#f97316', margin: '0 0 10px 0', fontWeight: 'bold' }}>قصة العمل:</h3>
+              <p style={{ margin: 0, lineHeight: '1.8', color: '#d4d4d8', fontSize: '14px' }}>
+                {selectedMedia.overview || 'لا يتوفر وصف تفصيلي حالياً لهذا العنوان باللغة العربية.'}
+              </p>
+            </div>
+
+            {/* بطاقة المواصفات الفنية والبيانات */}
+            <div style={{ backgroundColor: '#121215', padding: '20px', borderRadius: '12px', border: '1px solid #27272a', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h3 style={{ fontSize: '16px', color: '#f97316', margin: '0 0 4px 0', fontWeight: 'bold' }}>المواصفات والبيانات:</h3>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderBottom: '1px solid #27272a', paddingBottom: '8px' }}>
+                <span style={{ color: '#a1a1aa' }}>اسم العمل:</span>
+                <span style={{ color: '#fff', fontWeight: 'bold', direction: 'ltr' }}>{selectedMedia.title || selectedMedia.name}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderBottom: '1px solid #27272a', paddingBottom: '8px' }}>
+                <span style={{ color: '#a1a1aa' }}>نوع العمل:</span>
+                <span style={{ color: '#f97316', fontWeight: 'bold' }}>{selectedMedia.media_type === 'tv' || selectedMedia.first_air_date ? 'مسلسل تلفزيوني' : 'فيلم سينمائي'}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderBottom: '1px solid #27272a', paddingBottom: '8px' }}>
+                <span style={{ color: '#a1a1aa' }}>مدة العرض:</span>
+                <span style={{ color: '#fff' }}>
+                  {mediaExtendedDetails?.runtime ? `${mediaExtendedDetails.runtime} دقيقة` : (mediaExtendedDetails?.episode_run_time?.[0] ? `${mediaExtendedDetails.episode_run_time[0]} دقيقة للحلقة` : 'غير متوفر')}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderBottom: '1px solid #27272a', paddingBottom: '8px' }}>
+                <span style={{ color: '#a1a1aa' }}>جودة الدقة:</span>
+                <span style={{ color: '#10b981', fontWeight: 'bold', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>1080p FHD (عالية الدقة)</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderBottom: '1px solid #27272a', paddingBottom: '8px' }}>
+                <span style={{ color: '#a1a1aa' }}>تاريخ الإصدار:</span>
+                <span style={{ color: '#fff' }}>{selectedMedia.release_date || selectedMedia.first_air_date || 'غير محدد'}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderBottom: '1px solid #27272a', paddingBottom: '8px' }}>
+                <span style={{ color: '#a1a1aa' }}>بلد الإنتاج:</span>
+                <span style={{ color: '#fff' }}>
+                  {mediaExtendedDetails?.production_countries?.map(c => c.name).join(', ') || 'عالمي'}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                <span style={{ color: '#a1a1aa' }}>التصنيف النوعي:</span>
+                <span style={{ color: '#f97316' }}>
+                  {mediaExtendedDetails?.genres?.map(g => g.name).join('، ') || 'متنوع'}
+                </span>
+              </div>
+            </div>
+
+            {/* بطاقة طاقم العمل (الممثلين، المخرجين، والمؤلفين) */}
+            <div style={{ backgroundColor: '#121215', padding: '20px', borderRadius: '12px', border: '1px solid #27272a', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <h3 style={{ fontSize: '16px', color: '#f97316', margin: '0 0 4px 0', fontWeight: 'bold' }}>طاقم العمل والإنتاج:</h3>
+
+              <div>
+                <span style={{ fontSize: '13px', color: '#a1a1aa', display: 'block', marginBottom: '4px' }}>المخرجون / المؤلفون:</span>
+                <p style={{ margin: 0, fontSize: '14px', color: '#fff' }}>
+                  {mediaExtendedDetails?.crew ? 
+                    mediaExtendedDetails.crew
+                      .filter(person => ['Director', 'Writer', 'Creator', 'Screenplay'].includes(person.job))
+                      .slice(0, 3)
+                      .map(p => p.name)
+                      .join('، ') || 'غير متوفر'
+                    : 'جاري التحميل...'}
+                </p>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '13px', color: '#a1a1aa', display: 'block', marginBottom: '6px' }}>أبرز الممثلين:</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {mediaExtendedDetails?.cast ? 
+                    mediaExtendedDetails.cast.slice(0, 5).map(actor => (
+                      <span key={actor.id} style={{ backgroundColor: '#1f1f23', border: '1px solid #27272a', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', color: '#e4e4e7' }}>
+                        {actor.name}
+                      </span>
+                    ))
+                    : <span style={{ color: '#fff', fontSize: '14px' }}>جاري التحميل...</span>}
+                </div>
+              </div>
+
+            </div>
+
           </div>
         </div>
       ) : searchResults ? (
@@ -789,10 +744,11 @@ export default function Home() {
                     backgroundColor: hubGenre === g.id ? '#f97316' : 'transparent',
                     color: hubGenre === g.id ? '#000' : '#d4d4d8',
                     border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '13px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
                     fontWeight: hubGenre === g.id ? 'bold' : 'normal',
-                    cursor: 'pointer'
+                    fontSize: '13px',
+                    transition: 'all 0.2s'
                   }}
                 >
                   {g.name}
@@ -801,13 +757,13 @@ export default function Home() {
             </div>
           </div>
           <div className="hub-content">
-            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', marginBottom: '20px', borderRight: '4px solid #f97316', paddingRight: '10px' }}>
-              {activeTab === 'movies-hub' ? 'قسم الأفلام' : 'قسم المسلسلات'} - {GENRES.find(g => g.id === hubGenre)?.name}
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', borderRight: '4px solid #f97316', paddingRight: '10px' }}>
+              {activeTab === 'movies-hub' ? 'قائمة الأفلام' : 'قائمة المسلسلات'} ({GENRES.find(g => g.id === hubGenre)?.name || ''})
             </h2>
             <MediaGrid items={hubItems} onSelect={openWatchPage} />
             {hasMoreHub && (
               <div style={{ textAlign: 'center', marginTop: '30px' }}>
-                <button onClick={loadMoreHubItems} style={{ padding: '12px 28px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>
+                <button onClick={loadMoreHubItems} style={{ padding: '10px 24px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>
                   تحميل المزيد
                 </button>
               </div>
@@ -817,13 +773,13 @@ export default function Home() {
       ) : activeTab === 'catalog' ? (
         <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0, color: '#fff' }}>{catalogTitle}</h2>
-            <button onClick={() => setActiveTab('home')} style={{ backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>العودة للرئيسية</button>
+            <h2 style={{ fontSize: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>{catalogTitle}</h2>
+            <button onClick={() => setActiveTab('home')} style={{ background: 'none', border: 'none', color: '#f97316', cursor: 'pointer', fontWeight: 'bold' }}>العودة للرئيسية</button>
           </div>
           <MediaGrid items={catalogItems} onSelect={openWatchPage} />
           {hasMoreCatalog && (
             <div style={{ textAlign: 'center', marginTop: '30px' }}>
-              <button onClick={loadMoreCatalogItems} style={{ padding: '12px 28px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>
+              <button onClick={loadMoreCatalogItems} style={{ padding: '10px 24px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>
                 تحميل المزيد
               </button>
             </div>
@@ -831,52 +787,43 @@ export default function Home() {
         </div>
       ) : (
         <div>
-          {/* قسم الـ Hero الرئيسي المتحرك */}
+          {/* قسم الـ Hero المتحرك */}
           {heroItem && (
-            <div style={{ position: 'relative', width: '100%', height: '480px', overflow: 'hidden', backgroundColor: '#000' }}>
+            <div style={{ position: 'relative', width: '100%', height: '420px', backgroundColor: '#000', overflow: 'hidden' }}>
               <img 
-                src={heroItem.backdrop_path ? `https://image.tmdb.org/t/p/original${heroItem.backdrop_path}` : 'https://via.placeholder.com/1280x720?text=No+Image'} 
+                src={`https://image.tmdb.org/t/p/original${heroItem.backdrop_path || heroItem.poster_path}`} 
                 alt={heroItem.title || heroItem.name} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.55 }} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.45 }} 
               />
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '70%', background: 'linear-gradient(to top, #09090b, transparent)', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', maxWidth: '1200px', margin: '0 auto' }}>
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px', background: 'linear-gradient(to top, #09090b 10%, rgba(9,9,11,0.8) 50%, transparent 100%)' }}>
                 <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#fff', margin: '0 0 8px 0', direction: 'ltr', textAlign: 'left' }}>
                   {heroItem.title || heroItem.name}
                 </h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', fontSize: '13px' }}>
-                  <span style={{ color: '#eab308', fontWeight: 'bold' }}>★ {heroItem.vote_average ? heroItem.vote_average.toFixed(1) : 'N/A'}</span>
-                  <span style={{ color: '#a1a1aa' }}>• {(heroItem.release_date || heroItem.first_air_date || '').slice(0, 4)}</span>
-                  <span style={{ backgroundColor: '#f97316', color: '#000', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '11px' }}>
-                    {heroItem.media_type === 'tv' || heroItem.first_air_date ? 'مسلسل' : 'فيلم'}
-                  </span>
-                </div>
-                <p style={{ color: '#d4d4d8', fontSize: '14px', maxWidth: '700px', margin: '0 0 16px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                <p style={{ fontSize: '13px', color: '#d4d4d8', maxWidth: '600px', margin: '0 0 16px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {heroItem.overview}
                 </p>
-                <div>
-                  <button 
-                    onClick={() => openWatchPage(heroItem)}
-                    style={{ backgroundColor: '#f97316', color: '#000', border: 'none', padding: '10px 24px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                  >
-                    ▶ مشاهدة الآن
-                  </button>
-                </div>
+                <button 
+                  onClick={() => openWatchPage(heroItem)}
+                  style={{ backgroundColor: '#f97316', color: '#000', border: 'none', padding: '10px 24px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
+                >
+                  مشاهدة الآن
+                </button>
               </div>
             </div>
           )}
 
-          {/* صفوف المحتوى الأفقية */}
+          {/* محتوى الصفوف الأفقية */}
           <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '24px' }}>
-            <HorizontalRow title="افضل الافلام والمسلسلات لهذا الشهر" items={thisMonthMixed} rowRef={rowRefs.thisMonth} onSeeMore={() => openCatalog('movie', '0', 'أحدث إصدارات الشهر')} />
-            <HorizontalRow title="الأعمال الفائزة بالأوسكار والجوائز الكبرى" items={oscarsMixed} rowRef={rowRefs.oscars} onSeeMore={() => openCatalog('movie', '18,36', 'الأعمال الحائزة على جوائز')} />
-            <HorizontalRow title="الأعلى تقييماً  " items={topRatedMixed} rowRef={rowRefs.topRated} onSeeMore={() => openCatalog('movie', '0', 'الأعلى تقييماً')} />
-            <HorizontalRow title="دراما مؤثرة " items={dramaMixed} rowRef={rowRefs.drama} onSeeMore={() => openCatalog('movie', '18', 'قسم الدراما')} />
-            <HorizontalRow title="غموض وتحقيق" items={mysteryMixed} rowRef={rowRefs.mystery} onSeeMore={() => openCatalog('movie', '9648', 'غموض وتحقيق')} />
-            <HorizontalRow title="كوميديا  " items={comedyMixed} rowRef={rowRefs.comedy} onSeeMore={() => openCatalog('movie', '35', 'كوميديا وضاحكة')} />
-            <HorizontalRow title="إثارة وتشويق  " items={suspenseMixed} rowRef={rowRefs.suspense} onSeeMore={() => openCatalog('movie', '53', 'إثارة وتشويق')} />
-            <HorizontalRow title="أكشن ومغامرات " items={actionMixed} rowRef={rowRefs.action} onSeeMore={() => openCatalog('movie', '28', 'أكشن ومغامرة')} />
-            <HorizontalRow title="رعب وقصص مخيفة" items={horrorThrillerMixed} rowRef={rowRefs.horror} onSeeMore={() => openCatalog('movie', '27', 'رعب وإثارة')} />
-            <HorizontalRow title="خيال علمي  " items={sciFiAdventureMixed} rowRef={rowRefs.scifi} onSeeMore={() => openCatalog('movie', '878', 'خيال علمي')} />
+            <HorizontalRow title="يُعرض هذا الشهر (أحدث الإصدارات)" items={thisMonthMixed} rowRef={rowRefs.thisMonth} onSeeMore={() => openCatalog('movie', '0', 'أحدث الإصدارات لهذا الشهر')} />
+            <HorizontalRow title="ترشيحات الأوسكار والقصص الملهمة" items={oscarsMixed} rowRef={rowRefs.oscars} onSeeMore={() => openCatalog('movie', '18,36', 'ترشيحات الأوسكار والقصص الملهمة')} />
+            <HorizontalRow title="الأعلى تقييماً وشهرة" items={topRatedMixed} rowRef={rowRefs.topRated} onSeeMore={() => openCatalog('movie', '0', 'الأعلى تقييماً وشهرة')} />
+            <HorizontalRow title="أفلام ومسلسلات الدراما المؤثرة" items={dramaMixed} rowRef={rowRefs.drama} onSeeMore={() => openCatalog('movie', '18', 'الدراما المؤثرة')} />
+            <HorizontalRow title="الغموض والتحقيق المثير" items={mysteryMixed} rowRef={rowRefs.mystery} onSeeMore={() => openCatalog('movie', '9648', 'غموض وتحقيق')} />
+            <HorizontalRow title="الكوميديا والضحك" items={comedyMixed} rowRef={rowRefs.comedy} onSeeMore={() => openCatalog('movie', '35', 'كوميديا وضاحكة')} />
+            <HorizontalRow title="الإثارة والتشويق العالي" items={suspenseMixed} rowRef={rowRefs.suspense} onSeeMore={() => openCatalog('movie', '53', 'إثارة وتشويق')} />
+            <HorizontalRow title="أكشن ومغامرات حماسية" items={actionMixed} rowRef={rowRefs.action} onSeeMore={() => openCatalog('movie', '28', 'أكشن ومغامرة')} />
+            <HorizontalRow title="الرعب وقصص التشويق" items={horrorThrillerMixed} rowRef={rowRefs.horror} onSeeMore={() => openCatalog('movie', '27', 'رعب وإثارة')} />
+            <HorizontalRow title="الخيال العلمي وعوالم الفضاء" items.={sciFiAdventureMixed} rowRef={rowRefs.scifi} onSeeMore={() => openCatalog('movie', '878', 'خيال علمي وفضاء')} />
           </div>
         </div>
       )}
