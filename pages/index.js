@@ -814,16 +814,16 @@ export default function Home() {
 
           {/* محتوى الصفوف الأفقية */}
           <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '24px' }}>
-            <HorizontalRow title="يُعرض هذا الشهر (أحدث الإصدارات)" items={thisMonthMixed} rowRef={rowRefs.thisMonth} onSeeMore={() => openCatalog('movie', '0', 'أحدث الإصدارات لهذا الشهر')} />
-            <HorizontalRow title="ترشيحات الأوسكار والقصص الملهمة" items={oscarsMixed} rowRef={rowRefs.oscars} onSeeMore={() => openCatalog('movie', '18,36', 'ترشيحات الأوسكار والقصص الملهمة')} />
-            <HorizontalRow title="الأعلى تقييماً وشهرة" items={topRatedMixed} rowRef={rowRefs.topRated} onSeeMore={() => openCatalog('movie', '0', 'الأعلى تقييماً وشهرة')} />
-            <HorizontalRow title="أفلام ومسلسلات الدراما المؤثرة" items={dramaMixed} rowRef={rowRefs.drama} onSeeMore={() => openCatalog('movie', '18', 'الدراما المؤثرة')} />
-            <HorizontalRow title="الغموض والتحقيق المثير" items={mysteryMixed} rowRef={rowRefs.mystery} onSeeMore={() => openCatalog('movie', '9648', 'غموض وتحقيق')} />
-            <HorizontalRow title="الكوميديا والضحك" items={comedyMixed} rowRef={rowRefs.comedy} onSeeMore={() => openCatalog('movie', '35', 'كوميديا وضاحكة')} />
-            <HorizontalRow title="الإثارة والتشويق العالي" items={suspenseMixed} rowRef={rowRefs.suspense} onSeeMore={() => openCatalog('movie', '53', 'إثارة وتشويق')} />
-            <HorizontalRow title="أكشن ومغامرات حماسية" items={actionMixed} rowRef={rowRefs.action} onSeeMore={() => openCatalog('movie', '28', 'أكشن ومغامرة')} />
-            <HorizontalRow title="الرعب وقصص التشويق" items={horrorThrillerMixed} rowRef={rowRefs.horror} onSeeMore={() => openCatalog('movie', '27', 'رعب وإثارة')} />
-            <HorizontalRow title="الخيال العلمي وعوالم الفضاء" items.={sciFiAdventureMixed} rowRef={rowRefs.scifi} onSeeMore={() => openCatalog('movie', '878', 'خيال علمي وفضاء')} />
+            <HorizontalRow title="افضل الافلام والمسلسلات لهذا الشهر " items={thisMonthMixed} rowRef={rowRefs.thisMonth} onSeeMore={() => openCatalog('movie', '0', 'أحدث الإصدارات لهذا الشهر')} />
+            <HorizontalRow title="ترشيحات الأوسكار  " items={oscarsMixed} rowRef={rowRefs.oscars} onSeeMore={() => openCatalog('movie', '18,36', 'ترشيحات الأوسكار والقصص الملهمة')} />
+            <HorizontalRow title="الأعلى تقييماً " items={topRatedMixed} rowRef={rowRefs.topRated} onSeeMore={() => openCatalog('movie', '0', 'الأعلى تقييماً وشهرة')} />
+            <HorizontalRow title="  الدراما " items={dramaMixed} rowRef={rowRefs.drama} onSeeMore={() => openCatalog('movie', '18', 'الدراما المؤثرة')} />
+            <HorizontalRow title="الغموض والتحقيق" items={mysteryMixed} rowRef={rowRefs.mystery} onSeeMore={() => openCatalog('movie', '9648', 'غموض وتحقيق')} />
+            <HorizontalRow title="الكوميديا " items={comedyMixed} rowRef={rowRefs.comedy} onSeeMore={() => openCatalog('movie', '35', 'كوميديا وضاحكة')} />
+            <HorizontalRow title="الإثارة والتشويق" items={suspenseMixed} rowRef={rowRefs.suspense} onSeeMore={() => openCatalog('movie', '53', 'إثارة وتشويق')} />
+            <HorizontalRow title="أكشن ومغامرات" items={actionMixed} rowRef={rowRefs.action} onSeeMore={() => openCatalog('movie', '28', 'أكشن ومغامرة')} />
+            <HorizontalRow title="الرعب  " items={horrorThrillerMixed} rowRef={rowRefs.horror} onSeeMore={() => openCatalog('movie', '27', 'رعب وإثارة')} />
+            <HorizontalRow title="الخيال العلمي " items.={sciFiAdventureMixed} rowRef={rowRefs.scifi} onSeeMore={() => openCatalog('movie', '878', 'خيال علمي وفضاء')} />
           </div>
         </div>
       )}
