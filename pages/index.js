@@ -30,8 +30,8 @@ export default function Home() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [selectedMedia, setSelectedMedia] = useState(null);
   
-  // تحديث السيرفر الافتراضي
-  const [selectedServer, setSelectedServer] = useState('autoembed');
+  // تحديث السيرفر الافتراضي للسيرفرات الأولى
+  const [selectedServer, setSelectedServer] = useState('vidsrc');
 
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
@@ -277,7 +277,7 @@ export default function Home() {
     setSelectedMedia(item);
     setSelectedSeason(1);
     setSelectedEpisode(1);
-    setSelectedServer('autoembed');
+    setSelectedServer('vidsrc');
     setActiveTab('watch');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -294,32 +294,32 @@ export default function Home() {
 
   const heroItem = trending[heroIndex];
 
-  // دالة توليد روابط السيرفرات الجديدة المحدثة
+  // دالة توليد روابط السيرفرات الأولى التي أضفتها في بداية المشروع
   const getEmbedUrl = (media, server) => {
     if (!media) return '';
     const isTv = media.media_type === 'tv' || media.first_air_date;
     const id = media.id;
 
     switch (server) {
-      case 'autoembed':
-        return isTv ? `https://player.autoembed.cc/embed/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://player.autoembed.cc/embed/movie/${id}`;
-      case 'moviesapi':
-        return isTv ? `https://moviesapi.club/tv/${id}-${selectedSeason}-${selectedEpisode}` : `https://moviesapi.club/movie/${id}`;
-      case 'embed-tf':
-        return isTv ? `https://embed.tf/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://embed.tf/movie/${id}`;
-      case 'vidsrc-su':
-        return isTv ? `https://vidsrc.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://vidsrc.su/embed/movie/${id}`;
+      case 'vidsrc':
+        return isTv ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=${selectedSeason}&episode=${selectedEpisode}` : `https://vidsrc.me/embed/movie?tmdb=${id}`;
+      case '2embed':
+        return isTv ? `https://www.2embed.cc/embedtv/${id}&s=${selectedSeason}&e=${selectedEpisode}` : `https://www.2embed.cc/embed/${id}`;
+      case 'multiembed':
+        return isTv ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${selectedSeason}&e=${selectedEpisode}` : `https://multiembed.mov/?video_id=${id}&tmdb=1`;
+      case 'smashy':
+        return isTv ? `https://player.smashy.stream/tv/${id}?s=${selectedSeason}&e=${selectedEpisode}` : `https://player.smashy.stream/movie/${id}`;
       default:
-        return isTv ? `https://player.autoembed.cc/embed/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://player.autoembed.cc/embed/movie/${id}`;
+        return isTv ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=${selectedSeason}&episode=${selectedEpisode}` : `https://vidsrc.me/embed/movie?tmdb=${id}`;
     }
   };
 
-  // قائمة السيرفرات الجديدة البديلة والمعتمدة
+  // قائمة السيرفرات الأولى الأصلية
   const serversList = [
-    { id: 'autoembed', name: '⚡ سيرفر AutoEmbed' },
-    { id: 'moviesapi', name: '🎬 سيرفر MoviesAPI' },
-    { id: 'embed-tf', name: '🌐 سيرفر Embed TF' },
-    { id: 'vidsrc-su', name: '🚀 سيرفر VidSrc Su' }
+    { id: 'vidsrc', name: 'سيرفر VidSrc' },
+    { id: '2embed', name: 'سيرفر 2Embed' },
+    { id: 'multiembed', name: 'سيرفر MultiEmbed' },
+    { id: 'smashy', name: 'سيرفر SmashyStream' }
   ];
 
   const HorizontalRow = ({ title, items, rowRef, onSeeMore }) => {
@@ -647,16 +647,15 @@ export default function Home() {
                   key={g.id}
                   onClick={() => setHubGenre(g.id)}
                   style={{
+                    padding: '10px 12px',
                     textAlign: 'right',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontWeight: 'bold',
                     backgroundColor: hubGenre === g.id ? '#f97316' : 'transparent',
-                    color: hubGenre === g.id ? '#000' : '#a1a1aa',
-                    transition: 'all 0.2s'
+                    color: hubGenre === g.id ? '#000' : '#d4d4d8',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: hubGenre === g.id ? 'bold' : 'normal',
+                    fontSize: '13px'
                   }}
                 >
                   {g.name}
@@ -665,13 +664,27 @@ export default function Home() {
             </div>
           </div>
           <div className="hub-content">
-            <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px', borderRight: '4px solid #f97316', paddingRight: '10px' }}>
-              {activeTab === 'movies-hub' ? 'قسم الأفلام' : 'قسم المسلسلات'}
+            <h2 style={{ fontSize: '20px', color: '#fff', marginBottom: '20px', borderRight: '4px solid #f97316', paddingRight: '10px' }}>
+              {activeTab === 'movies-hub' ? 'قائمة الأفلام' : 'قائمة المسلسلات'} - {GENRES.find(g => g.id === hubGenre)?.name}
             </h2>
             <MediaGrid items={hubItems} onSelect={openWatchPage} />
             {hasMoreHub && (
               <div style={{ textAlign: 'center', marginTop: '30px' }}>
-                <button onClick={loadMoreHubItems} style={{ padding: '10px 24px', backgroundColor: '#27272a', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>تحميل المزيد</button>
+                <button
+                  onClick={loadMoreHubItems}
+                  style={{
+                    backgroundColor: '#27272a',
+                    color: '#fff',
+                    border: '1px solid #3f3f46',
+                    padding: '10px 24px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '14px'
+                  }}
+                >
+                  تحميل المزيد
+                </button>
               </div>
             )}
           </div>
@@ -679,53 +692,69 @@ export default function Home() {
       ) : activeTab === 'catalog' ? (
         <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>{catalogTitle}</h2>
-            <button onClick={() => setActiveTab('home')} style={{ background: 'none', border: 'none', color: '#f97316', cursor: 'pointer', fontWeight: 'bold' }}>العودة للرئيسية</button>
+            <h2 style={{ fontSize: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0, color: '#fff' }}>{catalogTitle}</h2>
+            <button onClick={() => setActiveTab('home')} style={{ backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>العودة للرئيسية</button>
           </div>
           <MediaGrid items={catalogItems} onSelect={openWatchPage} />
           {hasMoreCatalog && (
             <div style={{ textAlign: 'center', marginTop: '30px' }}>
-              <button onClick={loadMoreCatalogItems} style={{ padding: '10px 24px', backgroundColor: '#27272a', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>تحميل المزيد</button>
+              <button
+                onClick={loadMoreCatalogItems}
+                style={{
+                  backgroundColor: '#27272a',
+                  color: '#fff',
+                  border: '1px solid #3f3f46',
+                  padding: '10px 24px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '14px'
+                }}
+              >
+                تحميل المزيد
+              </button>
             </div>
           )}
         </div>
       ) : (
         <div>
           {heroItem && (
-            <div style={{ position: 'relative', width: '100%', height: '450px', backgroundColor: '#121215', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', width: '100%', height: '480px', overflow: 'hidden' }}>
               <img 
-                src={heroItem.backdrop_path ? `https://image.tmdb.org/t/p/original${heroItem.backdrop_path}` : 'https://via.placeholder.com/1280x720?text=No+Backdrop'} 
+                src={heroItem.backdrop_path ? `https://image.tmdb.org/t/p/original${heroItem.backdrop_path}` : 'https://via.placeholder.com/1200x600?text=No+Image'} 
                 alt={heroItem.title || heroItem.name} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.45 }} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.5)' }} 
               />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #09090b 5%, rgba(9,9,11,0.4) 60%, transparent 100%)' }} />
-              <div style={{ position: 'absolute', bottom: '40px', right: '40px', left: '40px', maxWidth: '700px' }}>
-                <span style={{ backgroundColor: '#f97316', color: '#000', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block', marginBottom: '10px' }}>الأكثر رواجاً اليوم</span>
-                <h2 style={{ fontSize: '32px', fontWeight: '900', margin: '0 0 10px 0', color: '#fff', direction: 'ltr', textAlign: 'left' }}>{heroItem.title || heroItem.name}</h2>
-                <p style={{ fontSize: '14px', color: '#d4d4d8', margin: '0 0 20px 0', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: '1.6' }}>
-                  {heroItem.overview || 'لا يتوفر وصف تفصيلي حالياً.'}
+              <div style={{ position: 'absolute', bottom: 0, right: 0, left: 0, padding: '40px 24px', background: 'linear-gradient(to top, #09090b, transparent)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <h2 style={{ fontSize: '28px', fontWeight: '900', margin: 0, color: '#fff', direction: 'ltr', textAlign: 'right' }}>
+                  {heroItem.title || heroItem.name}
+                </h2>
+                <p style={{ margin: 0, maxWidth: '700px', fontSize: '14px', lineHeight: '1.6', color: '#d4d4d8', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {heroItem.overview}
                 </p>
-                <button 
-                  onClick={() => openWatchPage(heroItem)}
-                  style={{ padding: '10px 24px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <span>مشاهدة الآن</span>
-                </button>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                  <button 
+                    onClick={() => openWatchPage(heroItem)}
+                    style={{ backgroundColor: '#f97316', color: '#000', border: 'none', padding: '10px 22px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    ▶ مشاهدة الآن
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
-          <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-            <HorizontalRow title="أفلام ومسلسلات هذا الشهر (2026)" items={thisMonthMixed} rowRef={rowRefs.thisMonth} onSeeMore={() => openCatalog('movie', '0', 'أفلام ومسلسلات هذا الشهر')} />
-            <HorizontalRow title="الأعمال الحائزة على جوائز وتقييمات عالمية" items={oscarsMixed} rowRef={rowRefs.oscars} onSeeMore={() => openCatalog('movie', '18,36', 'الأعمال الحائزة على جوائز وتقييمات عالمية')} />
-            <HorizontalRow title="الأعلى تقييماً في المنصة" items={topRatedMixed} rowRef={rowRefs.topRated} onSeeMore={() => openCatalog('movie', '0', 'الأعلى تقييماً في المنصة')} />
+          <div style={{ padding: '24px', maxWidth: '1300px', margin: '0 auto' }}>
+            <HorizontalRow title="أفلام ومسلسلات صدرت هذا الشهر" items={thisMonthMixed} rowRef={rowRefs.thisMonth} onSeeMore={() => openCatalog('movie', '0', 'أفلام ومسلسلات صدرت هذا الشهر')} />
+            <HorizontalRow title="الترشيحات الحائزة على جوائز أوسكار" items={oscarsMixed} rowRef={rowRefs.oscars} onSeeMore={() => openCatalog('movie', '18,36', 'الترشيحات الحائزة على جوائز أوسكار')} />
+            <HorizontalRow title="الأعلى تقييم والمشاهدة" items={topRatedMixed} rowRef={rowRefs.topRated} onSeeMore={() => openCatalog('movie', '0', 'الأعلى تقييم والمشاهدة')} />
+            <HorizontalRow title="أكشن وحماس بلا حدود" items={actionMixed} rowRef={rowRefs.action} onSeeMore={() => openCatalog('movie', '28', 'أكشن وحماس بلا حدود')} />
             <HorizontalRow title="دراما مؤثرة وعميقة" items={dramaMixed} rowRef={rowRefs.drama} onSeeMore={() => openCatalog('movie', '18', 'دراما مؤثرة وعميقة')} />
-            <HorizontalRow title="غموض وتحقيق مشوق" items={mysteryMixed} rowRef={rowRefs.mystery} onSeeMore={() => openCatalog('movie', '9648', 'غموض وتحقيق مشوق')} />
-            <HorizontalRow title="كوميديا ومرح" items={comedyMixed} rowRef={rowRefs.comedy} onSeeMore={() => openCatalog('movie', '35', 'كوميديا ومرح')} />
-            <HorizontalRow title="تشويق وإثارة عالية" items={suspenseMixed} rowRef={rowRefs.suspense} onSeeMore={() => openCatalog('movie', '53', 'تشويق وإثارة عالية')} />
-            <HorizontalRow title="أكشن ومغامرات قوية" items={actionMixed} rowRef={rowRefs.action} onSeeMore={() => openCatalog('movie', '28', 'أكشن ومغامرات قوية')} />
-            <HorizontalRow title="رعب وقصص مخيفة" items={horrorThrillerMixed} rowRef={rowRefs.horror} onSeeMore={() => openCatalog('movie', '27', 'رعب وقصص مخيفة')} />
-            <HorizontalRow title="خيال علمي وفضاء" items={sciFiAdventureMixed} rowRef={rowRefs.scifi} onSeeMore={() => openCatalog('movie', '878', 'خيال علمي وفضاء')} />
+            <HorizontalRow title="رعب وإثارة وتشويق" items={horrorThrillerMixed} rowRef={rowRefs.horror} onSeeMore={() => openCatalog('movie', '27', 'رعب وإثارة وتشويق')} />
+            <HorizontalRow title="خيال علمي ومغامرات فضاء" items={sciFiAdventureMixed} rowRef={rowRefs.scifi} onSeeMore={() => openCatalog('movie', '878', 'خيال علمي ومغامرات فضاء')} />
+            <HorizontalRow title="غموض وتحقيق جنائي" items={mysteryMixed} rowRef={rowRefs.mystery} onSeeMore={() => openCatalog('movie', '9648', 'غموض وتحقيق جنائي')} />
+            <HorizontalRow title="كوميديا وضحك بلا حدود" items={comedyMixed} rowRef={rowRefs.comedy} onSeeMore={() => openCatalog('movie', '35', 'كوميديا وضحك بلا حدود')} />
+            <HorizontalRow title="تشويق ومغامرة" items={suspenseMixed} rowRef={rowRefs.suspense} onSeeMore={() => openCatalog('movie', '53', 'تشويق ومغامرة')} />
           </div>
         </div>
       )}
