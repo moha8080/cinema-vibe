@@ -12,7 +12,7 @@ export default function Home() {
   const [trending, setTrending] = useState([]);
   const [heroIndex, setHeroIndex] = useState(0);
   const [selectedMedia, setSelectedMedia] = useState(null);
-  const [selectedServer, setSelectedServer] = useState(1); // نظام السيرفرات المتعددة
+  const [selectedServer, setSelectedServer] = useState(1);
 
   const [topMovies, setTopMovies] = useState([]);
   const [popularTv, setPopularTv] = useState([]);
@@ -25,22 +25,20 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const lang = '&language=ar-SA';
-        
-        const trendRes = await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}${lang}`);
+        const trendRes = await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}&language=en-US`);
         const trendData = await trendRes.json();
         setTrending(trendData.results || []);
 
-        const topRes = await fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}${lang}`);
+        const topRes = await fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US`);
         const topData = await topRes.json();
         setTopMovies(topData.results || []);
 
-        const tvRes = await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}${lang}`);
+        const tvRes = await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=en-US`);
         const tvData = await tvRes.json();
         setPopularTv(tvData.results || []);
 
         const fetchGenre = async (genreId, setter) => {
-          const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${genreId}${lang}`);
+          const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${genreId}&language=en-US`);
           const data = await res.json();
           setter(data.results || []);
         };
@@ -67,7 +65,7 @@ export default function Home() {
   useEffect(() => {
     const fetchCatalog = async () => {
       const type = activeTab === 'tv' ? 'tv' : 'movie';
-      let url = `https://api.themoviedb.org/3/discover/${type}?api_key=${API_KEY}&language=ar-SA`;
+      let url = `https://api.themoviedb.org/3/discover/${type}?api_key=${API_KEY}&language=en-US`;
       if (selectedGenre !== 'all') {
         url += `&with_genres=${selectedGenre}`;
       }
@@ -85,7 +83,7 @@ export default function Home() {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     try {
-      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=ar-SA`);
+      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=en-US`);
       const data = await res.json();
       setSearchResults(data.results || []);
       setShowSearchModal(false);
@@ -96,14 +94,14 @@ export default function Home() {
 
   const openWatchPage = (item) => {
     setSelectedMedia(item);
-    setSelectedServer(1); // إعادة ضبط السيرفر الافتراضي عند فتح فيلم جديد
+    setSelectedServer(1);
     setActiveTab('watch');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const heroItem = trending[heroIndex];
 
-  // تحديد روابط السيرفرات المختلفة بناءً على نوع العرض (فيلم أو مسلسل)
+  // دالة جلب روابط التشغيل مع فرض باراميترات الترجمة العربية تلقائياً لتناسب الكمبيوتر والجوال
   const getEmbedUrl = (media, serverId) => {
     if (!media) return '';
     const isTv = media.media_type === 'tv' || media.first_air_date;
@@ -112,11 +110,14 @@ export default function Home() {
 
     switch (serverId) {
       case 1:
+        // سيرفر vidsrc.me مع تفعيل الترجمة العربية الافتراضية
         return `https://vidsrc.me/embed/${type}?tmdb=${id}&sub.lang=ar`;
       case 2:
-        return `https://vidsrc.to/embed/${type}/${id}`;
+        // سيرفر vidsrc.to مع دعم تحديد اللغة العربية
+        return `https://vidsrc.to/embed/${type}/${id}?sub.lang=ar`;
       case 3:
-        return `https://multiembed.mov/?video_id=${id}&tmdb=1${isTv ? '&s=1&e=1' : ''}`;
+        // سيرفر بديل متعدد
+        return `https://multiembed.mov/?video_id=${id}&tmdb=1${isTv ? '&s=1&e=1' : ''}&sub.lang=ar`;
       default:
         return `https://vidsrc.me/embed/${type}?tmdb=${id}&sub.lang=ar`;
     }
@@ -130,7 +131,7 @@ export default function Home() {
     return (
       <div className="media-grid">
         {items.map((item) => {
-          const title = item.title || item.name;
+          const title = item.title || item.name; // الاسم بالإنجليزية
           const posterPath = item.poster_path 
             ? `https://image.tmdb.org/t/p/w500${item.poster_path}` 
             : 'https://via.placeholder.com/500x750?text=No+Image';
@@ -158,7 +159,7 @@ export default function Home() {
                 </span>
               </div>
               <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1 }}>
-                <h3 style={{ fontSize: '14px', fontWeight: 'bold', margin: '0 0 4px 0', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 'bold', margin: '0 0 4px 0', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', direction: 'ltr', textAlign: 'right' }}>
                   {title}
                 </h3>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#a1a1aa' }}>
@@ -192,20 +193,37 @@ export default function Home() {
         }
       `}</style>
 
-      {/* Navbar */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', backgroundColor: 'rgba(9, 9, 11, 0.95)', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '900', color: '#f97316', cursor: 'pointer' }} onClick={() => { setActiveTab('home'); setSearchResults(null); }}>
+      {/* Navbar متناسق مع أيقونة بحث برتقالية */}
+      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(9, 9, 11, 0.95)', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
+          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '900', color: '#f97316', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => { setActiveTab('home'); setSearchResults(null); }}>
             CINEMA<span style={{ color: '#ffffff' }}>VIBE</span>
           </h1>
-          <div style={{ display: 'flex', gap: '16px', fontSize: '15px', fontWeight: '600' }}>
+          <div style={{ display: 'flex', gap: '12px', fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap' }}>
             <span style={{ color: activeTab === 'home' && !searchQuery ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('home'); setSearchResults(null); }}>الرئيسية</span>
             <span style={{ color: activeTab === 'movies' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('movies'); setSearchResults(null); }}>الأفلام</span>
             <span style={{ color: activeTab === 'tv' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('tv'); setSearchResults(null); }}>المسلسلات</span>
           </div>
         </div>
-        <button onClick={() => setShowSearchModal(!showSearchModal)} style={{ background: 'none', border: 'none', color: '#f4f4f5', cursor: 'pointer', padding: '6px' }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <button 
+          onClick={() => setShowSearchModal(!showSearchModal)} 
+          style={{ 
+            background: 'rgba(255,255,255,0.06)', 
+            border: '1px solid rgba(255,255,255,0.1)', 
+            borderRadius: '50%', 
+            width: '38px', 
+            height: '38px', 
+            minWidth: '38px', 
+            color: '#f97316', 
+            cursor: 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            flexShrink: 0 
+          }}
+          aria-label="Search"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
       </nav>
 
@@ -222,11 +240,12 @@ export default function Home() {
         <div style={{ padding: '30px 24px', maxWidth: '1000px', margin: '0 auto' }}>
           <button onClick={() => setActiveTab('home')} style={{ marginBottom: '20px', backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>← العودة للرئيسية</button>
           
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316', marginBottom: '12px' }}>{selectedMedia.title || selectedMedia.name}</h2>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316', marginBottom: '12px', direction: 'ltr', textAlign: 'right' }}>
+            {selectedMedia.title || selectedMedia.name}
+          </h2>
           
-          {/* أزرار اختيار السيرفرات */}
           <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '14px', color: '#a1a1aa', fontWeight: 'bold' }}>اختر السيرفر:</span>
+            <span style={{ fontSize: '14px', color: '#a1a1aa', fontWeight: 'bold' }}>اختر السيرفر (الترجمة العربية مفعلة):</span>
             {[1, 2, 3].map((srv) => (
               <button 
                 key={srv} 
@@ -238,8 +257,7 @@ export default function Home() {
                   fontWeight: 'bold', 
                   cursor: 'pointer', 
                   backgroundColor: selectedServer === srv ? '#f97316' : '#27272a',
-                  color: selectedServer === srv ? '#000' : '#fff',
-                  transition: '0.2s'
+                  color: selectedServer === srv ? '#000' : '#fff'
                 }}
               >
                 سيرفر {srv} {srv === 1 ? '(رئيسي)' : srv === 2 ? '(احتياطي 1)' : '(احتياطي 2)'}
@@ -247,7 +265,6 @@ export default function Home() {
             ))}
           </div>
 
-          {/* مشغل الفيديو (Iframe) */}
           <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden', border: '1px solid #27272a' }}>
             <iframe src={getEmbedUrl(selectedMedia, selectedServer)} style={{ width: '100%', height: '100%', border: 'none' }} allowFullScreen title="مشغل الفيديو" />
           </div>
@@ -273,7 +290,9 @@ export default function Home() {
             <div className="hero-banner" style={{ position: 'relative', width: '100%', backgroundImage: `linear-gradient(to top, #09090b 10%, transparent 90%), url(https://image.tmdb.org/t/p/original${heroItem.backdrop_path})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'flex-end', padding: '24px' }}>
               <div style={{ maxWidth: '650px', zIndex: 2 }}>
                 <span style={{ backgroundColor: '#f97316', color: '#000', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '11px' }}>رائج الآن</span>
-                <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '10px 0', color: '#fff' }}>{heroItem.title || heroItem.name}</h1>
+                <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '10px 0', color: '#fff', direction: 'ltr', textAlign: 'right' }}>
+                  {heroItem.title || heroItem.name}
+                </h1>
                 <p style={{ color: '#d4d4d8', fontSize: '13px', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>{heroItem.overview}</p>
                 <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
                   <button onClick={() => openWatchPage(heroItem)} style={{ padding: '10px 22px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>شاهد الآن</button>
