@@ -452,7 +452,25 @@ export default function Home() {
   return (
     <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <Head>
-        <title>سينما فايب | Cinema Vibe</title>
+        <title>سينما فايب | مشاهدة أحدث الأفلام والمسلسلات مترجمة اونلاين</title>
+        <meta name="description" content="استمتع بمشاهدة وتحميل أحدث الأفلام والمسلسلات العربية والعالمية بجودات عالية مترجمة حصرياً على سينما فايب - Cinema Vibe." />
+        <meta name="keywords" content="سينما فايب, أفلام مترجمة, مسلسلات أونلاين, مشاهدة أفلام, Cinema Vibe, سينما الحارة" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="robots" content="index, follow" />
+        
+        {/* دعم اللغة العربية واتجاه الصفحة */}
+        <meta httpEquiv="content-language" content="ar" />
+
+        {/* Open Graph / Social Media Preview (عند مشاركة الرابط في واتساب وتويتر) */}
+        <meta property="og:title" content="سينما فايب | Cinema Vibe" />
+        <meta property="og:description" content="منصتك المفضلة لمشاهدة أحدث الأفلام والمسلسلات مترجمة أونلاين." />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content="ar_AR" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="سينما فايب | Cinema Vibe" />
+        <meta name="twitter:description" content="منصتك المفضلة لمشاهدة أحدث الأفلام والمسلسلات مترجمة أونلاين." />
       </Head>
 
       <style jsx global>{`
@@ -659,157 +677,75 @@ export default function Home() {
             </div>
           </div>
 
-          {/* محتوى الشبكة الرئيسي */}
           <div className="hub-content">
-            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', borderRight: '4px solid #f97316', paddingRight: '10px', marginBottom: '20px' }}>
-              {GENRES.find(g => g.id === hubGenre)?.name || 'العروض'}
+            <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', color: '#fff' }}>
+              {activeTab === 'movies-hub' ? 'أفلام: ' : 'مسلسلات: '} 
+              <span style={{ color: '#f97316' }}>{GENRES.find(g => g.id === hubGenre)?.name}</span>
             </h2>
-
             <MediaGrid items={hubItems} onSelect={openWatchPage} />
-
+            
             {hasMoreHub && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '35px', marginBottom: '20px' }}>
+              <div style={{ textAlign: 'center', marginTop: '30px' }}>
                 <button 
                   onClick={loadMoreHubItems}
-                  style={{ 
-                    backgroundColor: '#f97316', 
-                    color: '#000', 
-                    border: 'none', 
-                    padding: '12px 32px', 
-                    borderRadius: '8px', 
-                    fontWeight: 'bold', 
-                    fontSize: '15px', 
-                    cursor: 'pointer' 
-                  }}
+                  style={{ backgroundColor: '#f97316', color: '#000', border: 'none', padding: '12px 28px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
                 >
-                  عرض المزيد
+                  تحميل المزيد
                 </button>
               </div>
             )}
           </div>
         </div>
-      ) : activeTab === 'catalog' ? (
-        <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-          <button onClick={() => setActiveTab('home')} style={{ marginBottom: '20px', backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>العودة للرئيسية</button>
-          
-          <h2 style={{ fontSize: '22px', borderRight: '4px solid #f97316', paddingRight: '10px', marginBottom: '20px', color: '#fff' }}>
-            {catalogTitle}
-          </h2>
-
-          <MediaGrid items={catalogItems} onSelect={openWatchPage} />
-
-          {hasMoreCatalog && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '35px', marginBottom: '20px' }}>
-              <button 
-                onClick={loadMoreCatalogItems}
-                style={{ 
-                  backgroundColor: '#f97316', 
-                  color: '#000', 
-                  border: 'none', 
-                  padding: '12px 32px', 
-                  borderRadius: '8px', 
-                  fontWeight: 'bold', 
-                  fontSize: '15px', 
-                  cursor: 'pointer'
-                }}
-              >
-                عرض المزيد من النتائج
-              </button>
-            </div>
-          )}
-        </div>
       ) : (
-        <>
+        <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
           {heroItem && (
-            <div style={{ position: 'relative', width: '100%', height: '400px', backgroundImage: `linear-gradient(to top, #09090b 10%, transparent 90%), url(https://image.tmdb.org/t/p/original${heroItem.backdrop_path})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'flex-end', padding: '24px' }}>
-              <div style={{ maxWidth: '650px', zIndex: 2 }}>
-                <span style={{ backgroundColor: '#f97316', color: '#000', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '11px' }}>رائج الآن</span>
-                <h1 style={{ fontSize: '26px', fontWeight: 'bold', margin: '10px 0', color: '#fff', direction: 'ltr', textAlign: 'left' }}>
+            <div 
+              onClick={() => openWatchPage(heroItem)}
+              style={{ 
+                position: 'relative', 
+                width: '100%', 
+                height: '420px', 
+                borderRadius: '14px', 
+                overflow: 'hidden', 
+                marginBottom: '36px', 
+                cursor: 'pointer',
+                border: '1px solid #27272a'
+              }}
+            >
+              <img 
+                src={`https://image.tmdb.org/t/p/original${heroItem.backdrop_path || heroItem.poster_path}`} 
+                alt={heroItem.title || heroItem.name} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #09090b 5%, rgba(9,9,11,0.6) 50%, transparent 100%)' }} />
+              <div style={{ position: 'absolute', bottom: '24px', right: '24px', left: '24px', maxWidth: '700px' }}>
+                <span style={{ backgroundColor: '#f97316', color: '#000', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block', marginBottom: '8px' }}>
+                  الأكثر شيوعاً اليوم 🔥
+                </span>
+                <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#fff', margin: '0 0 8px 0', direction: 'ltr', textAlign: 'left' }}>
                   {heroItem.title || heroItem.name}
-                </h1>
-                <p style={{ color: '#d4d4d8', fontSize: '13px', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>{heroItem.overview}</p>
-                <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                  <button onClick={() => openWatchPage(heroItem)} style={{ padding: '10px 22px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>شاهد الآن</button>
-                </div>
+                </h2>
+                <p style={{ color: '#d4d4d8', fontSize: '13px', margin: '0 0 16px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {heroItem.overview}
+                </p>
+                <button style={{ backgroundColor: '#f97316', color: '#000', border: 'none', padding: '10px 22px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>
+                  شاهد الان
+                </button>
               </div>
             </div>
           )}
 
-          {/* الترتيب الأساسي والمنسق للالصفحة الرئيسية بالكامل */}
-          <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '1200px', margin: '0 auto' }}>
-            
-            <HorizontalRow 
-              title="أفضل الأفلام والمسلسلات هذا الشهر" 
-              items={thisMonthMixed} 
-              rowRef={rowRefs.thisMonth} 
-              onSeeMore={() => openCatalog('movie', '0', 'أفضل الأفلام والمسلسلات هذا الشهر')} 
-            />
-
-            <HorizontalRow 
-              title="أعمال حاصلة على أوسكار" 
-              items={oscarsMixed} 
-              rowRef={rowRefs.oscars} 
-              onSeeMore={() => openCatalog('movie', '18,36', 'أعمال حاصلة على أوسكار')} 
-            />
-
-            <HorizontalRow 
-              title="الأعلى تقييماً" 
-              items={topRatedMixed} 
-              rowRef={rowRefs.topRated} 
-              onSeeMore={() => openCatalog('movie', '0', 'الأعلى تقييماً')} 
-            />
-
-            <HorizontalRow 
-              title="أفلام ومسلسلات الدراما" 
-              items={dramaMixed} 
-              rowRef={rowRefs.drama} 
-              onSeeMore={() => openCatalog('movie', '18', 'أفلام ومسلسلات الدراما')} 
-            />
-
-            <HorizontalRow 
-              title="أفلام ومسلسلات الغموض" 
-              items={mysteryMixed} 
-              rowRef={rowRefs.mystery} 
-              onSeeMore={() => openCatalog('movie', '9648', 'أفلام ومسلسلات الغموض')} 
-            />
-
-            <HorizontalRow 
-              title="الكوميديا والضحك" 
-              items={comedyMixed} 
-              rowRef={rowRefs.comedy} 
-              onSeeMore={() => openCatalog('movie', '35', 'الكوميديا والضحك')} 
-            />
-
-            <HorizontalRow 
-              title="الإثارة والتشويق" 
-              items={suspenseMixed} 
-              rowRef={rowRefs.suspense} 
-              onSeeMore={() => openCatalog('movie', '53', 'الإثارة والتشويق')} 
-            />
-
-            <HorizontalRow 
-              title="الأكشن والمغامرات" 
-              items={actionMixed} 
-              rowRef={rowRefs.action} 
-              onSeeMore={() => openCatalog('movie', '28', 'الأكشن والمغامرات')} 
-            />
-
-            <HorizontalRow 
-              title="الرعب والغموض" 
-              items={horrorThrillerMixed} 
-              rowRef={rowRefs.horror} 
-              onSeeMore={() => openCatalog('movie', '27', 'الرعب والغموض')} 
-            />
-
-            <HorizontalRow 
-              title="خيال علمي ومغامرة" 
-              items={sciFiAdventureMixed} 
-              rowRef={rowRefs.scifi} 
-              onSeeMore={() => openCatalog('movie', '878', 'خيال علمي ومغامرة')} 
-            />
-
-          </div>
-        </>
+          <HorizontalRow title="أفلام ومسلسلات أضيفت هذا الشهر (2026)" items={thisMonthMixed} rowRef={rowRefs.thisMonth} onSeeMore={() => openCatalog('movie', '0', 'إصدارات هذا الشهر')} />
+          <HorizontalRow title="ترشيح الأوسكار والقصص الخالدة" items={oscarsMixed} rowRef={rowRefs.oscars} onSeeMore={() => openCatalog('movie', '18,36', 'ترشيح الأوسكار والقصص الخالدة')} />
+          <HorizontalRow title="الأعلى تقييماً وعالمياً" items={topRatedMixed} rowRef={rowRefs.topRated} onSeeMore={() => openCatalog('movie', '0', 'الأعلى تقييماً')} />
+          <HorizontalRow title="دراما مؤثرة وعميقة" items={dramaMixed} rowRef={rowRefs.drama} onSeeMore={() => openCatalog('movie', '18', 'دراما مؤثرة وعميقة')} />
+          <HorizontalRow title="غموض وتحقيق مشوق" items={mysteryMixed} rowRef={rowRefs.mystery} onSeeMore={() => openCatalog('movie', '9648', 'غموض وتحقيق')} />
+          <HorizontalRow title="كوميديا ومرح" items={comedyMixed} rowRef={rowRefs.comedy} onSeeMore={() => openCatalog('movie', '35', 'كوميديا ومرح')} />
+          <HorizontalRow title="إثارة وجريمة وتشويق" items={suspenseMixed} rowRef={rowRefs.suspense} onSeeMore={() => openCatalog('movie', '53', 'إثارة وجريمة')} />
+          <HorizontalRow title="أكشن وحركة بلا حدود" items={actionMixed} rowRef={rowRefs.action} onSeeMore={() => openCatalog('movie', '28', 'أكشن وحركة')} />
+          <HorizontalRow title="رعب وإثارة نفسية" items={horrorThrillerMixed} rowRef={rowRefs.horror} onSeeMore={() => openCatalog('movie', '27', 'رعب وإثارة')} />
+          <HorizontalRow title="خيال علمي وفضاء" items={sciFiAdventureMixed} rowRef={rowRefs.scifi} onSeeMore={() => openCatalog('movie', '878', 'خيال علمي وفضاء')} />
+        </div>
       )}
     </div>
   );
