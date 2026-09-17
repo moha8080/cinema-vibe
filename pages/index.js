@@ -1,546 +1,753 @@
-'use client';
+import { useState, useEffect, useRef } from 'react';
+import Head from 'next/head';
 
-import React, { useEffect, useState } from 'react';
+const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
-const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY; // ضع مفتاح TMDB هنا في env
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
-
-type MediaType = 'movie' | 'tv';
-
-interface TMDBMedia {
-  id: number;
-  title?: string;
-  name?: string;
-  overview: string;
-  poster_path: string | null;
-  backdrop_path: string | null;
-  media_type?: MediaType;
-}
-
-interface TMDBSeason {
-  id: number;
-  season_number: number;
-  name: string;
-  episode_count: number;
-}
-
-interface TMDBEpisode {
-  id: number;
-  episode_number: number;
-  name: string;
-}
-
-interface TMDBTVDetails {
-  id: number;
-  name: string;
-  overview: string;
-  seasons: TMDBSeason[];
-}
-
-interface TMDBMovieDetails {
-  id: number;
-  title: string;
-  overview: string;
-}
-
-type ActiveTab = 'home' | 'watch';
-
-interface ServerOption {
-  id: string;
-  name: string;
-  // هنا تبني رابط التضمين حسب السيرفر القانوني الذي تستخدمه
-  buildUrl: (params: {
-    tmdbId: number;
-    type: MediaType;
-    season?: number;
-    episode?: number;
-  }) => string;
-}
-
-const serverOptions: ServerOption[] = [
-  {
-    id: 'server1',
-    name: 'سيرفر 1 (قانوني/رسمي)',
-    buildUrl: ({ tmdbId, type, season, episode }) => {
-      // مثال عام: استبدل هذا بالرابط الخاص بمنصتك أو مشغلك القانوني
-      // مثلاً: https://your-legal-player.com/embed/movie/{tmdbId}
-      if (type === 'movie') {
-        return `https://your-legal-player.com/embed/movie/${tmdbId}`;
-      }
-      return `https://your-legal-player.com/embed/tv/${tmdbId}/season/${season}/episode/${episode}`;
-    },
-  },
-  {
-    id: 'server2',
-    name: 'سيرفر 2 (مشغّل داخلي)',
-    buildUrl: ({ tmdbId, type, season, episode }) => {
-      // يمكنك لاحقاً ربط هذا بمسار داخلي في موقعك أو مشغّل HLS قانوني
-      if (type === 'movie') {
-        return `/player/movie?tmdbId=${tmdbId}`;
-      }
-      return `/player/tv?tmdbId=${tmdbId}&season=${season}&episode=${episode}`;
-    },
-  },
+// قائمة التصنيفات الشاملة (أكثر من 10 تصنيفات مع معرفات TMDB المقابلة للأفلام والمسلسلات)
+const GENRES = [
+  { id: 'all', name: 'الكل / الشائع', movieGenre: '0', tvGenre: '0' },
+  { id: 'action', name: 'أكشن ومغامرة', movieGenre: '28', tvGenre: '10759' },
+  { id: 'drama', name: 'دراما مؤثرة', movieGenre: '18', tvGenre: '18' },
+  { id: 'horror', name: 'رعب وإثارة', movieGenre: '27', tvGenre: '10765' },
+  { id: 'comedy', name: 'كوميديا وضاحكة', movieGenre: '35', tvGenre: '35' },
+  { id: 'scifi', name: 'خيال علمي وفضاء', movieGenre: '878', tvGenre: '10765' },
+  { id: 'crime', name: 'جريمة وتصحيح', movieGenre: '80', tvGenre: '80' },
+  { id: 'mystery', name: 'غموض وتحقيق', movieGenre: '9648', tvGenre: '9648' },
+  { id: 'romance', name: 'رومانسية وعاطفة', movieGenre: '10749', tvGenre: '18' },
+  { id: 'animation', name: 'رسوم متحركة / أنمي', movieGenre: '16', tvGenre: '16' },
+  { id: 'documentary', name: 'وثائقي ومعرفي', movieGenre: '99', tvGenre: '99' },
+  { id: 'family', name: 'عائلي ومغامرات أطفال', movieGenre: '10751', tvGenre: '10762' },
+  { id: 'history', name: 'تاريخ وحروب', movieGenre: '36,10752', tvGenre: '10768' },
 ];
 
-const HomePage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
-
-  const [trending, setTrending] = useState<TMDBMedia[]>([]);
-  const [popularMovies, setPopularMovies] = useState<TMDBMedia[]>([]);
-  const [popularTV, setPopularTV] = useState<TMDBMedia[]>([]);
+export default function Home() {
+  const [activeTab, setActiveTab] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<TMDBMedia[]>([]);
-  const [searchPage, setSearchPage] = useState(1);
-  const [searchTotalPages, setSearchTotalPages] = useState(1);
+  const [searchResults, setSearchResults] = useState(null);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  
+  const [trending, setTrending] = useState([]);
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [selectedMedia, setSelectedMedia] = useState(null);
+  
+  // تحديث السيرفر الافتراضي للسيرفرات البديلة الجديدة
+  const [selectedServer, setSelectedServer] = useState('embedsu');
 
-  const [selectedMedia, setSelectedMedia] = useState<TMDBMedia | null>(null);
-  const [selectedType, setSelectedType] = useState<MediaType>('movie');
+  const [selectedSeason, setSelectedSeason] = useState(1);
+  const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const [tvDetails, setTvDetails] = useState(null);
+  const [episodesList, setEpisodesList] = useState([]);
 
-  const [tvDetails, setTvDetails] = useState<TMDBTVDetails | null>(null);
-  const [movieDetails, setMovieDetails] = useState<TMDBMovieDetails | null>(null);
+  // القوائم للرئيسية
+  const [topRatedMixed, setTopRatedMixed] = useState([]);
+  const [actionMixed, setActionMixed] = useState([]);
+  const [horrorThrillerMixed, setHorrorThrillerMixed] = useState([]);
+  const [sciFiAdventureMixed, setSciFiAdventureMixed] = useState([]);
+  const [dramaMixed, setDramaMixed] = useState([]);
+  const [mysteryMixed, setMysteryMixed] = useState([]);
+  const [comedyMixed, setComedyMixed] = useState([]);
+  const [suspenseMixed, setSuspenseMixed] = useState([]);
+  const [oscarsMixed, setOscarsMixed] = useState([]);
+  const [thisMonthMixed, setThisMonthMixed] = useState([]);
 
-  const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
-  const [selectedEpisode, setSelectedEpisode] = useState<number | null>(null);
-  const [episodes, setEpisodes] = useState<TMDBEpisode[]>([]);
+  // حالات صفحات الأفلام / المسلسلات مع التصنيفات الجانبية
+  const [hubGenre, setHubGenre] = useState('all');
+  const [hubItems, setHubItems] = useState([]);
+  const [hubPage, setHubPage] = useState(1);
+  const [hasMoreHub, setHasMoreHub] = useState(true);
 
-  const [selectedServerId, setSelectedServerId] = useState<string>(serverOptions[0].id);
+  // حالات الكتالوج العام (عند الضغط على عرض المزيد في أي قسم بالرئيسية)
+  const [catalogTitle, setCatalogTitle] = useState('');
+  const [catalogItems, setCatalogItems] = useState([]);
+  const [catalogEndpoint, setCatalogEndpoint] = useState('');
+  const [catalogGenre, setCatalogGenre] = useState('');
+  const [catalogPage, setCatalogPage] = useState(1);
+  const [hasMoreCatalog, setHasMoreCatalog] = useState(true);
 
-  // جلب التريند
+  // مراجع للتحريك التلقائي في الرئيسية
+  const rowRefs = {
+    thisMonth: useRef(null),
+    oscars: useRef(null),
+    topRated: useRef(null),
+    drama: useRef(null),
+    mystery: useRef(null),
+    comedy: useRef(null),
+    suspense: useRef(null),
+    action: useRef(null),
+    horror: useRef(null),
+    scifi: useRef(null),
+  };
+
   useEffect(() => {
-    const fetchTrending = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch(
-          `${TMDB_BASE_URL}/trending/all/day?api_key=${TMDB_API_KEY}&language=ar-SA`
-        );
-        const data = await res.json();
-        setTrending(data.results || []);
-      } catch (e) {
-        console.error('Error fetching trending', e);
+        const trendRes = await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}&language=en-US`);
+        const trendData = await trendRes.json();
+        setTrending(trendData.results || []);
+
+        const fetchMixedCategory = async (movieGenre, tvGenre, setter) => {
+          const [movieRes, tvRes] = await Promise.all([
+            fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${movieGenre}&language=en-US&sort_by=vote_average.desc&vote_count.gte=300`),
+            fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_genres=${tvGenre}&language=en-US&sort_by=vote_average.desc&vote_count.gte=150`)
+          ]);
+          const movieData = await movieRes.json();
+          const tvData = await tvRes.json();
+          
+          const combined = [...(movieData.results || []), ...(tvData.results || [])];
+          setter(combined.sort(() => 0.5 - Math.random()));
+        };
+
+        const topMovieRes = await fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US`);
+        const topTvRes = await fetch(`https://api.themoviedb.org/3/tv/top_rated?api_key=${API_KEY}&language=en-US`);
+        const topMovieData = await topMovieRes.json();
+        const topTvData = await topTvRes.json();
+        setTopRatedMixed([...(topMovieData.results || []), ...(topTvData.results || [])].sort(() => 0.5 - Math.random()));
+
+        fetchMixedCategory('28', '10759', setActionMixed);
+        fetchMixedCategory('27', '10765', setHorrorThrillerMixed);
+        fetchMixedCategory('12,878', '10765', setSciFiAdventureMixed);
+        fetchMixedCategory('18', '18', setDramaMixed);
+        fetchMixedCategory('9648', '9648', setMysteryMixed);
+        fetchMixedCategory('35', '35', setComedyMixed);
+        fetchMixedCategory('53', '10768', setSuspenseMixed);
+        fetchMixedCategory('18,36', '18', setOscarsMixed);
+        
+        const monthMovieRes = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=en-US&sort_by=popularity.desc&primary_release_date.gte=2026-01-01`);
+        const monthTvRes = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=en-US&sort_by=popularity.desc&first_air_date.gte=2026-01-01`);
+        const monthMovieData = await monthMovieRes.json();
+        const monthTvData = await monthTvRes.json();
+        setThisMonthMixed([...(monthMovieData.results || []), ...(monthTvData.results || [])].sort(() => 0.5 - Math.random()));
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
       }
     };
 
-    const fetchPopularMovies = async () => {
-      try {
-        const res = await fetch(
-          `${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&language=ar-SA&page=1`
-        );
-        const data = await res.json();
-        setPopularMovies(data.results || []);
-      } catch (e) {
-        console.error('Error fetching popular movies', e);
-      }
-    };
-
-    const fetchPopularTV = async () => {
-      try {
-        const res = await fetch(
-          `${TMDB_BASE_URL}/tv/popular?api_key=${TMDB_API_KEY}&language=ar-SA&page=1`
-        );
-        const data = await res.json();
-        setPopularTV(data.results || []);
-      } catch (e) {
-        console.error('Error fetching popular tv', e);
-      }
-    };
-
-    fetchTrending();
-    fetchPopularMovies();
-    fetchPopularTV();
+    fetchData();
   }, []);
 
-  // البحث
-  const handleSearch = async (page = 1) => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setSearchPage(1);
-      setSearchTotalPages(1);
-      return;
-    }
-    try {
-      const res = await fetch(
-        `${TMDB_BASE_URL}/search/multi?api_key=${TMDB_API_KEY}&language=ar-SA&query=${encodeURIComponent(
-          searchQuery
-        )}&page=${page}`
-      );
-      const data = await res.json();
-      setSearchResults(data.results || []);
-      setSearchPage(data.page || 1);
-      setSearchTotalPages(data.total_pages || 1);
-    } catch (e) {
-      console.error('Error searching', e);
-    }
-  };
+  // تمرير تلقائي للصفوف الأفقية في الرئيسية كل 5 ثوانٍ
+  useEffect(() => {
+    const interval = setInterval(() => {
+      Object.values(rowRefs).forEach((ref) => {
+        if (ref.current) {
+          const { scrollLeft, scrollWidth, clientWidth } = ref.current;
+          if (scrollLeft + clientWidth >= scrollWidth - 10) {
+            ref.current.scrollTo({ left: 0, behavior: 'smooth' });
+          } else {
+            ref.current.scrollBy({ left: 300, behavior: 'smooth' });
+          }
+        }
+      });
+    }, 5000);
 
-  const handleLoadMoreSearch = () => {
-    if (searchPage < searchTotalPages) {
-      handleSearch(searchPage + 1);
-    }
-  };
+    return () => clearInterval(interval);
+  }, []);
 
-  // اختيار عنصر للمشاهدة
-  const handleSelectMedia = async (media: TMDBMedia) => {
-    const type: MediaType =
-      media.media_type === 'tv' || (!media.title && media.name) ? 'tv' : 'movie';
-
-    setSelectedMedia(media);
-    setSelectedType(type);
-    setActiveTab('watch');
-    setSelectedSeason(null);
-    setSelectedEpisode(null);
-    setEpisodes([]);
-    setTvDetails(null);
-    setMovieDetails(null);
-
-    if (type === 'tv') {
+  useEffect(() => {
+    const fetchTvSeasonsAndEpisodes = async () => {
+      if (!selectedMedia || (!selectedMedia.first_air_date && selectedMedia.media_type !== 'tv')) return;
       try {
-        const res = await fetch(
-          `${TMDB_BASE_URL}/tv/${media.id}?api_key=${TMDB_API_KEY}&language=ar-SA`
-        );
+        const res = await fetch(`https://api.themoviedb.org/3/tv/${selectedMedia.id}?api_key=${API_KEY}&language=en-US`);
         const data = await res.json();
         setTvDetails(data);
-      } catch (e) {
-        console.error('Error fetching TV details', e);
+
+        const seasonRes = await fetch(`https://api.themoviedb.org/3/tv/${selectedMedia.id}/season/${selectedSeason}?api_key=${API_KEY}&language=en-US`);
+        const seasonData = await seasonRes.json();
+        if (seasonData.episodes && seasonData.episodes.length > 0) {
+          setEpisodesList(seasonData.episodes);
+        } else {
+          setEpisodesList(Array.from({ length: 20 }, (_, i) => ({ episode_number: i + 1, name: `Episode ${i + 1}` })));
+        }
+      } catch (err) {
+        console.error('Error fetching TV details:', err);
       }
-    } else {
+    };
+
+    fetchTvSeasonsAndEpisodes();
+  }, [selectedMedia, selectedSeason]);
+
+  useEffect(() => {
+    if (trending.length === 0) return;
+    const interval = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % Math.min(trending.length, 5));
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [trending]);
+
+  useEffect(() => {
+    if (activeTab !== 'movies-hub' && activeTab !== 'tv-hub') return;
+    
+    const fetchHubContent = async () => {
+      setHubPage(1);
+      const endpoint = activeTab === 'movies-hub' ? 'movie' : 'tv';
+      const selectedObj = GENRES.find(g => g.id === hubGenre) || GENRES[0];
+      const genreId = activeTab === 'movies-hub' ? selectedObj.movieGenre : selectedObj.tvGenre;
+
       try {
-        const res = await fetch(
-          `${TMDB_BASE_URL}/movie/${media.id}?api_key=${TMDB_API_KEY}&language=ar-SA`
-        );
+        let url = `https://api.themoviedb.org/3/discover/${endpoint}?api_key=${API_KEY}&language=en-US&page=1`;
+        if (genreId && genreId !== '0') {
+          url += `&with_genres=${genreId}`;
+        }
+        const res = await fetch(url);
         const data = await res.json();
-        setMovieDetails(data);
-      } catch (e) {
-        console.error('Error fetching movie details', e);
+        setHubItems(data.results || []);
+        setHasMoreHub(data.page < data.total_pages);
+      } catch (err) {
+        console.error('Error fetching hub content:', err);
       }
-    }
-  };
+    };
 
-  // جلب حلقات الموسم المحدد
-  const fetchSeasonEpisodes = async (tvId: number, seasonNumber: number) => {
+    fetchHubContent();
+  }, [activeTab, hubGenre]);
+
+  const loadMoreHubItems = async () => {
+    const nextPage = hubPage + 1;
+    const endpoint = activeTab === 'movies-hub' ? 'movie' : 'tv';
+    const selectedObj = GENRES.find(g => g.id === hubGenre) || GENRES[0];
+    const genreId = activeTab === 'movies-hub' ? selectedObj.movieGenre : selectedObj.tvGenre;
+
     try {
-      const res = await fetch(
-        `${TMDB_BASE_URL}/tv/${tvId}/season/${seasonNumber}?api_key=${TMDB_API_KEY}&language=ar-SA`
-      );
+      let url = `https://api.themoviedb.org/3/discover/${endpoint}?api_key=${API_KEY}&language=en-US&page=${nextPage}`;
+      if (genreId && genreId !== '0') {
+        url += `&with_genres=${genreId}`;
+      }
+      const res = await fetch(url);
       const data = await res.json();
-      setEpisodes(data.episodes || []);
-    } catch (e) {
-      console.error('Error fetching season episodes', e);
+      setHubItems(prev => [...prev, ...(data.results || [])]);
+      setHubPage(nextPage);
+      setHasMoreHub(nextPage < data.total_pages);
+    } catch (err) {
+      console.error('Error loading more hub items:', err);
     }
   };
 
-  const currentServer = serverOptions.find((s) => s.id === selectedServerId) || serverOptions[0];
-
-  const buildEmbedUrl = () => {
-    if (!selectedMedia) return '';
-    const tmdbId = selectedMedia.id;
-    if (selectedType === 'movie') {
-      return currentServer.buildUrl({ tmdbId, type: 'movie' });
+  const openCatalog = async (endpointType, genreId, title) => {
+    setCatalogTitle(title);
+    setCatalogEndpoint(endpointType);
+    setCatalogGenre(genreId);
+    setCatalogPage(1);
+    setActiveTab('catalog');
+    try {
+      let url = `https://api.themoviedb.org/3/discover/${endpointType}?api_key=${API_KEY}&language=en-US&page=1`;
+      if (genreId && genreId !== '0') {
+        url += `&with_genres=${genreId}`;
+      }
+      const res = await fetch(url);
+      const data = await res.json();
+      setCatalogItems(data.results || []);
+      setHasMoreCatalog(data.page < data.total_pages);
+    } catch (err) {
+      console.error('Error fetching catalog:', err);
     }
-    return currentServer.buildUrl({
-      tmdbId,
-      type: 'tv',
-      season: selectedSeason || 1,
-      episode: selectedEpisode || 1,
-    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const renderPoster = (media: TMDBMedia) => {
-    const title = media.title || media.name || 'بدون عنوان';
-    const imgSrc = media.poster_path
-      ? `${TMDB_IMAGE_BASE}${media.poster_path}`
-      : media.backdrop_path
-      ? `${TMDB_IMAGE_BASE}${media.backdrop_path}`
-      : undefined;
+  const loadMoreCatalogItems = async () => {
+    const nextPage = catalogPage + 1;
+    try {
+      let url = `https://api.themoviedb.org/3/discover/${catalogEndpoint}?api_key=${API_KEY}&language=en-US&page=${nextPage}`;
+      if (catalogGenre && catalogGenre !== '0') {
+        url += `&with_genres=${catalogGenre}`;
+      }
+      const res = await fetch(url);
+      const data = await res.json();
+      setCatalogItems(prev => [...prev, ...(data.results || [])]);
+      setCatalogPage(nextPage);
+      setHasMoreCatalog(nextPage < data.total_pages);
+    } catch (err) {
+      console.error('Error loading more catalog items:', err);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    try {
+      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=en-US`);
+      const data = await res.json();
+      setSearchResults(data.results || []);
+      setShowSearchModal(false);
+    } catch (err) {
+      console.error('Search error:', err);
+    }
+  };
+
+  const openWatchPage = async (item) => {
+    setSelectedMedia(item);
+    setSelectedSeason(1);
+    setSelectedEpisode(1);
+    setSelectedServer('embedsu');
+    setActiveTab('watch');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    try {
+      const res = await fetch(`https://api.themoviedb.org/3/${item.media_type || (item.first_air_date ? 'tv' : 'movie')}/${item.id}?api_key=${API_KEY}&language=ar-SA`);
+      const data = await res.json();
+      if (data.overview) {
+        setSelectedMedia(prev => ({ ...prev, overview: data.overview }));
+      }
+    } catch (err) {
+      console.error('Error fetching arabic overview:', err);
+    }
+  };
+
+  const heroItem = trending[heroIndex];
+
+  // دالة توليد روابط السيرفرات البديلة الجديدة (Embed.su, 2Embed, MultiEmbed, SmashyStream)
+  const getEmbedUrl = (media, server) => {
+    if (!media) return '';
+    const isTv = media.media_type === 'tv' || media.first_air_date;
+    const id = media.id;
+
+    switch (server) {
+      case 'embedsu':
+        return isTv ? `https://embed.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://embed.su/embed/movie/${id}`;
+      case 'twouembed':
+        return isTv ? `https://www.2embed.cc/embedtv/${id}&s=${selectedSeason}&e=${selectedEpisode}` : `https://www.2embed.cc/embed/${id}`;
+      case 'multiembed':
+        return isTv ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${selectedSeason}&e=${selectedEpisode}` : `https://multiembed.mov/?video_id=${id}&tmdb=1`;
+      case 'smashy':
+        return isTv ? `https://player.smashy.stream/tv/${id}?s=${selectedSeason}&e=${selectedEpisode}` : `https://player.smashy.stream/movie/${id}`;
+      default:
+        return isTv ? `https://embed.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://embed.su/embed/movie/${id}`;
+    }
+  };
+
+  // قائمة السيرفرات الجديدة البديلة النشطة
+  const serversList = [
+    { id: 'embedsu', name: 'سيرفر Embed.su (ممتاز وسريع)' },
+    { id: 'twouembed', name: 'سيرفر 2Embed' },
+    { id: 'multiembed', name: 'سيرفر MultiEmbed' },
+    { id: 'smashy', name: 'سيرفر SmashyStream' }
+  ];
+
+  const HorizontalRow = ({ title, items, rowRef, onSeeMore }) => {
+    if (!items || items.length === 0) return null;
 
     return (
-      <div
-        key={`${media.id}-${title}`}
-        className="group cursor-pointer w-40 flex-shrink-0"
-        onClick={() => handleSelectMedia(media)}
-      >
-        <div className="relative w-40 h-60 rounded-lg overflow-hidden bg-zinc-900">
-          {imgSrc ? (
-            <img
-              src={imgSrc}
-              alt={title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-zinc-500 text-xs">
-              لا توجد صورة
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingRight: '4px', paddingLeft: '4px' }}>
+          <h2 style={{ fontSize: '17px', fontWeight: 'bold', borderRight: '3px solid #f97316', paddingRight: '8px', margin: 0, color: '#fff' }}>
+            {title}
+          </h2>
+          <button 
+            onClick={onSeeMore} 
+            style={{ 
+              backgroundColor: 'rgba(249, 115, 22, 0.1)', 
+              border: '1px solid #f97316', 
+              color: '#f97316', 
+              fontSize: '12px', 
+              fontWeight: 'bold', 
+              cursor: 'pointer', 
+              padding: '6px 14px',
+              borderRadius: '6px',
+              transition: 'all 0.2s'
+            }}
+          >
+            عرض المزيد
+          </button>
         </div>
-        <p className="mt-2 text-xs text-zinc-200 line-clamp-2 group-hover:text-orange-400 transition-colors">
-          {title}
-        </p>
+
+        <div 
+          ref={rowRef}
+          style={{ 
+            display: 'flex', 
+            gap: '14px', 
+            overflowX: 'auto', 
+            scrollBehavior: 'smooth', 
+            paddingBottom: '8px',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          }}
+          className="no-scrollbar"
+        >
+          {items.map((item) => {
+            const itemTitle = item.title || item.name;
+            const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Image';
+            const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+            const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+            const isTvShow = item.media_type === 'tv' || item.first_air_date;
+
+            return (
+              <div 
+                key={item.id} 
+                onClick={() => openWatchPage(item)}
+                style={{ 
+                  minWidth: '135px', 
+                  maxWidth: '135px',
+                  backgroundColor: '#121215', 
+                  borderRadius: '8px', 
+                  overflow: 'hidden', 
+                  cursor: 'pointer', 
+                  border: '1px solid #27272a',
+                  flexShrink: '0',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+              >
+                <div style={{ position: 'relative', width: '100%', height: '190px' }}>
+                  <img src={posterPath} alt={itemTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                  <span style={{ position: 'absolute', top: '6px', left: '6px', backgroundColor: 'rgba(0, 0, 0, 0.75)', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <span style={{ color: '#eab308' }}>★</span> {rating}
+                  </span>
+                </div>
+                <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1 }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', margin: '0 0 4px 0', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', direction: 'ltr', textAlign: 'left' }}>
+                    {itemTitle}
+                  </h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#a1a1aa' }}>
+                    <span>{year}</span>
+                    <span style={{ color: '#f97316', fontWeight: 'bold' }}>{isTvShow ? 'مسلسل' : 'فيلم'}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const MediaGrid = ({ items, onSelect }) => {
+    if (!items || items.length === 0) {
+      return <p style={{ color: '#a1a1aa', textAlign: 'center', padding: '40px' }}>لا توجد عناوين متاحة لهذا التصنيف حالياً...</p>;
+    }
+
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '14px' }}>
+        {items.map((item) => {
+          const title = item.title || item.name;
+          const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Image';
+          const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+          const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+          const isTvShow = item.media_type === 'tv' || item.first_air_date;
+
+          return (
+            <div 
+              key={item.id} 
+              onClick={() => onSelect(item)}
+              style={{ backgroundColor: '#121215', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #27272a', display: 'flex', flexDirection: 'column' }}
+            >
+              <div style={{ position: 'relative', width: '100%', height: '200px' }}>
+                <img src={posterPath} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: 'rgba(0, 0, 0, 0.75)', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  <span style={{ color: '#eab308' }}>★</span> {rating}
+                </span>
+              </div>
+              <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1 }}>
+                <h3 style={{ fontSize: '13px', fontWeight: 'bold', margin: '0 0 4px 0', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', direction: 'ltr', textAlign: 'left' }}>
+                  {title}
+                </h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#a1a1aa' }}>
+                  <span>{year}</span>
+                  <span style={{ color: '#f97316', fontWeight: 'bold' }}>{isTvShow ? 'مسلسل' : 'فيلم'}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
 
   return (
-    <main className="min-h-screen bg-[#09090b] text-zinc-100">
-      {/* الهيدر */}
-      <header className="border-b border-zinc-800 bg-[#09090b]/95 backdrop-blur sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-orange-300 flex items-center justify-center">
-              <span className="text-xs font-bold text-black">M</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-zinc-100">موفي هَب</span>
-              <span className="text-[11px] text-zinc-500">اكتشف وشاهد الأفلام والمسلسلات</span>
-            </div>
+    <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <Head>
+        <title>سينما فايب | مشاهدة أحدث الأفلام والمسلسلات مترجمة اونلاين</title>
+        <meta name="description" content="استمتع بمشاهدة وتحميل أحدث الأفلام والمسلسلات العربية والعالمية بجودات عالية مترجمة حصرياً على سينما فايب - Cinema Vibe." />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </Head>
+
+      <style jsx global>{`
+        html, body { margin: 0; padding: 0; background-color: #09090b; overflow-x: hidden; }
+        * { box-sizing: border-box; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .hub-container {
+          display: flex;
+          flex-direction: row;
+          gap: 24px;
+          max-width: 1300px;
+          margin: 0 auto;
+          padding: 24px;
+        }
+        .hub-sidebar {
+          width: 240px;
+          min-width: 240px;
+          background-color: #121215;
+          border: 1px solid #27272a;
+          border-radius: 12px;
+          padding: 16px;
+          height: fit-content;
+          position: sticky;
+          top: 80px;
+        }
+        .hub-content {
+          flex: 1;
+          min-width: 0;
+        }
+        @media (max-width: 900px) {
+          .hub-container {
+            flex-direction: column;
+          }
+          .hub-sidebar {
+            width: 100%;
+            position: relative;
+            top: 0;
+            display: flex;
+            overflow-x: auto;
+            gap: 8px;
+            padding: 12px;
+          }
+        }
+      `}</style>
+
+      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(9, 9, 11, 0.95)', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', minWidth: 0, flexWrap: 'wrap' }}>
+          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '900', color: '#f97316', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => { setActiveTab('home'); setSearchResults(null); }}>
+            CINEMA<span style={{ color: '#ffffff' }}>VIBE</span>
+          </h1>
+          <div style={{ display: 'flex', gap: '16px', fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap' }}>
+            <span style={{ color: activeTab === 'home' && !searchQuery ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('home'); setSearchResults(null); }}>الرئيسية</span>
+            <span style={{ color: activeTab === 'movies-hub' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('movies-hub'); setHubGenre('all'); setSearchResults(null); }}>الأفلام</span>
+            <span style={{ color: activeTab === 'tv-hub' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} onClick={() => { setActiveTab('tv-hub'); setHubGenre('all'); setSearchResults(null); }}>المسلسلات</span>
           </div>
-
-          <nav className="flex items-center gap-2 text-xs">
-            <button
-              onClick={() => setActiveTab('home')}
-              className={`px-3 py-1 rounded-full border text-xs transition ${
-                activeTab === 'home'
-                  ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                  : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500'
-              }`}
-            >
-              الرئيسية
-            </button>
-            <button
-              onClick={() => setActiveTab('watch')}
-              disabled={!selectedMedia}
-              className={`px-3 py-1 rounded-full border text-xs transition ${
-                activeTab === 'watch'
-                  ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                  : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500'
-              } ${!selectedMedia ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              المشاهدة
-            </button>
-          </nav>
         </div>
-      </header>
+        <button 
+          onClick={() => setShowSearchModal(!showSearchModal)} 
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: '38px', height: '38px', minWidth: '38px', color: '#f97316', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          aria-label="Search"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
+      </nav>
 
-      {/* المحتوى الرئيسي */}
-      <div className="max-w-6xl mx-auto px-4 py-4">
-        {activeTab === 'home' && (
-          <section className="space-y-6">
-            {/* محرك البحث */}
-            <div className="flex flex-col gap-3">
-              <label className="text-xs text-zinc-400">ابحث عن فيلم أو مسلسل</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSearch();
-                  }}
-                  placeholder="اكتب اسم العمل هنا..."
-                  className="flex-1 rounded-lg bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-orange-500"
-                />
-                <button
-                  onClick={() => handleSearch()}
-                  className="px-4 py-2 rounded-lg bg-orange-500 text-xs font-semibold text-black hover:bg-orange-400 transition"
+      {showSearchModal && (
+        <div style={{ padding: '16px 24px', backgroundColor: '#18181b', borderBottom: '1px solid #27272a' }}>
+          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', maxWidth: '600px', margin: '0 auto' }}>
+            <input type="text" placeholder="ابحث عن فيلم أو مسلسل..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} autoFocus style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid #3f3f46', backgroundColor: '#09090b', color: '#fff', outline: 'none' }} />
+            <button type="submit" style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#f97316', color: '#000', fontWeight: 'bold', cursor: 'pointer' }}>بحث</button>
+          </form>
+        </div>
+      )}
+
+      {activeTab === 'watch' && selectedMedia ? (
+        <div style={{ padding: '30px 24px', maxWidth: '1000px', margin: '0 auto' }}>
+          <button onClick={() => setActiveTab('home')} style={{ marginBottom: '20px', backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>العودة للرئيسية</button>
+          
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316', marginBottom: '16px', direction: 'ltr', textAlign: 'left' }}>
+            {selectedMedia.title || selectedMedia.name}
+          </h2>
+
+          {(selectedMedia.media_type === 'tv' || selectedMedia.first_air_date) && (
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '16px', backgroundColor: '#121215', padding: '14px 18px', borderRadius: '10px', border: '1px solid #27272a', alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '13px', color: '#f97316', fontWeight: 'bold' }}>اختر الموسم والحلقة:</span>
+              
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <label style={{ fontSize: '12px', color: '#a1a1aa' }}>الموسم:</label>
+                <select 
+                  value={selectedSeason} 
+                  onChange={(e) => {
+                    setSelectedSeason(Number(e.target.value));
+                    setSelectedEpisode(1);
+                  }} 
+                  style={{ padding: '8px 12px', backgroundColor: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', outline: 'none' }}
                 >
-                  بحث
-                </button>
-              </div>
-              {searchResults.length > 0 && (
-                <div className="flex items-center justify-between text-[11px] text-zinc-500">
-                  <span>
-                    النتائج: صفحة {searchPage} من {searchTotalPages}
-                  </span>
-                  {searchPage < searchTotalPages && (
-                    <button
-                      onClick={handleLoadMoreSearch}
-                      className="text-orange-400 hover:text-orange-300"
-                    >
-                      تحميل المزيد
-                    </button>
+                  {tvDetails && tvDetails.seasons ? (
+                    tvDetails.seasons.map(season => (
+                      <option key={season.id} value={season.season_number}>
+                        {season.name || `Season ${season.season_number}`}
+                      </option>
+                    ))
+                  ) : (
+                    [1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Season {s}</option>)
                   )}
-                </div>
-              )}
-            </div>
-
-            {/* نتائج البحث */}
-            {searchResults.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-sm font-semibold text-zinc-100">نتائج البحث</h2>
-                <div className="flex gap-3 overflow-x-auto pb-2">
-                  {searchResults.map(renderPoster)}
-                </div>
+                </select>
               </div>
-            )}
 
-            {/* التريند */}
-            <div className="space-y-3">
-              <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-                <span className="w-1 h-4 rounded-full bg-orange-500" />
-                التريند اليومي
-              </h2>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {trending.map(renderPoster)}
-              </div>
-            </div>
-
-            {/* أفلام شهيرة */}
-            <div className="space-y-3">
-              <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-                <span className="w-1 h-4 rounded-full bg-orange-500" />
-                أفلام شهيرة
-              </h2>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {popularMovies.map(renderPoster)}
-              </div>
-            </div>
-
-            {/* مسلسلات شهيرة */}
-            <div className="space-y-3">
-              <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-                <span className="w-1 h-4 rounded-full bg-orange-500" />
-                مسلسلات شهيرة
-              </h2>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {popularTV.map(renderPoster)}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {activeTab === 'watch' && selectedMedia && (
-          <section className="space-y-6">
-            {/* معلومات العمل */}
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="w-full md:w-1/3">
-                {renderPoster(selectedMedia)}
-              </div>
-              <div className="w-full md:w-2/3 space-y-3">
-                <h1 className="text-lg font-semibold text-zinc-100">
-                  {selectedMedia.title || selectedMedia.name}
-                </h1>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  {selectedMedia.overview || 'لا يوجد وصف متوفر باللغة العربية.'}
-                </p>
-
-                <div className="flex flex-wrap gap-2 text-[11px] text-zinc-500">
-                  <span className="px-2 py-1 rounded-full bg-zinc-900 border border-zinc-700">
-                    النوع: {selectedType === 'movie' ? 'فيلم' : 'مسلسل'}
-                  </span>
-                  {selectedType === 'tv' && tvDetails && (
-                    <span className="px-2 py-1 rounded-full bg-zinc-900 border border-zinc-700">
-                      عدد المواسم: {tvDetails.seasons.length}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* إعدادات المشاهدة (مواسم/حلقات + سيرفرات) */}
-            <div className="grid md:grid-cols-3 gap-4">
-              {/* مواسم وحلقات للمسلسلات */}
-              {selectedType === 'tv' && tvDetails && (
-                <div className="space-y-3 md:col-span-2">
-                  <h2 className="text-sm font-semibold text-zinc-100">اختيار الموسم والحلقة</h2>
-                  <div className="flex flex-col md:flex-row gap-3">
-                    <div className="flex-1">
-                      <label className="text-[11px] text-zinc-400 mb-1 block">الموسم</label>
-                      <select
-                        className="w-full rounded-lg bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-orange-500"
-                        value={selectedSeason ?? ''}
-                        onChange={(e) => {
-                          const seasonNumber = Number(e.target.value);
-                          setSelectedSeason(seasonNumber);
-                          setSelectedEpisode(null);
-                          setEpisodes([]);
-                          fetchSeasonEpisodes(tvDetails.id, seasonNumber);
-                        }}
-                      >
-                        <option value="" disabled>
-                          اختر الموسم
-                        </option>
-                        {tvDetails.seasons.map((season) => (
-                          <option key={season.id} value={season.season_number}>
-                            {season.name || `الموسم ${season.season_number}`} (
-                            {season.episode_count} حلقة)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex-1">
-                      <label className="text-[11px] text-zinc-400 mb-1 block">الحلقة</label>
-                      <select
-                        className="w-full rounded-lg bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-orange-500"
-                        value={selectedEpisode ?? ''}
-                        onChange={(e) => {
-                          const episodeNumber = Number(e.target.value);
-                          setSelectedEpisode(episodeNumber);
-                        }}
-                        disabled={!episodes.length}
-                      >
-                        <option value="" disabled>
-                          {episodes.length ? 'اختر الحلقة' : 'اختر موسم أولاً'}
-                        </option>
-                        {episodes.map((ep) => (
-                          <option key={ep.id} value={ep.episode_number}>
-                            الحلقة {ep.episode_number} - {ep.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* سيرفرات التشغيل */}
-              <div className="space-y-3">
-                <h2 className="text-sm font-semibold text-zinc-100">سيرفرات التشغيل</h2>
-                <p className="text-[11px] text-zinc-500">
-                  اختر السيرفر القانوني أو المشغّل الداخلي الذي قمت بربطه بالموقع.
-                </p>
-                <select
-                  className="w-full rounded-lg bg-zinc-900 border border-zinc-700 px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-orange-500"
-                  value={selectedServerId}
-                  onChange={(e) => setSelectedServerId(e.target.value)}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <label style={{ fontSize: '12px', color: '#a1a1aa' }}>الحلقة:</label>
+                <select 
+                  value={selectedEpisode} 
+                  onChange={(e) => setSelectedEpisode(Number(e.target.value))} 
+                  style={{ padding: '8px 12px', backgroundColor: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', outline: 'none' }}
                 >
-                  {serverOptions.map((server) => (
-                    <option key={server.id} value={server.id}>
-                      {server.name}
+                  {episodesList.map(ep => (
+                    <option key={ep.id || ep.episode_number} value={ep.episode_number}>
+                      Episode {ep.episode_number} {ep.name && ep.name !== `Episode ${ep.episode_number}` ? `- ${ep.name}` : ''}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
+          )}
 
-            {/* مشغّل الفيديو (iframe) */}
-            <div className="space-y-3">
-              <h2 className="text-sm font-semibold text-zinc-100">المشاهدة الآن</h2>
-              <div className="rounded-xl border border-zinc-800 bg-zinc-950 overflow-hidden">
-                {buildEmbedUrl() ? (
-                  <iframe
-                    src={buildEmbedUrl()}
-                    className="w-full h-[420px] bg-black"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    title="مشغّل الفيديو"
-                  />
-                ) : (
-                  <div className="w-full h-[220px] flex items-center justify-center text-xs text-zinc-500">
-                    يرجى اختيار الموسم والحلقة (للمسلسلات) أو التأكد من إعداد السيرفر.
-                  </div>
-                )}
-              </div>
-              <p className="text-[11px] text-zinc-500">
-                تأكد دائماً من استخدام مصادر قانونية تحترم حقوق الملكية الفكرية عند ربط أي
-                سيرفر تشغيل.
-              </p>
+          <div style={{ marginBottom: '16px', backgroundColor: '#121215', padding: '14px 18px', borderRadius: '10px', border: '1px solid #27272a' }}>
+            <span style={{ fontSize: '13px', color: '#a1a1aa', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>اختر سيرفر أو مصدر التشغيل (إذا واجهتك مشكلة، جرب سيرفر آخر):</span>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {serversList.map((srv) => (
+                <button 
+                  key={srv.id} 
+                  onClick={() => setSelectedServer(srv.id)}
+                  style={{ 
+                    padding: '8px 14px', 
+                    borderRadius: '6px', 
+                    border: 'none', 
+                    fontWeight: 'bold', 
+                    fontSize: '12px',
+                    cursor: 'pointer', 
+                    backgroundColor: selectedServer === srv.id ? '#f97316' : '#27272a',
+                    color: selectedServer === srv.id ? '#000' : '#fff',
+                  }}
+                >
+                  {srv.name}
+                </button>
+              ))}
             </div>
-          </section>
-        )}
-      </div>
-    </main>
-  );
-};
+          </div>
 
-export default HomePage;
+          <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden', border: '1px solid #27272a' }}>
+            <iframe src={getEmbedUrl(selectedMedia, selectedServer)} style={{ width: '100%', height: '100%', border: 'none' }} allowFullScreen title="مشغل الفيديو" />
+          </div>
+
+          <div style={{ marginTop: '20px', backgroundColor: '#121215', padding: '18px', borderRadius: '10px', border: '1px solid #27272a' }}>
+            <h3 style={{ fontSize: '15px', color: '#f97316', margin: '0 0 8px 0', fontWeight: 'bold' }}>قصة العمل:</h3>
+            <p style={{ margin: 0, lineHeight: '1.7', color: '#d4d4d8', fontSize: '14px' }}>
+              {selectedMedia.overview || 'لا يتوفر وصف تفصيلي حالياً لهذا العنوان باللغة العربية.'}
+            </p>
+          </div>
+        </div>
+      ) : searchResults ? (
+        <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>نتائج البحث</h2>
+            <button onClick={() => setSearchResults(null)} style={{ background: 'none', border: 'none', color: '#f97316', cursor: 'pointer', fontWeight: 'bold' }}>إغلاق البحث</button>
+          </div>
+          <MediaGrid items={searchResults} onSelect={openWatchPage} />
+        </div>
+      ) : activeTab === 'movies-hub' || activeTab === 'tv-hub' ? (
+        <div className="hub-container">
+          <div className="hub-sidebar">
+            <h3 style={{ fontSize: '14px', color: '#f97316', marginBottom: '12px', marginTop: 0, fontWeight: 'bold' }}>التصنيفات</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {GENRES.map(g => (
+                <button
+                  key={g.id}
+                  onClick={() => setHubGenre(g.id)}
+                  style={{
+                    padding: '10px 12px',
+                    textAlign: 'right',
+                    backgroundColor: hubGenre === g.id ? '#f97316' : 'transparent',
+                    color: hubGenre === g.id ? '#000' : '#d4d4d8',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: hubGenre === g.id ? 'bold' : 'normal',
+                    fontSize: '13px'
+                  }}
+                >
+                  {g.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="hub-content">
+            <h2 style={{ fontSize: '20px', color: '#fff', marginBottom: '20px', borderRight: '4px solid #f97316', paddingRight: '10px' }}>
+              {activeTab === 'movies-hub' ? 'قائمة الأفلام' : 'قائمة المسلسلات'} - {GENRES.find(g => g.id === hubGenre)?.name}
+            </h2>
+            <MediaGrid items={hubItems} onSelect={openWatchPage} />
+            {hasMoreHub && (
+              <div style={{ textAlign: 'center', marginTop: '30px' }}>
+                <button
+                  onClick={loadMoreHubItems}
+                  style={{
+                    backgroundColor: '#27272a',
+                    color: '#fff',
+                    border: '1px solid #3f3f46',
+                    padding: '10px 24px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '14px'
+                  }}
+                >
+                  تحميل المزيد
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : activeTab === 'catalog' ? (
+        <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0, color: '#fff' }}>{catalogTitle}</h2>
+            <button onClick={() => setActiveTab('home')} style={{ backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>العودة للرئيسية</button>
+          </div>
+          <MediaGrid items={catalogItems} onSelect={openWatchPage} />
+          {hasMoreCatalog && (
+            <div style={{ textAlign: 'center', marginTop: '30px' }}>
+              <button
+                onClick={loadMoreCatalogItems}
+                style={{
+                  backgroundColor: '#27272a',
+                  color: '#fff',
+                  border: '1px solid #3f3f46',
+                  padding: '10px 24px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '14px'
+                }}
+              >
+                تحميل المزيد
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div>
+          {heroItem && (
+            <div style={{ position: 'relative', width: '100%', height: '480px', overflow: 'hidden' }}>
+              <img 
+                src={heroItem.backdrop_path ? `https://image.tmdb.org/t/p/original${heroItem.backdrop_path}` : 'https://via.placeholder.com/1200x600?text=No+Image'} 
+                alt={heroItem.title || heroItem.name} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.5)' }} 
+              />
+              <div style={{ position: 'absolute', bottom: 0, right: 0, left: 0, padding: '40px 24px', background: 'linear-gradient(to top, #09090b, transparent)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <h2 style={{ fontSize: '28px', fontWeight: '900', margin: 0, color: '#fff', direction: 'ltr', textAlign: 'right' }}>
+                  {heroItem.title || heroItem.name}
+                </h2>
+                <p style={{ margin: 0, maxWidth: '700px', fontSize: '14px', lineHeight: '1.6', color: '#d4d4d8', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {heroItem.overview}
+                </p>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                  <button 
+                    onClick={() => openWatchPage(heroItem)}
+                    style={{ backgroundColor: '#f97316', color: '#000', border: 'none', padding: '10px 22px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    ▶ مشاهدة الآن
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div style={{ padding: '24px', maxWidth: '1300px', margin: '0 auto' }}>
+            <HorizontalRow title="أفلام ومسلسلات صدرت هذا الشهر" items={thisMonthMixed} rowRef={rowRefs.thisMonth} onSeeMore={() => openCatalog('movie', '0', 'أفلام ومسلسلات صدرت هذا الشهر')} />
+            <HorizontalRow title="الترشيحات الحائزة على جوائز أوسكار" items={oscarsMixed} rowRef={rowRefs.oscars} onSeeMore={() => openCatalog('movie', '18,36', 'الترشيحات الحائزة على جوائز أوسكار')} />
+            <HorizontalRow title="الأعلى تقييم والمشاهدة" items={topRatedMixed} rowRef={rowRefs.topRated} onSeeMore={() => openCatalog('movie', '0', 'الأعلى تقييم والمشاهدة')} />
+            <HorizontalRow title="أكشن وحماس بلا حدود" items={actionMixed} rowRef={rowRefs.action} onSeeMore={() => openCatalog('movie', '28', 'أكشن وحماس بلا حدود')} />
+            <HorizontalRow title="دراما مؤثرة وعميقة" items={dramaMixed} rowRef={rowRefs.drama} onSeeMore={() => openCatalog('movie', '18', 'دراما مؤثرة وعميقة')} />
+            <HorizontalRow title="رعب وإثارة وتشويق" items={horrorThrillerMixed} rowRef={rowRefs.horror} onSeeMore={() => openCatalog('movie', '27', 'رعب وإثارة وتشويق')} />
+            <HorizontalRow title="خيال علمي ومغامرات فضاء" items={sciFiAdventureMixed} rowRef={rowRefs.scifi} onSeeMore={() => openCatalog('movie', '878', 'خيال علمي ومغامرات فضاء')} />
+            <HorizontalRow title="غموض وتحقيق جنائي" items={mysteryMixed} rowRef={rowRefs.mystery} onSeeMore={() => openCatalog('movie', '9648', 'غموض وتحقيق جنائي')} />
+            <HorizontalRow title="كوميديا وضحك بلا حدود" items={comedyMixed} rowRef={rowRefs.comedy} onSeeMore={() => openCatalog('movie', '35', 'كوميديا وضحك بلا حدود')} />
+            <HorizontalRow title="تشويق ومغامرة" items={suspenseMixed} rowRef={rowRefs.suspense} onSeeMore={() => openCatalog('movie', '53', 'تشويق ومغامرة')} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
