@@ -6,6 +6,7 @@ const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
 export default function Home() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -13,6 +14,7 @@ export default function Home() {
   const [trending, setTrending] = useState([]);
   const [heroIndex, setHeroIndex] = useState(0);
 
+  // القوائم للرئيسية
   const [topRatedMixed, setTopRatedMixed] = useState([]);
   const [actionMixed, setActionMixed] = useState([]);
   const [horrorThrillerMixed, setHorrorThrillerMixed] = useState([]);
@@ -40,23 +42,24 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const trendRes = await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}&language=en-US`);
+        const trendRes = await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}&language=ar`);
         const trendData = await trendRes.json();
         setTrending(trendData.results || []);
 
         const fetchMixedCategory = async (movieGenre, tvGenre, setter) => {
           const [movieRes, tvRes] = await Promise.all([
-            fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${movieGenre}&language=en-US&sort_by=vote_average.desc&vote_count.gte=300`),
-            fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_genres=${tvGenre}&language=en-US&sort_by=vote_average.desc&vote_count.gte=150`)
+            fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${movieGenre}&language=ar&sort_by=vote_average.desc&vote_count.gte=300`),
+            fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_genres=${tvGenre}&language=ar&sort_by=vote_average.desc&vote_count.gte=150`)
           ]);
           const movieData = await movieRes.json();
           const tvData = await tvRes.json();
+          
           const combined = [...(movieData.results || []), ...(tvData.results || [])];
           setter(combined.sort(() => 0.5 - Math.random()));
         };
 
-        const topMovieRes = await fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US`);
-        const topTvRes = await fetch(`https://api.themoviedb.org/3/tv/top_rated?api_key=${API_KEY}&language=en-US`);
+        const topMovieRes = await fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=ar`);
+        const topTvRes = await fetch(`https://api.themoviedb.org/3/tv/top_rated?api_key=${API_KEY}&language=ar`);
         const topMovieData = await topMovieRes.json();
         const topTvData = await topTvRes.json();
         setTopRatedMixed([...(topMovieData.results || []), ...(topTvData.results || [])].sort(() => 0.5 - Math.random()));
@@ -70,8 +73,8 @@ export default function Home() {
         fetchMixedCategory('53', '10768', setSuspenseMixed);
         fetchMixedCategory('18,36', '18', setOscarsMixed);
         
-        const monthMovieRes = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=en-US&sort_by=popularity.desc&primary_release_date.gte=2026-01-01`);
-        const monthTvRes = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=en-US&sort_by=popularity.desc&first_air_date.gte=2026-01-01`);
+        const monthMovieRes = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=ar&sort_by=popularity.desc&primary_release_date.gte=2026-01-01`);
+        const monthTvRes = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=ar&sort_by=popularity.desc&first_air_date.gte=2026-01-01`);
         const monthMovieData = await monthMovieRes.json();
         const monthTvData = await monthTvRes.json();
         setThisMonthMixed([...(monthMovieData.results || []), ...(monthTvData.results || [])].sort(() => 0.5 - Math.random()));
@@ -84,6 +87,7 @@ export default function Home() {
     fetchData();
   }, []);
 
+  // تمرير تلقائي للصفوف الأفقية كل 5 ثوانٍ
   useEffect(() => {
     const interval = setInterval(() => {
       Object.values(rowRefs).forEach((ref) => {
@@ -97,14 +101,16 @@ export default function Home() {
         }
       });
     }, 5000);
+
     return () => clearInterval(interval);
   }, []);
 
+  // حركة البانر المتحرك في الأعلى وتغييره كل 5 ثوانٍ
   useEffect(() => {
     if (trending.length === 0) return;
     const interval = setInterval(() => {
       setHeroIndex((prev) => (prev + 1) % Math.min(trending.length, 5));
-    }, 6000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [trending]);
 
@@ -112,7 +118,7 @@ export default function Home() {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     try {
-      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=en-US`);
+      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=ar`);
       const data = await res.json();
       setSearchResults(data.results || []);
       setShowSearchModal(false);
@@ -121,18 +127,18 @@ export default function Home() {
     }
   };
 
-  const openWatchPage = (item) => {
-    router.push(`/watch/${item.id}`);
-  };
-
-  const openCatalog = (endpointType, genreId, title) => {
-    router.push(`/catalog?endpoint=${endpointType}&genre=${genreId}&title=${encodeURIComponent(title)}`);
+  const openCatalog = (endpointType, genreId, titleText) => {
+    router.push({
+      pathname: '/catalog',
+      query: { endpoint: endpointType, genre: genreId, title: titleText }
+    });
   };
 
   const heroItem = trending[heroIndex];
 
-  const HorizontalRow = ({ title, items, rowRef, onSeeMore }) => {
+  const HorizontalRow = ({ title, items, rowRef, endpointType, genreId }) => {
     if (!items || items.length === 0) return null;
+
     return (
       <div style={{ marginBottom: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingRight: '4px', paddingLeft: '4px' }}>
@@ -140,14 +146,36 @@ export default function Home() {
             {title}
           </h2>
           <button 
-            onClick={onSeeMore} 
-            style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', padding: '6px 14px', borderRadius: '6px' }}
+            onClick={() => openCatalog(endpointType, genreId, title)} 
+            style={{ 
+              backgroundColor: 'rgba(249, 115, 22, 0.1)', 
+              border: '1px solid #f97316', 
+              color: '#f97316', 
+              fontSize: '12px', 
+              fontWeight: 'bold', 
+              cursor: 'pointer', 
+              padding: '6px 14px',
+              borderRadius: '6px',
+              transition: 'all 0.2s'
+            }}
           >
             عرض المزيد
           </button>
         </div>
 
-        <div ref={rowRef} style={{ display: 'flex', gap: '14px', overflowX: 'auto', scrollBehavior: 'smooth', paddingBottom: '8px' }} className="no-scrollbar">
+        <div 
+          ref={rowRef}
+          style={{ 
+            display: 'flex', 
+            gap: '14px', 
+            overflowX: 'auto', 
+            scrollBehavior: 'smooth', 
+            paddingBottom: '8px',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          }}
+          className="no-scrollbar"
+        >
           {items.map((item) => {
             const itemTitle = item.title || item.name;
             const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Image';
@@ -158,8 +186,19 @@ export default function Home() {
             return (
               <div 
                 key={item.id} 
-                onClick={() => openWatchPage(item)}
-                style={{ minWidth: '135px', maxWidth: '135px', backgroundColor: '#121215', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #27272a', flexShrink: '0', display: 'flex', flexDirection: 'column' }}
+                onClick={() => router.push(`/watch/${item.id}`)}
+                style={{ 
+                  minWidth: '135px', 
+                  maxWidth: '135px',
+                  backgroundColor: '#121215', 
+                  borderRadius: '8px', 
+                  overflow: 'hidden', 
+                  cursor: 'pointer', 
+                  border: '1px solid #27272a',
+                  flexShrink: '0',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
               >
                 <div style={{ position: 'relative', width: '100%', height: '190px' }}>
                   <img src={posterPath} alt={itemTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
@@ -184,39 +223,6 @@ export default function Home() {
     );
   };
 
-  const MediaGrid = ({ items }) => {
-    if (!items || items.length === 0) return <p style={{ color: '#a1a1aa', textAlign: 'center', padding: '40px' }}>لا توجد عناوين متاحة...</p>;
-    return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '14px' }}>
-        {items.map((item) => {
-          const title = item.title || item.name;
-          const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Image';
-          const year = (item.release_date || item.first_air_date || '').slice(0, 4);
-          const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-          const isTvShow = item.media_type === 'tv' || item.first_air_date;
-
-          return (
-            <div key={item.id} onClick={() => openWatchPage(item)} style={{ backgroundColor: '#121215', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #27272a', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ position: 'relative', width: '100%', height: '200px' }}>
-                <img src={posterPath} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
-                <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: 'rgba(0, 0, 0, 0.75)', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
-                  <span style={{ color: '#eab308' }}>★</span> {rating}
-                </span>
-              </div>
-              <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1 }}>
-                <h3 style={{ fontSize: '13px', fontWeight: 'bold', margin: '0 0 4px 0', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', direction: 'ltr', textAlign: 'left' }}>{title}</h3>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#a1a1aa' }}>
-                  <span>{year}</span>
-                  <span style={{ color: '#f97316', fontWeight: 'bold' }}>{isTvShow ? 'مسلسل' : 'فيلم'}</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
   return (
     <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <Head>
@@ -231,18 +237,22 @@ export default function Home() {
       `}</style>
 
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(9, 9, 11, 0.95)', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '900', color: '#f97316', cursor: 'pointer' }} onClick={() => router.push('/')}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', minWidth: 0, flexWrap: 'wrap' }}>
+          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '900', color: '#f97316', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => router.push('/')}>
             CINEMA<span style={{ color: '#ffffff' }}>VIBE</span>
           </h1>
-          <div style={{ display: 'flex', gap: '16px', fontSize: '14px', fontWeight: '600' }}>
-            <span style={{ color: '#f97316', cursor: 'pointer' }} onClick={() => router.push('/')}>الرئيسية</span>
+          <div style={{ display: 'flex', gap: '16px', fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap' }}>
+            <span style={{ color: '#f97316', cursor: 'pointer' }}>الرئيسية</span>
             <span style={{ color: '#a1a1aa', cursor: 'pointer' }} onClick={() => router.push('/movies')}>الأفلام</span>
             <span style={{ color: '#a1a1aa', cursor: 'pointer' }} onClick={() => router.push('/tv')}>المسلسلات</span>
           </div>
         </div>
-        <button onClick={() => setShowSearchModal(!showSearchModal)} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: '38px', height: '38px', color: '#f97316', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <button 
+          onClick={() => setShowSearchModal(!showSearchModal)} 
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: '38px', height: '38px', minWidth: '38px', color: '#f97316', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          aria-label="Search"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
       </nav>
 
@@ -259,32 +269,70 @@ export default function Home() {
         <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>نتائج البحث</h2>
-            <button onClick={() => setSearchResults(null)} style={{ background: 'none', border: 'none', color: '#f97316', cursor: 'pointer', fontWeight: 'bold' }}>إغلاق البحث</button>
+            <button onClick={() => setSearchResults(null)} style={{ background: 'none', border: 'none', color: '#f97316', cursor: 'pointer', fontWeight: 'bold' }}>إلغاء البحث</button>
           </div>
-          <MediaGrid items={searchResults} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '14px' }}>
+            {searchResults.map(item => (
+              <div key={item.id} onClick={() => router.push(`/watch/${item.id}`)} style={{ backgroundColor: '#121215', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #27272a' }}>
+                <img src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Image'} alt={item.title || item.name} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+                <div style={{ padding: '10px' }}>
+                  <h3 style={{ fontSize: '13px', color: '#fff', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', direction: 'ltr', textAlign: 'left' }}>{item.title || item.name}</h3>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
-        <div style={{ padding: '24px', maxWidth: '1300px', margin: '0 auto' }}>
+        <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
           {heroItem && (
-            <div style={{ position: 'relative', width: '100%', height: '400px', borderRadius: '12px', overflow: 'hidden', marginBottom: '40px', background: '#121215', border: '1px solid #27272a' }}>
-              <img src={`https://image.tmdb.org/t/p/original${heroItem.backdrop_path || heroItem.poster_path}`} alt="Hero" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
-              <div style={{ position: 'absolute', bottom: 0, right: 0, left: 0, padding: '30px', background: 'linear-gradient(to top, #09090b, transparent)' }}>
-                <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#fff', margin: '0 0 10px 0', direction: 'ltr', textAlign: 'right' }}>{heroItem.title || heroItem.name}</h2>
-                <button onClick={() => openWatchPage(heroItem)} style={{ backgroundColor: '#f97316', color: '#000', border: 'none', padding: '10px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>مشاهدة الآن</button>
+            <div 
+              onClick={() => router.push(`/watch/${heroItem.id}`)}
+              style={{ 
+                position: 'relative', 
+                width: '100%', 
+                height: '420px', 
+                borderRadius: '14px', 
+                overflow: 'hidden', 
+                marginBottom: '36px', 
+                cursor: 'pointer',
+                border: '1px solid #27272a',
+                transition: 'background-image 0.5s ease-in-out'
+              }}
+            >
+              <img 
+                src={`https://image.tmdb.org/t/p/original${heroItem.backdrop_path || heroItem.poster_path}`} 
+                alt={heroItem.title || heroItem.name} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #09090b 5%, rgba(9,9,11,0.6) 50%, transparent 100%)' }} />
+              <div style={{ position: 'absolute', bottom: '24px', right: '24px', left: '24px', maxWidth: '700px' }}>
+                <span style={{ backgroundColor: '#f97316', color: '#000', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block', marginBottom: '8px' }}>
+                  رائج الآن 🔥
+                </span>
+                <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#fff', margin: '0 0 8px 0', direction: 'ltr', textAlign: 'left' }}>
+                  {heroItem.title || heroItem.name}
+                </h2>
+                {/* قصة الفيلم أو المسلسل الخاصة بالبانر المتحرك */}
+                <p style={{ color: '#d4d4d8', fontSize: '13px', margin: '0 0 16px 0', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {heroItem.overview || 'لا يتوفر وصف متاح حالياً لهذا العمل.'}
+                </p>
+                <button style={{ backgroundColor: '#f97316', color: '#000', border: 'none', padding: '10px 22px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>
+                  شاهد الآن
+                </button>
               </div>
             </div>
           )}
 
-          <HorizontalRow title="أحدث إصدارات هذا الشهر" items={thisMonthMixed} rowRef={rowRefs.thisMonth} onSeeMore={() => openCatalog('discover/movie', '0', 'أحدث إصدارات هذا الشهر')} />
-          <HorizontalRow title="الأفلام الحائزة على جوائز وتقييمات عالية" items={oscarsMixed} rowRef={rowRefs.oscars} onSeeMore={() => openCatalog('discover/movie', '18,36', 'أفلام جوائز وتقييمات عالية')} />
-          <HorizontalRow title="الأعلى تقييماً" items={topRatedMixed} rowRef={rowRefs.topRated} onSeeMore={() => openCatalog('movie/top_rated', '0', 'الأعلى تقييماً')} />
-          <HorizontalRow title="أفلام ومسلسلات الأكشن والحماس" items={actionMixed} rowRef={rowRefs.action} onSeeMore={() => openCatalog('discover/movie', '28', 'أكشن وحماس')} />
-          <HorizontalRow title="الرعب والإثارة" items={horrorThrillerMixed} rowRef={rowRefs.horror} onSeeMore={() => openCatalog('discover/movie', '27', 'رعب وإثارة')} />
-          <HorizontalRow title="الخيال العلمي والمغامرة" items={sciFiAdventureMixed} rowRef={rowRefs.scifi} onSeeMore={() => openCatalog('discover/movie', '878', 'خيال علمي ومغامرة')} />
-          <HorizontalRow title="الدراما المؤثرة" items={dramaMixed} rowRef={rowRefs.drama} onSeeMore={() => openCatalog('discover/movie', '18', 'دراما')} />
-          <HorizontalRow title="الغموض والتحقيق" items={mysteryMixed} rowRef={rowRefs.mystery} onSeeMore={() => openCatalog('discover/movie', '9648', 'غموض وتحقيق')} />
-          <HorizontalRow title="الكوميديا والضحك" items={comedyMixed} rowRef={rowRefs.comedy} onSeeMore={() => openCatalog('discover/movie', '35', 'كوميديا')} />
-          <HorizontalRow title="التشويق والجريمة" items={suspenseMixed} rowRef={rowRefs.suspense} onSeeMore={() => openCatalog('discover/movie', '53', 'تشويق وجريمة')} />
+          <HorizontalRow title="افضل الافلام ومسلسلات لهذي السنة " items={thisMonthMixed} rowRef={rowRefs.thisMonth} endpointType="movie" genreId="0" />
+          <HorizontalRow title="ترشيح الأوسكار  " items={oscarsMixed} rowRef={rowRefs.oscars} endpointType="movie" genreId="18,36" />
+          <HorizontalRow title="الأعلى تقييماً " items={topRatedMixed} rowRef={rowRefs.topRated} endpointType="movie" genreId="0" />
+          <HorizontalRow title="دراما مؤثرة " items={dramaMixed} rowRef={rowRefs.drama} endpointType="movie" genreId="18" />
+          <HorizontalRow title="غموض  " items={mysteryMixed} rowRef={rowRefs.mystery} endpointType="movie" genreId="9648" />
+          <HorizontalRow title="كوميديا " items={comedyMixed} rowRef={rowRefs.comedy} endpointType="movie" genreId="35" />
+          <HorizontalRow title="إثارة وجريمة " items={suspenseMixed} rowRef={rowRefs.suspense} endpointType="movie" genreId="53" />
+          <HorizontalRow title="أكشن وحركة  " items={actionMixed} rowRef={rowRefs.action} endpointType="movie" genreId="28" />
+          <HorizontalRow title="رعب  " items={horrorThrillerMixed} rowRef={rowRefs.horror} endpointType="movie" genreId="27" />
+          <HorizontalRow title="خيال علمي " items={sciFiAdventureMixed} rowRef={rowRefs.scifi} endpointType="movie" genreId="878" />
         </div>
       )}
     </div>
