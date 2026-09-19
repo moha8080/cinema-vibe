@@ -1,183 +1,116 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
 const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
 export default function WatchPage() {
   const router = useRouter();
   const { id } = router.query;
-
   const [media, setMedia] = useState(null);
-  const [selectedServer, setSelectedServer] = useState('embedsu');
-  const [selectedSeason, setSelectedSeason] = useState(1);
-  const [selectedEpisode, setSelectedEpisode] = useState(1);
-  const [tvDetails, setTvDetails] = useState(null);
-  const [episodesList, setEpisodesList] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const serversList = [
-    { id: 'embedsu', name: 'سيرفر Embed.su (ممتاز وسريع)' },
-    { id: 'twouembed', name: 'سيرفر 2Embed' },
-    { id: 'multiembed', name: 'سيرفر MultiEmbed' },
-    { id: 'smashy', name: 'سيرفر SmashyStream' }
-  ];
+  const [contentType, setContentType] = useState('movie');
 
   useEffect(() => {
-    if (!id) return;
-    const fetchMediaDetails = async () => {
-      try {
-        // جلب تفاصيل الفيلم أو المسلسل بناءً على الـ ID
-        // سنحاول معرفة هل هو فيلم أم مسلسل من خلال استدعاء عام أو فحص البيانات
-        let res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=ar-SA`);
-        let data = await res.json();
-        
-        let mediaType = 'movie';
-        if (data.success === false) {
-          // إن لم يكن فيلماً، قد يكون مسلسلاً
-          res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=ar-SA`);
-          data = await res.json();
-          mediaType = 'tv';
+    if (!router.isReady || !id) return;
+
+    fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=ar`)
+      .then(res => {
+        if (res.ok) {
+          setContentType('movie');
+          return res.json();
         } else {
-          mediaType = 'movie';
+          return fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=ar`)
+            .then(tvRes => {
+              setContentType('tv');
+              return tvRes.json();
+            });
         }
-
-        setMedia({ ...data, media_type: mediaType });
+      })
+      .then(data => {
+        setMedia(data);
         setLoading(false);
-
-        if (mediaType === 'tv') {
-          setTvDetails(data);
-          const seasonRes = await fetch(`https://api.themoviedb.org/3/tv/${id}/season/1?api_key=${API_KEY}&language=ar-SA`);
-          const seasonData = await seasonRes.json();
-          setEpisodesList(seasonData.episodes || []);
-        }
-      } catch (err) {
+      })
+      .catch(err => {
         console.error('Error fetching media details:', err);
         setLoading(false);
-      }
-    };
-
-    fetchMediaDetails();
-  }, [id]);
-
-  // تحديث الحلقات عند تغيير الموسم
-  useEffect(() => {
-    if (!id || !media || media.media_type !== 'tv') return;
-    const fetchEpisodes = async () => {
-      try {
-        const res = await fetch(`https://api.themoviedb.org/3/tv/${id}/season/${selectedSeason}?api_key=${API_KEY}&language=ar-SA`);
-        const data = await res.json();
-        setEpisodesList(data.episodes || []);
-      } catch (err) {
-        console.error('Error fetching episodes:', err);
-      }
-    };
-    fetchEpisodes();
-  }, [selectedSeason, id, media]);
-
-  const getEmbedUrl = () => {
-    if (!media) return '';
-    const isTv = media.media_type === 'tv';
-    switch (selectedServer) {
-      case 'embedsu':
-        return isTv ? `https://embed.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://embed.su/embed/movie/${id}`;
-      case 'twouembed':
-        return isTv ? `https://www.2embed.cc/embedtv/${id}&s=${selectedSeason}&e=${selectedEpisode}` : `https://www.2embed.cc/embed/${id}`;
-      case 'multiembed':
-        return isTv ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${selectedSeason}&e=${selectedEpisode}` : `https://multiembed.mov/?video_id=${id}&tmdb=1`;
-      case 'smashy':
-        return isTv ? `https://player.smashy.stream/tv/${id}?s=${selectedSeason}&e=${selectedEpisode}` : `https://player.smashy.stream/movie/${id}`;
-      default:
-        return isTv ? `https://embed.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://embed.su/embed/movie/${id}`;
-    }
-  };
+      });
+  }, [router.isReady, id]);
 
   if (loading) {
-    return <div style={{ color: '#fff', textAlign: 'center', marginTop: '100px', background: '#09090b', minHeight: '100vh' }}>جاري التحميل...</div>;
+    return (
+      <div style={{ backgroundColor: '#09090b', color: '#fff', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'system-ui, sans-serif' }}>
+        جاري التحميل...
+      </div>
+    );
   }
 
-  if (!media || media.success === false) {
-    return <div style={{ color: '#fff', textAlign: 'center', marginTop: '100px', background: '#09090b', minHeight: '100vh' }}>عذراً، لم يتم العثور على العمل المطلوب.</div>;
+  if (!media || media.status_code === 34) {
+    return (
+      <div style={{ backgroundColor: '#09090b', color: '#fff', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '15px', fontFamily: 'system-ui, sans-serif' }}>
+        <p>عذراً، العنوان غير موجود.</p>
+        <button onClick={() => router.push('/')} style={{ backgroundColor: '#f97316', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', color: '#000' }}>الرئيسية</button>
+      </div>
+    );
   }
 
   const title = media.title || media.name;
+  const overview = media.overview || 'لا توجد قصة متاحة    .';
+  const rating = media.vote_average ? media.vote_average.toFixed(1) : 'N/A';
+  const releaseDate = media.release_date || media.first_air_date || '';
+
+  const embedUrl = contentType === 'movie' 
+    ? `https://vidsrc.xyz/embed/movie?tmdb=${id}`
+    : `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=1&episode=1`;
 
   return (
-    <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', padding: '20px' }}>
+    <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <Head>
-        <title>مشاهدة {title} | سينما فايب</title>
+        <title>{title} | سينما فايب</title>
       </Head>
 
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        {/* زر رجوع حقيقي يعيدك للصفحة السابقة أو الرئيسية */}
-        <button 
-          onClick={() => router.back()} 
-          style={{ marginBottom: '20px', backgroundColor: '#27272a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          ← رجوع للخلف
-        </button>
+      {/* منع أي خطوط بيضاء بتثبيت لون الخلفية للصفحة بالكامل */}
+      <style jsx global>{`
+        html, body {
+          margin: 0;
+          padding: 0;
+          background-color: #09090b !important;
+          color-scheme: dark;
+        }
+      `}</style>
 
-        <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316', marginBottom: '16px', direction: 'ltr', textAlign: 'left' }}>
-          {title}
-        </h2>
+      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(9, 9, 11, 0.95)', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '900', color: '#f97316', cursor: 'pointer' }} onClick={() => router.push('/')}>
+          CINEMA<span style={{ color: '#ffffff' }}>VIBE</span>
+        </h1>
+        <button onClick={() => router.push('/')} style={{ background: 'transparent', border: '1px solid #3f3f46', color: '#fff', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>الرئيسية</button>
+      </nav>
 
-        {media.media_type === 'tv' && (
-          <div style={{ display: 'flex', gap: '15px', marginBottom: '16px', backgroundColor: '#121215', padding: '14px 18px', borderRadius: '10px', border: '1px solid #27272a', alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '13px', color: '#f97316', fontWeight: 'bold' }}>اختر الموسم والحلقة:</span>
-            
-            <select 
-              value={selectedSeason} 
-              onChange={(e) => { setSelectedSeason(Number(e.target.value)); setSelectedEpisode(1); }} 
-              style={{ padding: '8px 12px', backgroundColor: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '6px', cursor: 'pointer' }}
-            >
-              {tvDetails?.seasons?.map(season => (
-                <option key={season.id} value={season.season_number}>
-                  {season.name || `الموسم ${season.season_number}`}
-                </option>
-              ))}
-            </select>
-
-            <select 
-              value={selectedEpisode} 
-              onChange={(e) => setSelectedEpisode(Number(e.target.value))} 
-              style={{ padding: '8px 12px', backgroundColor: '#18181b', color: '#fff', border: '1px solid #3f3f46', borderRadius: '6px', cursor: 'pointer' }}
-            >
-              {episodesList.map(ep => (
-                <option key={ep.id || ep.episode_number} value={ep.episode_number}>
-                  الحلقة {ep.episode_number} {ep.name ? `- ${ep.name}` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <div style={{ marginBottom: '16px', backgroundColor: '#121215', padding: '14px 18px', borderRadius: '10px', border: '1px solid #27272a' }}>
-          <span style={{ fontSize: '13px', color: '#a1a1aa', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>اختر سيرفر التشغيل:</span>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {serversList.map((srv) => (
-              <button 
-                key={srv.id} 
-                onClick={() => setSelectedServer(srv.id)}
-                style={{ 
-                  padding: '8px 14px', borderRadius: '6px', border: 'none', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', 
-                  backgroundColor: selectedServer === srv.id ? '#f97316' : '#27272a',
-                  color: selectedServer === srv.id ? '#000' : '#fff',
-                }}
-              >
-                {srv.name}
-              </button>
-            ))}
-          </div>
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 16px' }}>
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden', border: '1px solid #27272a', marginBottom: '24px' }}>
+          <iframe 
+            src={embedUrl} 
+            style={{ width: '100%', height: '100%', border: 'none' }} 
+            allowFullScreen 
+            title={title}
+          ></iframe>
         </div>
 
-        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden', border: '1px solid #27272a' }}>
-          <iframe src={getEmbedUrl()} style={{ width: '100%', height: '100%', border: 'none' }} allowFullScreen title="مشغل الفيديو" />
-        </div>
+        <div style={{ backgroundColor: '#121215', padding: '24px', borderRadius: '12px', border: '1px solid #27272a' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px',marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0, color: '#fff', direction: 'ltr', textAlign: 'right' }}>{title}</h2>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <span style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid #eab308', color: '#eab308', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold' }}>
+                ★ {rating}
+              </span>
+              <span style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold' }}>
+                {releaseDate.slice(0, 4)}
+              </span>
+            </div>
+          </div>
 
-        <div style={{ marginTop: '20px', backgroundColor: '#121215', padding: '18px', borderRadius: '10px', border: '1px solid #27272a' }}>
-          <h3 style={{ fontSize: '15px', color: '#f97316', margin: '0 0 8px 0', fontWeight: 'bold' }}>قصة العمل:</h3>
-          <p style={{ margin: 0, lineHeight: '1.7', color: '#d4d4d8', fontSize: '14px' }}>
-            {media.overview || 'لا يتوفر وصف تفصيلي حالياً لهذا العنوان باللغة العربية.'}
+          <p style={{ fontSize: '15px', lineHeight: '1.8', color: '#a1a1aa', margin: 0 }}>
+            {overview}
           </p>
         </div>
       </div>
