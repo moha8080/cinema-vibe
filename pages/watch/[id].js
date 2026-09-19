@@ -26,25 +26,34 @@ export default function WatchPage() {
     const fetchMediaDetails = async () => {
       setLoading(true);
       try {
-        // محاولة جلب البيانات كفيلم أولاً
-        const movieRes = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=ar`);
-        
-        if (movieRes.ok) {
-          const movieData = await movieRes.json();
-          if (movieData && movieData.id) {
-            setMedia(movieData);
+        // جلب البيانات باللغة الإنجليزية لضمان العناوين الإنجليزية، ومع العربية لقصة العمل
+        const [movieResEn, movieResAr] = await Promise.all([
+          fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=en-US`),
+          fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=ar`)
+        ]);
+
+        if (movieResEn.ok) {
+          const dataEn = await movieResEn.json();
+          const dataAr = movieResAr.ok ? await movieResAr.json() : {};
+          if (dataEn && dataEn.id) {
+            setMedia({ ...dataEn, overview: dataAr.overview || dataEn.overview });
             setContentType('movie');
             setLoading(false);
             return;
           }
         }
 
-        // إن لم يكن فيلماً، نجرب كمسلسل (TV Show)
-        const tvRes = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=ar`);
-        if (tvRes.ok) {
-          const tvData = await tvRes.json();
-          if (tvData && tvData.id) {
-            setMedia(tvData);
+        // إذا لم يكن فيلماً، نجرب كمسلسل (TV Show)
+        const [tvResEn, tvResAr] = await Promise.all([
+          fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=en-US`),
+          fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=ar`)
+        ]);
+
+        if (tvResEn.ok) {
+          const dataEn = await tvResEn.json();
+          const dataAr = tvResAr.ok ? await tvResAr.json() : {};
+          if (dataEn && dataEn.id) {
+            setMedia({ ...dataEn, overview: dataAr.overview || dataEn.overview });
             setContentType('tv');
             setLoading(false);
             return;
@@ -64,7 +73,7 @@ export default function WatchPage() {
   // جلب تفاصيل الموسم للمسلسلات عند تغيير الموسم
   useEffect(() => {
     if (contentType === 'tv' && id) {
-      fetch(`https://api.themoviedb.org/3/tv/${id}/season/${selectedSeason}?api_key=${API_KEY}&language=ar`)
+      fetch(`https://api.themoviedb.org/3/tv/${id}/season/${selectedSeason}?api_key=${API_KEY}&language=en-US`)
         .then(res => res.json())
         .then(data => {
           if (data && data.episodes) {
@@ -78,7 +87,7 @@ export default function WatchPage() {
   if (loading) {
     return (
       <div style={{ backgroundColor: '#09090b', color: '#fff', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'system-ui, sans-serif' }}>
-        جاري تحميل تفاصيل العمل...
+        جاري التحميل...
       </div>
     );
   }
@@ -86,15 +95,15 @@ export default function WatchPage() {
   if (!media) {
     return (
       <div style={{ backgroundColor: '#09090b', color: '#fff', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '15px', fontFamily: 'system-ui, sans-serif' }}>
-        <p>عذراً، العنوان غير موجود أو حدث خطأ في الجلب.</p>
+        <p>عذراً، العنوان غير موجود.</p>
         <button onClick={() => router.push('/')} style={{ backgroundColor: '#f97316', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', color: '#000' }}>الرئيسية</button>
       </div>
     );
   }
 
-  const title = media.title || media.name || 'بدون عنوان';
-  const originalTitle = media.original_title || media.original_name || '';
-  const overview = media.overview || 'لا توجد قصة متاحة باللغة العربية لهذا العنوان.';
+  // فرض العنوان باللغة الإنجليزية حصراً
+  const title = media.title || media.name || media.original_title || media.original_name || 'Title';
+  const overview = media.overview || 'No overview available in Arabic.';
   const rating = media.vote_average ? media.vote_average.toFixed(1) : 'N/A';
   const releaseDate = media.release_date || media.first_air_date || '';
 
@@ -114,7 +123,7 @@ export default function WatchPage() {
   return (
     <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <Head>
-        <title>{title} | سينما فايب</title>
+        <title>{title} | CINEMAVIBE</title>
       </Head>
 
       <style jsx global>{`
@@ -162,7 +171,7 @@ export default function WatchPage() {
               style={{
                 backgroundColor: activeServer === server ? '#f97316' : '#27272a',
                 color: activeServer === server ? '#000' : '#fff',
-                border: 'none',
+                border: '1px solid #27272a',
                 padding: '6px 14px',
                 borderRadius: '6px',
                 fontSize: '12px',
@@ -176,18 +185,18 @@ export default function WatchPage() {
           ))}
         </div>
 
-        {/* قسم المواسم والحلقات (يظهر فقط للمسلسلات) */}
-        {contentType === 'tv' && media.seasons && (
+        {/* قسم المواسم والحلقات (يظهر للمسلسلات بضمان كامل) */}
+        {(contentType === 'tv' || (media.seasons && media.seasons.length > 0)) && (
           <div style={{ backgroundColor: '#121215', padding: '20px', borderRadius: '12px', border: '1px solid #27272a', marginBottom: '24px' }}>
             <h3 style={{ fontSize: '16px', color: '#fff', margin: '0 0 12px 0', borderRight: '3px solid #f97316', paddingRight: '8px' }}>
-              اختر الموسم والحلقة
+              Select Season & Episode
             </h3>
             
             {/* أزرار المواسم */}
             <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '10px', marginBottom: '16px' }} className="no-scrollbar">
-              {media.seasons.filter(s => s.season_number > 0).map((season) => (
+              {(media.seasons || [{ season_number: 1, id: 1 }]).filter(s => s.season_number > 0).map((season) => (
                 <button
-                  key={season.id}
+                  key={season.id || season.season_number}
                   onClick={() => {
                     setSelectedSeason(season.season_number);
                     setSelectedEpisode(1);
@@ -204,7 +213,7 @@ export default function WatchPage() {
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  الموسم {season.season_number}
+                  Season {season.season_number}
                 </button>
               ))}
             </div>
@@ -212,7 +221,7 @@ export default function WatchPage() {
             {/* أزرار الحلقات */}
             {seasonData && seasonData.episodes && (
               <div>
-                <div style={{ fontSize: '13px', color: '#a1a1aa', marginBottom: '8px' }}>الحلقات:</div>
+                <div style={{ fontSize: '13px', color: '#a1a1aa', marginBottom: '8px' }}>Episodes:</div>
                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }} className="no-scrollbar">
                   {seasonData.episodes.map((ep) => (
                     <button
@@ -240,36 +249,31 @@ export default function WatchPage() {
           </div>
         )}
 
-        {/* تفاصيل ومعلومات العمل */}
+        {/* تفاصيل العمل (العنوان بالإنجليزية حصراً) */}
         <div style={{ backgroundColor: '#121215', padding: '24px', borderRadius: '12px', border: '1px solid #27272a' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px', marginBottom: '16px' }}>
             <div>
-              <h2 style={{ fontSize: '26px', fontWeight: '900', margin: '0 0 4px 0', color: '#fff', direction: 'ltr', textAlign: 'right' }}>
+              <h2 style={{ fontSize: '26px', fontWeight: '900', margin: '0 0 4px 0', color: '#fff', direction: 'ltr', textAlign: 'left' }}>
                 {title}
               </h2>
-              {originalTitle && originalTitle !== title && (
-                <p style={{ fontSize: '13px', color: '#71717a', margin: 0, direction: 'ltr', textAlign: 'right' }}>
-                  {originalTitle}
-                </p>
-              )}
             </div>
             
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <span style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid #eab308', color: '#eab308', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 ★ {rating}
               </span>
-              <span style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold' }}>
+              <span style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid #f97316', color: '#f97316', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', direction: 'ltr' }}>
                 {releaseDate.slice(0, 4)}
               </span>
               <span style={{ backgroundColor: '#27272a', color: '#fff', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold' }}>
-                {contentType === 'movie' ? 'فيلم' : 'مسلسل'}
+                {contentType === 'movie' ? 'Movie' : 'TV Show'}
               </span>
             </div>
           </div>
 
           <hr style={{ border: 'none', borderTop: '1px solid #27272a', margin: '16px 0' }} />
 
-          <h4 style={{ fontSize: '14px', color: '#f97316', margin: '0 0 8px 0' }}>قصة العمل:</h4>
+          <h4 style={{ fontSize: '14px', color: '#f97316', margin: '0 0 8px 0' }}>Overview:</h4>
           <p style={{ fontSize: '15px', lineHeight: '1.8', color: '#d4d4d8', margin: 0 }}>
             {overview}
           </p>
