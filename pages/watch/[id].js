@@ -10,7 +10,6 @@ export default function WatchPage() {
 
   const [media, setMedia] = useState(null);
   const [cast, setCast] = useState([]);
-  const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const [seasons, setSeasons] = useState([]);
@@ -46,16 +45,10 @@ export default function WatchPage() {
           }
         }
 
-        const [creditsRes, similarRes] = await Promise.all([
-          fetch(`https://api.themoviedb.org/3/${mediaType}/${id}/credits?api_key=${API_KEY}&language=ar-SA`),
-          fetch(`https://api.themoviedb.org/3/${mediaType}/${id}/similar?api_key=${API_KEY}&language=ar-SA`)
-        ]);
-
+        const creditsRes = await fetch(`https://api.themoviedb.org/3/${mediaType}/${id}/credits?api_key=${API_KEY}&language=ar-SA`);
         const creditsData = await creditsRes.json();
-        const similarData = await similarRes.json();
 
         setCast(creditsData.cast?.filter(actor => actor.profile_path).slice(0, 12) || []);
-        setSimilar(similarData.results?.filter(item => item.poster_path).slice(0, 6) || []);
         
         setLoading(false);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -102,7 +95,6 @@ export default function WatchPage() {
   const title = media.title || media.name;
   const year = (media.release_date || media.first_air_date || '').slice(0, 4);
   const rating = media.vote_average ? media.vote_average.toFixed(1) : 'N/A';
-  const backdropUrl = media.backdrop_path ? `https://image.tmdb.org/t/p/original${media.backdrop_path}` : '';
 
   const embedUrl = !media.isTvShow 
     ? `https://vidsrc.xyz/embed/movie?imdb=${media.imdb_id || id}`
@@ -150,14 +142,9 @@ export default function WatchPage() {
           onClick={() => router.push('/')}
           style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #27272a', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
         >
-          رجوع 
+          الرئيسية 🏠
         </button>
       </nav>
-
-      {/* خلفية بانر خافتة */}
-      {backdropUrl && (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '350px', backgroundImage: `url(${backdropUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.25)', zIndex: 0, pointerEvents: 'none' }} />
-      )}
 
       {/* محتوى الصفحة */}
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '20px 16px', position: 'relative', zIndex: 1 }}>
@@ -245,3 +232,7 @@ export default function WatchPage() {
           </div>
         )}
 
+      </div>
+    </div>
+  );
+}
