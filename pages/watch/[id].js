@@ -142,7 +142,7 @@ export default function WatchPage() {
           onClick={() => router.push('/')}
           style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #27272a', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
         >
-          الرئيسية 🏠
+          رجوع 
         </button>
       </nav>
 
