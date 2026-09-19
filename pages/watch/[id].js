@@ -160,14 +160,9 @@ export default function WatchPage() {
           onClick={() => router.push('/')}
           style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #27272a', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
         >
-          الرئيسية 🏠
+          عودة -> 
         </button>
       </nav>
-
-      {/* خلفية بانر خافتة */}
-      {backdropUrl && (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '350px', backgroundImage: `url(${backdropUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.25)', zIndex: 0, pointerEvents: 'none' }} />
-      )}
 
       {/* محتوى الصفحة */}
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '20px 16px', position: 'relative', zIndex: 1 }}>
@@ -255,32 +250,4 @@ export default function WatchPage() {
           </div>
         )}
 
-        {/* أعمال مشابهة (تصفية الصور التالفة بالكامل) */}
-        {similar.length > 0 && (
-          <div>
-            <h3 style={{ fontSize: '16px', color: '#fff', marginBottom: '12px', borderRight: '4px solid #f97316', paddingRight: '8px' }}>أعمال مشابهة</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
-              {similar.map(item => {
-                const itemTitle = item.title || item.name;
-                const mediaType = item.media_type || (media.isTvShow ? 'tv' : 'movie');
-                return (
-                  <div 
-                    key={item.id} 
-                    onClick={() => router.push(`/watch/${item.id}?type=${mediaType}`)}
-                    style={{ backgroundColor: '#121215', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #27272a' }}
-                  >
-                    <img src={`https://image.tmdb.org/t/p/w500${item.poster_path}`} alt={itemTitle} style={{ width: '100%', height: '190px', objectFit: 'cover' }} />
-                    <div style={{ padding: '8px' }}>
-                      <h4 style={{ fontSize: '11px', margin: '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>{itemTitle}</h4>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-      </div>
-    </div>
-  );
-}
+        {
