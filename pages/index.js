@@ -21,10 +21,11 @@ export default function Home() {
     const fetchHomeData = async () => {
       try {
         setLoading(true);
+        // جلب البيانات مع الترجمة العربية
         const [moviesRes, tvRes, topRes] = await Promise.all([
-          fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${API_KEY}&language=en-US`),
-          fetch(`https://api.themoviedb.org/3/trending/tv/day?api_key=${API_KEY}&language=en-US`),
-          fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US`)
+          fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${API_KEY}&language=ar-SA`),
+          fetch(`https://api.themoviedb.org/3/trending/tv/day?api_key=${API_KEY}&language=ar-SA`),
+          fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=ar-SA`)
         ]);
 
         const moviesData = await moviesRes.json();
@@ -35,7 +36,7 @@ export default function Home() {
         setTrendingTv(tvData.results || []);
         setTopRated(topData.results || []);
 
-        // اختيار "سهرتك اليوم من اختيارنا" عشوائياً من الترند
+        // اختيار "سهرتك اليوم من اختيارنا" عشوائياً
         const combined = [...(moviesData.results || []), ...(tvData.results || [])];
         if (combined.length > 0) {
           const randomPick = combined[Math.floor(Math.random() * combined.length)];
@@ -63,7 +64,7 @@ export default function Home() {
     setIsSearching(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=en-US`);
+        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=ar-SA`);
         const data = await res.json();
         setSearchResults(data.results || []);
       } catch (err) {
@@ -75,9 +76,9 @@ export default function Home() {
   }, [searchQuery]);
 
   return (
-    <div dir="ltr" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <Head>
-        <title>CINEMAVIBE | Watch Movies & TV Shows</title>
+        <title>CINEMAVIBE | افلام ومسلسلات</title>
       </Head>
 
       <style jsx global>{`
@@ -106,7 +107,7 @@ export default function Home() {
         zIndex: 1000, 
         borderBottom: '1px solid rgba(255,255,255,0.08)' 
       }}>
-        {/* اسم الموقع */}
+        {/* اسم الموقع والقوائم */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
           <h1 
             style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#f97316', cursor: 'pointer', letterSpacing: '0.5px' }} 
@@ -115,11 +116,10 @@ export default function Home() {
             CINEMA<span style={{ color: '#ffffff' }}>VIBE</span>
           </h1>
 
-          {/* روابط القوائم السريعة */}
           <div style={{ display: 'flex', gap: '20px' }}>
-            <span onClick={() => router.push('/catalog?endpoint=movie&title=Movies')} style={{ color: '#d4d4d8', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='#f97316'} onMouseOut={e => e.target.style.color='#d4d4d8'}>Movies</span>
-            <span onClick={() => router.push('/catalog?endpoint=tv&title=TV Shows')} style={{ color: '#d4d4d8', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='#f97316'} onMouseOut={e => e.target.style.color='#d4d4d8'}>TV Shows</span>
-            <span onClick={() => router.push('/catalog?endpoint=top_rated&title=Top Rated')} style={{ color: '#d4d4d8', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='#f97316'} onMouseOut={e => e.target.style.color='#d4d4d8'}>Top Rated</span>
+            <span onClick={() => router.push('/catalog?endpoint=movie&title=الأفلام')} style={{ color: '#d4d4d8', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='#f97316'} onMouseOut={e => e.target.style.color='#d4d4d8'}>الأفلام</span>
+            <span onClick={() => router.push('/catalog?endpoint=tv&title=المسلسلات')} style={{ color: '#d4d4d8', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='#f97316'} onMouseOut={e => e.target.style.color='#d4d4d8'}>المسلسلات</span>
+            <span onClick={() => router.push('/catalog?endpoint=top_rated&title=الأعلى تقييماً')} style={{ color: '#d4d4d8', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='#f97316'} onMouseOut={e => e.target.style.color='#d4d4d8'}>الأعلى تقييماً</span>
           </div>
         </div>
 
@@ -127,7 +127,7 @@ export default function Home() {
         <div style={{ position: 'relative', width: '260px' }}>
           <input 
             type="text" 
-            placeholder="Search movies, tv shows..." 
+            placeholder="ابحث عن فيلم أو مسلسل..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -135,7 +135,7 @@ export default function Home() {
               backgroundColor: '#18181b',
               border: '1px solid #27272a',
               borderRadius: '8px',
-              padding: '8px 12px 8px 36px',
+              padding: '8px 36px 8px 12px',
               color: '#fff',
               fontSize: '13px',
               outline: 'none',
@@ -144,7 +144,7 @@ export default function Home() {
             onFocus={e => e.target.style.borderColor = '#f97316'}
             onBlur={e => e.target.style.borderColor = '#27272a'}
           />
-          <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#a1a1aa', fontSize: '14px', pointerEvents: 'none' }}>🔍</span>
+          <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#a1a1aa', fontSize: '14px', pointerEvents: 'none' }}>🔍</span>
         </div>
       </nav>
 
@@ -152,11 +152,11 @@ export default function Home() {
       {isSearching && (
         <div style={{ maxWidth: '1400px', margin: '20px auto', padding: '0 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '18px', color: '#fff', margin: 0 }}>Search Results for "{searchQuery}"</h3>
-            <button onClick={() => { setSearchQuery(''); setIsSearching(false); }} style={{ background: 'none', border: 'none', color: '#f97316', cursor: 'pointer', fontWeight: 'bold' }}>Clear</button>
+            <h3 style={{ fontSize: '18px', color: '#fff', margin: 0 }}>نتائج البحث عن "{searchQuery}"</h3>
+            <button onClick={() => { setSearchQuery(''); setIsSearching(false); }} style={{ background: 'none', border: 'none', color: '#f97316', cursor: 'pointer', fontWeight: 'bold' }}>مسح</button>
           </div>
           {searchResults.length === 0 ? (
-            <p style={{ color: '#a1a1aa' }}>No results found.</p>
+            <p style={{ color: '#a1a1aa' }}>لا توجد نتائج مطابقة.</p>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px' }}>
               {searchResults.filter(item => item.poster_path).map((item) => {
@@ -181,7 +181,7 @@ export default function Home() {
       {!isSearching && (
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 24px' }}>
 
-          {/* ميزة: سهرتك اليوم من اختيارنا (Tonight's Pick) */}
+          {/* ميزة: سهرتك اليوم من اختيارنا */}
           {tonightsPick && (
             <div style={{ 
               position: 'relative', 
@@ -211,13 +211,13 @@ export default function Home() {
               {/* المحتوى فوق البانر */}
               <div style={{ position: 'relative', padding: '32px', zIndex: 2, maxWidth: '700px' }}>
                 <span style={{ backgroundColor: '#f97316', color: '#000', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', display: 'inline-block' }}>
-                  ★ Tonight's Pick For You
+                  ★ سهرتك اليوم من اختيارنا
                 </span>
                 <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#fff', margin: '0 0 10px 0' }}>
                   {tonightsPick.title || tonightsPick.name}
                 </h2>
                 <p style={{ fontSize: '14px', color: '#d4d4d8', margin: '0 0 20px 0', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                  {tonightsPick.overview || 'No description available.'}
+                  {tonightsPick.overview || 'لا توجد نبذة متوفرة حالياً.'}
                 </p>
                 <button 
                   onClick={() => router.push(`/watch/${tonightsPick.id}`)}
@@ -236,34 +236,34 @@ export default function Home() {
                   onMouseOver={e => e.target.style.transform = 'scale(1.05)'}
                   onMouseOut={e => e.target.style.transform = 'scale(1)'}
                 >
-                  Watch Now 🎬
+                  شاهد الآن 🎬
                 </button>
               </div>
             </div>
           )}
 
-          {/* قسم الترند للأفلام */}
+          {/* قسم الأفلام الرائجة */}
           <SectionRow 
-            title="Trending Movies" 
+            title="الأفلام الرائجة" 
             items={trendingMovies} 
             router={router} 
-            onViewMore={() => router.push('/catalog?endpoint=movie&title=Trending Movies')} 
+            onViewMore={() => router.push('/catalog?endpoint=movie&title=الأفلام الرائجة')} 
           />
 
-          {/* قسم الترند للمسلسلات */}
+          {/* قسم المسلسلات الرائجة */}
           <SectionRow 
-            title="Trending TV Shows" 
+            title="المسلسلات الرائجة" 
             items={trendingTv} 
             router={router} 
-            onViewMore={() => router.push('/catalog?endpoint=tv&title=Trending TV Shows')} 
+            onViewMore={() => router.push('/catalog?endpoint=tv&title=المسلسلات الرائجة')} 
           />
 
           {/* قسم الأعلى تقييماً */}
           <SectionRow 
-            title="Top Rated Globally" 
+            title="الأعلى تقييماً عالمياً" 
             items={topRated} 
             router={router} 
-            onViewMore={() => router.push('/catalog?endpoint=top_rated&title=Top Rated Globally')} 
+            onViewMore={() => router.push('/catalog?endpoint=top_rated&title=الأعلى تقييماً عالمياً')} 
           />
 
         </div>
@@ -272,19 +272,19 @@ export default function Home() {
   );
 }
 
-// مكون فرعي لعرض صف الأفلام بشكل أفقي أنيق
+// مكون فرعي لعرض صف العناصر بشكل أفقي أنيق
 function SectionRow({ title, items, router, onViewMore }) {
   return (
     <div style={{ marginBottom: '40px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', borderLeft: '4px solid #f97316', paddingLeft: '10px', margin: 0 }}>
+        <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>
           {title}
         </h3>
         <button 
           onClick={onViewMore} 
           style={{ background: 'none', border: 'none', color: '#f97316', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}
         >
-          View More →
+          عرض الكل ←
         </button>
       </div>
 
@@ -315,7 +315,7 @@ function SectionRow({ title, items, router, onViewMore }) {
             >
               <div style={{ position: 'relative', height: '230px', width: '100%' }}>
                 <img src={poster} alt={itemTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
-                <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: 'rgba(0,0,0,0.8)', color: '#eab308', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: 'rgba(0,0,0,0.8)', color: '#eab308', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
                   ★ {rating}
                 </span>
               </div>
@@ -325,7 +325,7 @@ function SectionRow({ title, items, router, onViewMore }) {
                 </h4>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#a1a1aa' }}>
                   <span>{year}</span>
-                  <span style={{ color: '#f97316' }}>{item.media_type === 'tv' ? 'TV' : 'Movie'}</span>
+                  <span style={{ color: '#f97316' }}>{item.media_type === 'tv' ? 'مسلسل' : 'فيلم'}</span>
                 </div>
               </div>
             </div>
