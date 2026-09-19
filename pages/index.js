@@ -211,13 +211,13 @@ export default function Home() {
               {/* المحتوى فوق البانر */}
               <div style={{ position: 'relative', padding: '32px', zIndex: 2, maxWidth: '700px' }}>
                 <span style={{ backgroundColor: '#f97316', color: '#000', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', display: 'inline-block' }}>
-                  ★ سهرتك اليوم من اختيارنا
+                  ★ توصياتنا   
                 </span>
                 <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#fff', margin: '0 0 10px 0' }}>
                   {tonightsPick.title || tonightsPick.name}
                 </h2>
                 <p style={{ fontSize: '14px', color: '#d4d4d8', margin: '0 0 20px 0', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                  {tonightsPick.overview || 'لا توجد نبذة متوفرة حالياً.'}
+                  {tonightsPick.overview || ''}
                 </p>
                 <button 
                   onClick={() => router.push(`/watch/${tonightsPick.id}`)}
@@ -236,7 +236,7 @@ export default function Home() {
                   onMouseOver={e => e.target.style.transform = 'scale(1.05)'}
                   onMouseOut={e => e.target.style.transform = 'scale(1)'}
                 >
-                  شاهد الآن 🎬
+                  شاهد الآن 
                 </button>
               </div>
             </div>
@@ -244,7 +244,7 @@ export default function Home() {
 
           {/* قسم الأفلام الرائجة */}
           <SectionRow 
-            title="الأفلام الرائجة" 
+            title="الأفلام الاكثر شهرة" 
             items={trendingMovies} 
             router={router} 
             onViewMore={() => router.push('/catalog?endpoint=movie&title=الأفلام الرائجة')} 
@@ -252,7 +252,7 @@ export default function Home() {
 
           {/* قسم المسلسلات الرائجة */}
           <SectionRow 
-            title="المسلسلات الرائجة" 
+            title="المسلسلات الاكثر شهرة" 
             items={trendingTv} 
             router={router} 
             onViewMore={() => router.push('/catalog?endpoint=tv&title=المسلسلات الرائجة')} 
