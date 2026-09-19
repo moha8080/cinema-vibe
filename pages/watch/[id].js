@@ -6,14 +6,13 @@ const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
 export default function WatchPage() {
   const router = useRouter();
-  const { id, type } = router.query; // استلام نوع الوسائط (movie أو tv) لمنع أي تداخل
+  const { id, type } = router.query;
 
   const [media, setMedia] = useState(null);
   const [cast, setCast] = useState([]);
   const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // خاص بالمواسم والحلقات للمسلسلات
   const [seasons, setSeasons] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [episodes, setEpisodes] = useState([]);
@@ -25,17 +24,11 @@ export default function WatchPage() {
     const fetchDetails = async () => {
       try {
         setLoading(true);
-        
-        // تحديد النوع بدقة (إذا لم يُرسل، نخمن بناءً على الرقم أو نجرب الأفلام أولاً)
-        let mediaType = type;
-        if (!mediaType) {
-          mediaType = 'movie'; // افتراضي
-        }
+        let mediaType = type || 'movie';
 
         let res = await fetch(`https://api.themoviedb.org/3/${mediaType}/${id}?api_key=${API_KEY}&language=ar-SA`);
         let data = await res.json();
 
-        // لو فشل كفيلم، نجربه كمسلسل
         if (data.success === false) {
           mediaType = 'tv';
           res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=ar-SA`);
@@ -53,7 +46,6 @@ export default function WatchPage() {
           }
         }
 
-        // جلب طاقم العمل والأعمال المشابهة مع تصفية الصور التالفة
         const [creditsRes, similarRes] = await Promise.all([
           fetch(`https://api.themoviedb.org/3/${mediaType}/${id}/credits?api_key=${API_KEY}&language=ar-SA`),
           fetch(`https://api.themoviedb.org/3/${mediaType}/${id}/similar?api_key=${API_KEY}&language=ar-SA`)
@@ -76,7 +68,6 @@ export default function WatchPage() {
     fetchDetails();
   }, [id, type]);
 
-  // جلب الحلقات عند تغيير الموسم
   useEffect(() => {
     if (media?.isTvShow && selectedSeason) {
       fetch(`https://api.themoviedb.org/3/tv/${id}/season/${selectedSeason}?api_key=${API_KEY}&language=ar-SA`)
@@ -113,7 +104,6 @@ export default function WatchPage() {
   const rating = media.vote_average ? media.vote_average.toFixed(1) : 'N/A';
   const backdropUrl = media.backdrop_path ? `https://image.tmdb.org/t/p/original${media.backdrop_path}` : '';
 
-  // توليد رابط التشغيل المباشر
   const embedUrl = !media.isTvShow 
     ? `https://vidsrc.xyz/embed/movie?imdb=${media.imdb_id || id}`
     : `https://vidsrc.xyz/embed/tv?imdb=${media.imdb_id || id}&season=${selectedSeason}&episode=${selectedEpisode}`;
@@ -160,9 +150,14 @@ export default function WatchPage() {
           onClick={() => router.push('/')}
           style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #27272a', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
         >
-          عودة -> 
+          رجوع 
         </button>
       </nav>
+
+      {/* خلفية بانر خافتة */}
+      {backdropUrl && (
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '350px', backgroundImage: `url(${backdropUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.25)', zIndex: 0, pointerEvents: 'none' }} />
+      )}
 
       {/* محتوى الصفحة */}
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '20px 16px', position: 'relative', zIndex: 1 }}>
@@ -230,7 +225,7 @@ export default function WatchPage() {
           </p>
         </div>
 
-        {/* طاقم التمثيل (مع شرط منع الصور التالفة) */}
+        {/* طاقم التمثيل */}
         {cast.length > 0 && (
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{ fontSize: '16px', color: '#fff', marginBottom: '12px', borderRight: '4px solid #f97316', paddingRight: '8px' }}>طاقم التمثيل</h3>
@@ -250,4 +245,3 @@ export default function WatchPage() {
           </div>
         )}
 
-        {
