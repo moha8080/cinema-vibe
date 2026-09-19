@@ -116,7 +116,7 @@ export default function Home() {
           </h1>
 
           {/* روابط القوائم السريعة */}
-          <div style={{ display: 'flex', gap: '20px', '@media (max-width: 768px)': { display: 'none' } }}>
+          <div style={{ display: 'flex', gap: '20px' }}>
             <span onClick={() => router.push('/catalog?endpoint=movie&title=Movies')} style={{ color: '#d4d4d8', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='#f97316'} onMouseOut={e => e.target.style.color='#d4d4d8'}>Movies</span>
             <span onClick={() => router.push('/catalog?endpoint=tv&title=TV Shows')} style={{ color: '#d4d4d8', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='#f97316'} onMouseOut={e => e.target.style.color='#d4d4d8'}>TV Shows</span>
             <span onClick={() => router.push('/catalog?endpoint=top_rated&title=Top Rated')} style={{ color: '#d4d4d8', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color='#f97316'} onMouseOut={e => e.target.style.color='#d4d4d8'}>Top Rated</span>
@@ -144,7 +144,7 @@ export default function Home() {
             onFocus={e => e.target.style.borderColor = '#f97316'}
             onBlur={e => e.target.style.borderColor = '#27272a'}
           />
-          <span style={{ position: 'absolute', left: '10px', top: '50% transform: translateY(-50%)', color: '#a1a1aa', fontSize: '14px', pointerEvents: 'none' }}>🔍</span>
+          <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#a1a1aa', fontSize: '14px', pointerEvents: 'none' }}>🔍</span>
         </div>
       </nav>
 
@@ -205,7 +205,7 @@ export default function Home() {
                 filter: 'brightness(0.5)'
               }} />
               
-              {لتي تدرج الألوان للإضاءة الخافتة */}
+              {/* تدرج الألوان للإضاءة الخافتة */}
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #09090b 5%, rgba(9,9,11,0.7) 50%, transparent 100%)' }} />
 
               {/* المحتوى فوق البانر */}
