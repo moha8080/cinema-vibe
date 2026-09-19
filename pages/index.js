@@ -42,9 +42,12 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const trendRes = await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}&language=ar`);
+        // جلب التريند (باللغة الإنجليزية للأصل، وللباقي حسب الحاجة)
+        const trendRes = await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}&language=en-US`);
         const trendData = await trendRes.json();
-        setTrending(trendData.results || []);
+        // تصفية العناصر بحيث تحتوي حصراً على قصة (overview) غير فارغة
+        const validTrending = (trendData.results || []).filter(item => item.overview && item.overview.trim() !== '');
+        setTrending(validTrending);
 
         const fetchMixedCategory = async (movieGenre, tvGenre, setter) => {
           const [movieRes, tvRes] = await Promise.all([
@@ -307,14 +310,14 @@ export default function Home() {
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #09090b 5%, rgba(9,9,11,0.6) 50%, transparent 100%)' }} />
               <div style={{ position: 'absolute', bottom: '24px', right: '24px', left: '24px', maxWidth: '700px' }}>
                 <span style={{ backgroundColor: '#f97316', color: '#000', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block', marginBottom: '8px' }}>
-                  رائج الآن 🔥
+                  رائج الآن
                 </span>
                 <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#fff', margin: '0 0 8px 0', direction: 'ltr', textAlign: 'left' }}>
                   {heroItem.title || heroItem.name}
                 </h2>
                 {/* قصة الفيلم أو المسلسل الخاصة بالبانر المتحرك */}
-                <p style={{ color: '#d4d4d8', fontSize: '13px', margin: '0 0 16px 0', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                  {heroItem.overview || 'لا يتوفر وصف متاح حالياً لهذا العمل.'}
+                <p style={{ color: '#d4d4d8', fontSize: '13px', margin: '0 0 16px 0', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', direction: 'ltr', textAlign: 'left' }}>
+                  {heroItem.overview}
                 </p>
                 <button style={{ backgroundColor: '#f97316', color: '#000', border: 'none', padding: '10px 22px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>
                   شاهد الآن
@@ -323,16 +326,16 @@ export default function Home() {
             </div>
           )}
 
-          <HorizontalRow title="افضل الافلام ومسلسلات لهذي السنة " items={thisMonthMixed} rowRef={rowRefs.thisMonth} endpointType="movie" genreId="0" />
-          <HorizontalRow title="ترشيح الأوسكار  " items={oscarsMixed} rowRef={rowRefs.oscars} endpointType="movie" genreId="18,36" />
-          <HorizontalRow title="الأعلى تقييماً " items={topRatedMixed} rowRef={rowRefs.topRated} endpointType="movie" genreId="0" />
-          <HorizontalRow title="دراما مؤثرة " items={dramaMixed} rowRef={rowRefs.drama} endpointType="movie" genreId="18" />
-          <HorizontalRow title="غموض  " items={mysteryMixed} rowRef={rowRefs.mystery} endpointType="movie" genreId="9648" />
-          <HorizontalRow title="كوميديا " items={comedyMixed} rowRef={rowRefs.comedy} endpointType="movie" genreId="35" />
-          <HorizontalRow title="إثارة وجريمة " items={suspenseMixed} rowRef={rowRefs.suspense} endpointType="movie" genreId="53" />
-          <HorizontalRow title="أكشن وحركة  " items={actionMixed} rowRef={rowRefs.action} endpointType="movie" genreId="28" />
-          <HorizontalRow title="رعب  " items={horrorThrillerMixed} rowRef={rowRefs.horror} endpointType="movie" genreId="27" />
-          <HorizontalRow title="خيال علمي " items={sciFiAdventureMixed} rowRef={rowRefs.scifi} endpointType="movie" genreId="878" />
+          <HorizontalRow title="أفلام ومسلسلات أضيفت هذا الشهر (2026)" items={thisMonthMixed} rowRef={rowRefs.thisMonth} endpointType="movie" genreId="0" />
+          <HorizontalRow title="ترشيح الأوسكار والقصص الخالدة" items={oscarsMixed} rowRef={rowRefs.oscars} endpointType="movie" genreId="18,36" />
+          <HorizontalRow title="الأعلى تقييماً وعالمياً" items={topRatedMixed} rowRef={rowRefs.topRated} endpointType="movie" genreId="0" />
+          <HorizontalRow title="دراما مؤثرة وعميقة" items={dramaMixed} rowRef={rowRefs.drama} endpointType="movie" genreId="18" />
+          <HorizontalRow title="غموض وتحقيق مشوق" items={mysteryMixed} rowRef={rowRefs.mystery} endpointType="movie" genreId="9648" />
+          <HorizontalRow title="كوميديا ومرح" items={comedyMixed} rowRef={rowRefs.comedy} endpointType="movie" genreId="35" />
+          <HorizontalRow title="إثارة وجريمة وتشويق" items={suspenseMixed} rowRef={rowRefs.suspense} endpointType="movie" genreId="53" />
+          <HorizontalRow title="أكشن وحركة بلا حدود" items={actionMixed} rowRef={rowRefs.action} endpointType="movie" genreId="28" />
+          <HorizontalRow title="رعب وإثارة نفسية" items={horrorThrillerMixed} rowRef={rowRefs.horror} endpointType="movie" genreId="27" />
+          <HorizontalRow title="خيال علمي وفضاء" items={sciFiAdventureMixed} rowRef={rowRefs.scifi} endpointType="movie" genreId="878" />
         </div>
       )}
     </div>
