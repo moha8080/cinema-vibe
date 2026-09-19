@@ -23,28 +23,42 @@ export default function WatchPage() {
   useEffect(() => {
     if (!router.isReady || !id) return;
 
-    // محاولة جلب البيانات كفيلم أولاً، وإن لم يتم العثور عليه جلبها كمسلسل
-    fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=ar`)
-      .then(res => {
-        if (res.ok) {
-          setContentType('movie');
-          return res.json();
-        } else {
-          return fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=ar`)
-            .then(tvRes => {
-              setContentType('tv');
-              return tvRes.json();
-            });
+    const fetchMediaDetails = async () => {
+      setLoading(true);
+      try {
+        // محاولة جلب البيانات كفيلم أولاً
+        const movieRes = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=ar`);
+        
+        if (movieRes.ok) {
+          const movieData = await movieRes.json();
+          if (movieData && movieData.id) {
+            setMedia(movieData);
+            setContentType('movie');
+            setLoading(false);
+            return;
+          }
         }
-      })
-      .then(data => {
-        setMedia(data);
+
+        // إن لم يكن فيلماً، نجرب كمسلسل (TV Show)
+        const tvRes = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=ar`);
+        if (tvRes.ok) {
+          const tvData = await tvRes.json();
+          if (tvData && tvData.id) {
+            setMedia(tvData);
+            setContentType('tv');
+            setLoading(false);
+            return;
+          }
+        }
+
         setLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('Error fetching media details:', err);
         setLoading(false);
-      });
+      }
+    };
+
+    fetchMediaDetails();
   }, [router.isReady, id]);
 
   // جلب تفاصيل الموسم للمسلسلات عند تغيير الموسم
@@ -64,22 +78,22 @@ export default function WatchPage() {
   if (loading) {
     return (
       <div style={{ backgroundColor: '#09090b', color: '#fff', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'system-ui, sans-serif' }}>
-        جاري التحميل...
+        جاري تحميل تفاصيل العمل...
       </div>
     );
   }
 
-  if (!media || media.status_code === 34) {
+  if (!media) {
     return (
       <div style={{ backgroundColor: '#09090b', color: '#fff', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '15px', fontFamily: 'system-ui, sans-serif' }}>
-        <p>عذراً، العنوان غير موجود.</p>
+        <p>عذراً، العنوان غير موجود أو حدث خطأ في الجلب.</p>
         <button onClick={() => router.push('/')} style={{ backgroundColor: '#f97316', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', color: '#000' }}>الرئيسية</button>
       </div>
     );
   }
 
-  const title = media.title || media.name;
-  const originalTitle = media.original_title || media.original_name;
+  const title = media.title || media.name || 'بدون عنوان';
+  const originalTitle = media.original_title || media.original_name || '';
   const overview = media.overview || 'لا توجد قصة متاحة باللغة العربية لهذا العنوان.';
   const rating = media.vote_average ? media.vote_average.toFixed(1) : 'N/A';
   const releaseDate = media.release_date || media.first_air_date || '';
@@ -87,13 +101,13 @@ export default function WatchPage() {
   // روابط السيرفرات المتعددة
   const getEmbedUrl = () => {
     if (contentType === 'movie') {
-      if (activeServer === 'vidsrc') return `https://vidsrc.xyz/embed/movie?tmdb=${id}`;
       if (activeServer === 'embed.su') return `https://embed.su/embed/movie/${id}`;
-      return `https://vidsrc.me/embed/movie?tmdb=${id}`;
+      if (activeServer === 'vidsrc.me') return `https://vidsrc.me/embed/movie?tmdb=${id}`;
+      return `https://vidsrc.xyz/embed/movie?tmdb=${id}`;
     } else {
-      if (activeServer === 'vidsrc') return `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${selectedSeason}&episode=${selectedEpisode}`;
       if (activeServer === 'embed.su') return `https://embed.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}`;
-      return `https://vidsrc.me/embed/tv?tmdb=${id}&season=${selectedSeason}&episode=${selectedEpisode}`;
+      if (activeServer === 'vidsrc.me') return `https://vidsrc.me/embed/tv?tmdb=${id}&season=${selectedSeason}&episode=${selectedEpisode}`;
+      return `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${selectedSeason}&episode=${selectedEpisode}`;
     }
   };
 
