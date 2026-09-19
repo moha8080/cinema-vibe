@@ -4,22 +4,6 @@ import { useRouter } from 'next/router';
 
 const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
-const GENRES = [
-  { id: 'all', name: 'الكل / الشائع', movieGenre: '0', tvGenre: '0' },
-  { id: 'action', name: 'أكشن ', movieGenre: '28', tvGenre: '10759' },
-  { id: 'drama', name: 'دراما ', movieGenre: '18', tvGenre: '18' },
-  { id: 'horror', name: 'رعب ', movieGenre: '27', tvGenre: '10765' },
-  { id: 'comedy', name: 'كوميديا ', movieGenre: '35', tvGenre: '35' },
-  { id: 'scifi', name: 'خيال علمي ', movieGenre: '878', tvGenre: '10765' },
-  { id: 'crime', name: 'جريمة ', movieGenre: '80', tvGenre: '80' },
-  { id: 'mystery', name: 'غموض ', movieGenre: '9648', tvGenre: '9648' },
-  { id: 'romance', name: 'رومانسية ', movieGenre: '10749', tvGenre: '18' },
-  { id: 'animation', name: 'رسوم متحركة / أنمي', movieGenre: '16', tvGenre: '16' },
-  { id: 'documentary', name: 'وثائقي ', movieGenre: '99', tvGenre: '99' },
-  { id: 'family', name: 'عائلي  ', movieGenre: '10751', tvGenre: '10762' },
-  { id: 'history', name: 'تاريخ وحروب', movieGenre: '36,10752', tvGenre: '10768' },
-];
-
 export default function Home() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,7 +13,6 @@ export default function Home() {
   const [trending, setTrending] = useState([]);
   const [heroIndex, setHeroIndex] = useState(0);
 
-  // القوائم للرئيسية
   const [topRatedMixed, setTopRatedMixed] = useState([]);
   const [actionMixed, setActionMixed] = useState([]);
   const [horrorThrillerMixed, setHorrorThrillerMixed] = useState([]);
@@ -101,7 +84,6 @@ export default function Home() {
     fetchData();
   }, []);
 
-  // تمرير تلقائي للصفوف الأفقية
   useEffect(() => {
     const interval = setInterval(() => {
       Object.values(rowRefs).forEach((ref) => {
@@ -248,7 +230,6 @@ export default function Home() {
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {/* شريط التنقل العلوي */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(9, 9, 11, 0.95)', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '900', color: '#f97316', cursor: 'pointer' }} onClick={() => router.push('/')}>
@@ -295,7 +276,7 @@ export default function Home() {
           )}
 
           <HorizontalRow title="أحدث إصدارات هذا الشهر" items={thisMonthMixed} rowRef={rowRefs.thisMonth} onSeeMore={() => openCatalog('discover/movie', '0', 'أحدث إصدارات هذا الشهر')} />
-          <HorizontalRow title="الأفلام الحائزة على جوائز وتقييمات عالية" items={oscarsMixed} rowRefs={rowRefs.oscars} onSeeMore={() => openCatalog('discover/movie', '18,36', 'أفلام جوائز وتقييمات عالية')} />
+          <HorizontalRow title="الأفلام الحائزة على جوائز وتقييمات عالية" items={oscarsMixed} rowRef={rowRefs.oscars} onSeeMore={() => openCatalog('discover/movie', '18,36', 'أفلام جوائز وتقييمات عالية')} />
           <HorizontalRow title="الأعلى تقييماً" items={topRatedMixed} rowRef={rowRefs.topRated} onSeeMore={() => openCatalog('movie/top_rated', '0', 'الأعلى تقييماً')} />
           <HorizontalRow title="أفلام ومسلسلات الأكشن والحماس" items={actionMixed} rowRef={rowRefs.action} onSeeMore={() => openCatalog('discover/movie', '28', 'أكشن وحماس')} />
           <HorizontalRow title="الرعب والإثارة" items={horrorThrillerMixed} rowRef={rowRefs.horror} onSeeMore={() => openCatalog('discover/movie', '27', 'رعب وإثارة')} />
