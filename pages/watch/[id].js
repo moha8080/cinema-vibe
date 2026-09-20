@@ -36,7 +36,6 @@ export default function WatchPage() {
     fetchMediaDetails();
   }, [id, type]);
 
-  // رابط السيرفر عالي الدقة
   const embedUrl = mediaType === 'tv' 
     ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=1&episode=1` 
     : `https://vidsrc.xyz/embed/movie?tmdb=${id}`;
@@ -58,20 +57,14 @@ export default function WatchPage() {
         <title>{title} - سينما فيب</title>
       </Head>
 
-      {/* شريط التنقل العلوي */}
       <Navbar 
         activeTab={mediaType === 'movie' ? 'movies' : 'tv'}
         setActiveTab={(tab) => {
-          if (tab === 'home') router.push('/');
-          else if (tab === 'movies') router.push('/');
-          else if (tab === 'tv') router.push('/');
+          router.push('/');
         }}
-        onSearchClick={() => router.push('/')}
       />
 
       <div style={{ padding: '30px 20px', maxWidth: '1200px', margin: '0 auto' }}>
-        
-        {/* زر العودة */}
         <button 
           onClick={() => router.back()}
           style={{ 
@@ -85,10 +78,9 @@ export default function WatchPage() {
             fontWeight: 'bold'
           }}
         >
-          ← عودة للخلف
+          ← عودة 
         </button>
 
-        {/* مشغل الفيديو */}
         <div style={{ 
           position: 'relative', 
           width: '100%', 
@@ -108,7 +100,6 @@ export default function WatchPage() {
           />
         </div>
 
-        {/* معلومات العمل والقصة */}
         <div style={{ backgroundColor: '#121215', padding: '24px', borderRadius: '12px', border: '1px solid #27272a' }}>
           <h1 style={{ fontSize: '26px', fontWeight: 'bold', marginBottom: '12px', color: '#f97316' }}>{title}</h1>
           
@@ -123,7 +114,6 @@ export default function WatchPage() {
           <h3 style={{ fontSize: '16px', marginBottom: '8px', color: '#fff' }}>القصة:</h3>
           <p style={{ fontSize: '15px', lineHeight: '1.8', color: '#d4d4d8', margin: 0 }}>{overview}</p>
         </div>
-
       </div>
     </div>
   );
