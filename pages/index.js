@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import MediaRow from '../components/MediaRow';
 import MediaGrid from '../components/MediaGrid';
 
 export default function Home() {
+  const router = useRouter();
+  const { view } = router.query;
+
   const [currentView, setCurrentView] = useState('home');
 
   // أقسام الرئيسية
@@ -40,6 +44,15 @@ export default function Home() {
     { id: '10749', name: 'رومنسي' },
     { id: '12', name: 'مغامرة' }
   ];
+
+  // مزامنة العرض الحالي مع الـ URL (لحل مشكلة زر الرجوع 404)
+  useEffect(() => {
+    if (view === 'movies' || view === 'tv') {
+      setCurrentView(view);
+    } else {
+      setCurrentView('home');
+    }
+  }, [view]);
 
   useEffect(() => {
     async function fetchHomeData() {
@@ -134,6 +147,18 @@ export default function Home() {
     setLoading(false);
   };
 
+  // دالة لتغيير القسم مع تحديث مسار الـ URL لتسجيله في تاريخ المتصفح
+  const changeTab = (tab) => {
+    setSearchResults(null);
+    setSearchQuery('');
+    setSelectedGenre('all');
+    if (tab === 'home') {
+      router.push('/');
+    } else {
+      router.push(`/?view=${tab}`);
+    }
+  };
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#09090b', color: '#fff' }} dir="rtl">
       <Head>
@@ -142,12 +167,7 @@ export default function Home() {
 
       <Navbar 
         activeTab={currentView}
-        setActiveTab={(tab) => {
-          setCurrentView(tab);
-          setSearchResults(null);
-          setSearchQuery('');
-          setSelectedGenre('all');
-        }}
+        setActiveTab={changeTab}
         onSearchClick={() => setShowSearchBox(!showSearchBox)}
       />
 
@@ -233,11 +253,11 @@ export default function Home() {
           </div>
         ) : (
           <div>
-            <MediaRow title="الأفلام والمسلسلات الرائجة" items={trending} onViewMore={() => setCurrentView('movies')} />
-            <MediaRow title="أفضل الأفلام تقييماً" items={topMovies} onViewMore={() => setCurrentView('movies')} />
-            <MediaRow title="المسلسلات الأكثر مشاهدة" items={popularTv} onViewMore={() => setCurrentView('tv')} />
-            <MediaRow title="أفلام الأكشن والمغامرة" items={actionMovies} onViewMore={() => setCurrentView('movies')} />
-            <MediaRow title="أفلام الرعب والتشويق" items={horrorMovies} onViewMore={() => setCurrentView('movies')} />
+            <MediaRow title="الأفلام والمسلسلات الرائجة" items={trending} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="أفضل الأفلام تقييماً" items={topMovies} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="المسلسلات الأكثر مشاهدة" items={popularTv} onViewMore={() => changeTab('tv')} />
+            <MediaRow title="أفلام الأكشن والمغامرة" items={actionMovies} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="أفلام الرعب والتشويق" items={horrorMovies} onViewMore={() => changeTab('movies')} />
           </div>
         )}
       </main>
