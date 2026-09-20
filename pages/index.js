@@ -25,7 +25,8 @@ export default function Home() {
   const [showSearchBox, setShowSearchBox] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const API_KEY = '5b9856f6fb6a1f87627447e13d9c2288';
+  // مفتاح الـ API الخاص بك
+  const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
   const BASE_URL = 'https://api.themoviedb.org/3';
 
   // التصنيفات
