@@ -31,12 +31,12 @@ export default function Navbar({ activeTab, setActiveTab, onSearch }) {
       zIndex: 1000
     }} dir="rtl">
       {/* الشعار */}
-      <div 
-        onClick={() => router.push('/')} 
-        style={{ fontSize: '22px', fontWeight: 'bold', color: '#f97316', cursor: 'pointer', letterSpacing: '1px' }}
-      >
-        CINEMA VIBE
-      </div>
+<div 
+  onClick={() => router.push('/')} 
+  style={{ fontSize: '22px', fontWeight: 'bold', cursor: 'pointer', letterSpacing: '1px' }}
+>
+  <span style={{ color: '#f97316' }}>CINEMA</span> <span style={{ color: '#ffffff' }}>VIBE</span>
+</div>
 
       {/* روابط التنقل */}
       <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
