@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Navbar from '../components/Navbar';
+import MediaRow from '../components/MediaRow';
 import MediaGrid from '../components/MediaGrid';
 
 export default function Home() {
   const [currentView, setCurrentView] = useState('home');
 
-  // بيانات الصفحة الرئيسية
+  // أقسام الرئيسية
   const [trending, setTrending] = useState([]);
   const [topMovies, setTopMovies] = useState([]);
   const [popularTv, setPopularTv] = useState([]);
   const [horrorMovies, setHorrorMovies] = useState([]);
   const [actionMovies, setActionMovies] = useState([]);
 
-  // بيانات صفحات الأفلام والمسلسلات مع عرض المزيد والتصنيفات
+  // مكتبة الأفلام أو المسلسلات والتصنيفات
   const [libraryItems, setLibraryItems] = useState([]);
   const [libraryPage, setLibraryPage] = useState(1);
   const [selectedGenre, setSelectedGenre] = useState('all');
@@ -25,11 +26,9 @@ export default function Home() {
   const [showSearchBox, setShowSearchBox] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // مفتاح الـ API الخاص بك
   const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
   const BASE_URL = 'https://api.themoviedb.org/3';
 
-  // التصنيفات
   const genres = [
     { id: 'all', name: 'الكل' },
     { id: '28', name: 'أكشن' },
@@ -42,7 +41,6 @@ export default function Home() {
     { id: '12', name: 'مغامرة' }
   ];
 
-  // جلب بيانات الرئيسية
   useEffect(() => {
     async function fetchHomeData() {
       try {
@@ -72,7 +70,6 @@ export default function Home() {
     fetchHomeData();
   }, []);
 
-  // جلب بيانات مكتبة الأفلام أو المسلسلات عند التبديل
   useEffect(() => {
     if (currentView === 'home') return;
 
@@ -99,7 +96,6 @@ export default function Home() {
     fetchLibraryData();
   }, [currentView, selectedGenre]);
 
-  // زر عرض المزيد (Pagination)
   const handleLoadMore = async () => {
     setIsLoadingMore(true);
     try {
@@ -122,7 +118,6 @@ export default function Home() {
     }
   };
 
-  // البحث
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -140,12 +135,11 @@ export default function Home() {
   };
 
   return (
-    <div style={{ backgroundColor: '#09090b', color: '#ffffff', minHeight: '100vh', fontFamily: 'sans-serif' }} dir="rtl">
+    <div style={{ minHeight: '100vh', backgroundColor: '#09090b', color: '#fff' }} dir="rtl">
       <Head>
         <title>سينما فيب - Cinema Vibe</title>
       </Head>
 
-      {/* استدعاء الـ Navbar المستقل والموحد */}
       <Navbar 
         activeTab={currentView}
         setActiveTab={(tab) => {
@@ -157,7 +151,6 @@ export default function Home() {
         onSearchClick={() => setShowSearchBox(!showSearchBox)}
       />
 
-      {/* مربع البحث التفاعلي */}
       {showSearchBox && (
         <div style={{ padding: '16px 20px', backgroundColor: '#121215', borderBottom: '1px solid #27272a' }}>
           <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', maxWidth: '600px', margin: '0 auto' }}>
@@ -175,8 +168,6 @@ export default function Home() {
       )}
 
       <main style={{ padding: '30px 20px', maxWidth: '1400px', margin: '0 auto' }}>
-        
-        {/* الحالة 1: نتائج البحث */}
         {searchResults ? (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -186,13 +177,11 @@ export default function Home() {
             <MediaGrid items={searchResults} />
           </div>
         ) : currentView === 'movies' || currentView === 'tv' ? (
-          /* الحالة 2: مكتبة الأفلام أو المسلسلات مع التصنيفات وزر عرض المزيد */
           <div>
             <h2 style={{ fontSize: '22px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: '0 0 20px 0' }}>
               {currentView === 'movies' ? 'مكتبة الأفلام الشاملة' : 'مكتبة المسلسلات الشاملة'}
             </h2>
 
-            {/* شريط التصنيفات */}
             <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '30px' }}>
               {genres.map((g) => (
                 <button
@@ -220,8 +209,6 @@ export default function Home() {
             ) : (
               <>
                 <MediaGrid items={libraryItems} />
-                
-                {/* زر عرض المزيد */}
                 <div style={{ textAlign: 'center', marginTop: '40px' }}>
                   <button
                     onClick={handleLoadMore}
@@ -245,13 +232,12 @@ export default function Home() {
             )}
           </div>
         ) : (
-          /* الحالة 3: الصفحة الرئيسية والأقسام */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-            <MediaGrid title="الأفلام والمسلسلات الرائجة هذا الأسبوع" items={trending.slice(0, 12)} />
-            <MediaGrid title="أفضل الأفلام تقييماً" items={topMovies.slice(0, 12)} />
-            <MediaGrid title="المسلسلات الأكثر مشاهدة" items={popularTv.slice(0, 12)} />
-            <MediaGrid title="أفلام الأكشن والمغامرة" items={actionMovies.slice(0, 12)} />
-            <MediaGrid title="أفلام الرعب والتشويق" items={horrorMovies.slice(0, 12)} />
+          <div>
+            <MediaRow title="الأفلام والمسلسلات الرائجة" items={trending} onViewMore={() => setCurrentView('movies')} />
+            <MediaRow title="أفضل الأفلام تقييماً" items={topMovies} onViewMore={() => setCurrentView('movies')} />
+            <MediaRow title="المسلسلات الأكثر مشاهدة" items={popularTv} onViewMore={() => setCurrentView('tv')} />
+            <MediaRow title="أفلام الأكشن والمغامرة" items={actionMovies} onViewMore={() => setCurrentView('movies')} />
+            <MediaRow title="أفلام الرعب والتشويق" items={horrorMovies} onViewMore={() => setCurrentView('movies')} />
           </div>
         )}
       </main>
