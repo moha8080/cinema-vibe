@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import Navbar import '../../components/Navbar'; // تأكد من مسار الـ Navbar حسب تنظيم ملفاتك
+import Navbar from '../../components/Navbar';
 
 export default function WatchPage() {
   const router = useRouter();
@@ -36,8 +36,7 @@ export default function WatchPage() {
     fetchMediaDetails();
   }, [id, type]);
 
-  // روابط السيرفرات البديلة عالية الدقة والسرعة
-  // نستخدم سيرفر vidsrc الموثوق لتشغيل الأفلام والمسلسلات
+  // رابط السيرفر عالي الدقة
   const embedUrl = mediaType === 'tv' 
     ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=1&episode=1` 
     : `https://vidsrc.xyz/embed/movie?tmdb=${id}`;
@@ -52,7 +51,6 @@ export default function WatchPage() {
 
   const title = media?.title || media?.name || 'مشاهدة العمل';
   const overview = media?.overview || 'لا توجد نبذة تعريفية متاحة باللغة العربية لهذا العمل حالياً.';
-  const backdrop = media?.backdrop_path ? `https://image.tmdb.org/t/p/original${media.backdrop_path}` : '';
 
   return (
     <div style={{ backgroundColor: '#09090b', color: '#ffffff', minHeight: '100vh', fontFamily: 'sans-serif' }} dir="rtl">
@@ -60,7 +58,18 @@ export default function WatchPage() {
         <title>{title} - سينما فيب</title>
       </Head>
 
-      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      {/* شريط التنقل العلوي */}
+      <Navbar 
+        activeTab={mediaType === 'movie' ? 'movies' : 'tv'}
+        setActiveTab={(tab) => {
+          if (tab === 'home') router.push('/');
+          else if (tab === 'movies') router.push('/');
+          else if (tab === 'tv') router.push('/');
+        }}
+        onSearchClick={() => router.push('/')}
+      />
+
+      <div style={{ padding: '30px 20px', maxWidth: '1200px', margin: '0 auto' }}>
         
         {/* زر العودة */}
         <button 
@@ -79,7 +88,7 @@ export default function WatchPage() {
           ← عودة للخلف
         </button>
 
-        {/* مشغل الفيديو (السيرفر عالي الدقة) */}
+        {/* مشغل الفيديو */}
         <div style={{ 
           position: 'relative', 
           width: '100%', 
