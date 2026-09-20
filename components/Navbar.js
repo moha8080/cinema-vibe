@@ -1,65 +1,121 @@
 import { useRouter } from 'next/router';
+import { useState } from 'react';
 
-export default function Navbar({ activeTab, setActiveTab, onSearchClick }) {
+export default function Navbar({ activeTab, setActiveTab, onSearch }) {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleNav = (tab, path) => {
-    if (setActiveTab) {
-      setActiveTab(tab);
+  const handleNavClick = (tab) => {
+    setActiveTab(tab);
+    // إذا لم نكن في الصفحة الرئيسية، نعود إليها مع تحديد التاب المطلوب
+    if (router.pathname !== '/') {
+      router.push(`/?tab=${tab}`);
     }
-    router.push(path);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (onSearch) onSearch(searchQuery);
   };
 
   return (
-    <nav style={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center', 
-      padding: '16px 24px', 
-      backgroundColor: 'rgba(9, 9, 11, 0.95)', 
-      backdropFilter: 'blur(12px)', 
-      position: 'sticky', 
-      top: 0, 
-      zIndex: 100, 
-      borderBottom: '1px solid rgba(255,255,255,0.08)' 
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
-        <h1 
-          style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#f97316', cursor: 'pointer' }} 
-          onClick={() => handleNav('home', '/')}
-        >
-          CINEMA<span style={{ color: '#ffffff' }}>VIBE</span>
-        </h1>
-        <div style={{ display: 'flex', gap: '20px', fontSize: '15px', fontWeight: '600' }}>
-          <span 
-            style={{ color: activeTab === 'home' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} 
-            onClick={() => handleNav('home', '/')}
-          >
-            الرئيسية
-          </span>
-          <span 
-            style={{ color: activeTab === 'movies' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} 
-            onClick={() => handleNav('movies', '/')}
-          >
-            الأفلام
-          </span>
-          <span 
-            style={{ color: activeTab === 'tv' ? '#f97316' : '#a1a1aa', cursor: 'pointer' }} 
-            onClick={() => handleNav('tv', '/')}
-          >
-            المسلسلات
-          </span>
-        </div>
+    <nav style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '15px 30px',
+      backgroundColor: '#121215',
+      borderBottom: '1px solid #27272a',
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000
+    }} dir="rtl">
+      {/* الشعار */}
+      <div 
+        onClick={() => router.push('/')} 
+        style={{ fontSize: '22px', fontWeight: 'bold', color: '#f97316', cursor: 'pointer', letterSpacing: '1px' }}
+      >
+        CINEMA VIBE
       </div>
-      
-      {onSearchClick && (
+
+      {/* روابط التنقل */}
+      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
         <button 
-          onClick={onSearchClick} 
-          style={{ background: 'none', border: 'none', color: '#f4f4f5', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center' }}
+          onClick={() => handleNavClick('home')}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: activeTab === 'home' ? '#f97316' : '#d4d4d8',
+            fontSize: '16px',
+            cursor: 'pointer',
+            fontWeight: activeTab === 'home' ? 'bold' : 'normal'
+          }}
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          الرئيسية
         </button>
-      )}
+
+        <button 
+          onClick={() => handleNavClick('movies')}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: activeTab === 'movies' ? '#f97316' : '#d4d4d8',
+            fontSize: '16px',
+            cursor: 'pointer',
+            fontWeight: activeTab === 'movies' ? 'bold' : 'normal'
+          }}
+        >
+          الأفلام
+        </button>
+
+        <button 
+          onClick={() => handleNavClick('tv')}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: activeTab === 'tv' ? '#f97316' : '#d4d4d8',
+            fontSize: '16px',
+            cursor: 'pointer',
+            fontWeight: activeTab === 'tv' ? 'bold' : 'normal'
+          }}
+        >
+          المسلسلات
+        </button>
+      </div>
+
+      {/* خانة البحث */}
+      <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '8px' }}>
+        <input 
+          type="text" 
+          placeholder="ابحث عن فيلم أو مسلسل..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            padding: '8px 14px',
+            borderRadius: '8px',
+            backgroundColor: '#18181b',
+            border: '1px solid #27272a',
+            color: '#fff',
+            outline: 'none',
+            fontSize: '14px',
+            width: '200px'
+          }}
+        />
+        <button 
+          type="submit"
+          style={{
+            padding: '8px 14px',
+            backgroundColor: '#f97316',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          بحث
+        </button>
+      </form>
     </nav>
   );
 }
