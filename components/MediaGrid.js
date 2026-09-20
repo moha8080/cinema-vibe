@@ -1,23 +1,21 @@
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 
 export default function MediaGrid({ items, title }) {
   const router = useRouter();
 
-  // دالة التعامل مع النقر على الفيلم أو المسلسل والانتقال لصفحة المشاهدة
   const handleCardClick = (item) => {
     const mediaType = item.media_type || (item.title ? 'movie' : 'tv');
     router.push(`/watch/${item.id}?type=${mediaType}`);
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ width: '100%' }}>
       {title && (
         <h2 style={{ 
           color: '#ffffff', 
-          fontSize: '22px', 
+          fontSize: '20px', 
           fontWeight: '700', 
-          marginBottom: '20px',
+          marginBottom: '16px',
           borderRight: '4px solid #f97316',
           paddingRight: '12px'
         }}>
@@ -25,10 +23,11 @@ export default function MediaGrid({ items, title }) {
         </h2>
       )}
 
+      {/* تم تصغير حجم البطاقات بالحد الأدنى 140px عشان تعرض عناصر أكثر بكل صف */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', 
-        gap: '16px' 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', 
+        gap: '14px' 
       }}>
         {items && items.map((item) => {
           const posterPath = item.poster_path 
@@ -45,26 +44,17 @@ export default function MediaGrid({ items, title }) {
               onClick={() => handleCardClick(item)}
               style={{ 
                 backgroundColor: '#18181b', 
-                borderRadius: '12px', 
+                borderRadius: '8px', 
                 overflow: 'hidden', 
                 cursor: 'pointer',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                transition: 'transform 0.2s ease',
                 border: '1px solid rgba(255,255,255,0.06)',
                 display: 'flex',
                 flexDirection: 'column'
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-6px)';
-                e.currentTarget.style.boxShadow = '0 10px 20px rgba(249, 115, 22, 0.15)';
-                e.currentTarget.style.borderColor = 'rgba(249, 115, 22, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
-              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              {/* بوستر العمل */}
               <div style={{ position: 'relative', width: '100%', aspectRatio: '2/3', backgroundColor: '#27272a' }}>
                 <img 
                   src={posterPath} 
@@ -72,34 +62,27 @@ export default function MediaGrid({ items, title }) {
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   loading="lazy"
                 />
-                {/* تقييم العمل */}
                 <div style={{ 
                   position: 'absolute', 
-                  top: '8px', 
-                  left: '8px', 
-                  backgroundColor: 'rgba(0, 0, 0, 0.75)', 
-                  backdropFilter: 'blur(4px)',
+                  top: '6px', 
+                  left: '6px', 
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)', 
                   color: '#f97316', 
-                  padding: '3px 6px', 
-                  borderRadius: '6px', 
-                  fontSize: '11px', 
-                  fontWeight: '700',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '3px',
-                  border: '1px solid rgba(249,115,22,0.3)'
+                  padding: '2px 5px', 
+                  borderRadius: '4px', 
+                  fontSize: '10px', 
+                  fontWeight: '700'
                 }}>
                   ★ {voteAverage}
                 </div>
               </div>
 
-              {/* معلومات العمل */}
-              <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexGrow: 1 }}>
+              <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexGrow: 1 }}>
                 <h3 style={{ 
                   color: '#ffffff', 
-                  fontSize: '13px', 
+                  fontSize: '12px', 
                   fontWeight: '600', 
-                  margin: '0 0 6px 0',
+                  margin: '0 0 4px 0',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   display: '-webkit-box',
@@ -108,15 +91,9 @@ export default function MediaGrid({ items, title }) {
                 }}>
                   {itemTitle}
                 </h3>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#a1a1aa' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#a1a1aa' }}>
                   <span>{releaseYear}</span>
-                  <span style={{ 
-                    textTransform: 'uppercase', 
-                    backgroundColor: 'rgba(255,255,255,0.08)', 
-                    padding: '2px 5px', 
-                    borderRadius: '4px',
-                    fontSize: '10px'
-                  }}>
+                  <span style={{ textTransform: 'uppercase' }}>
                     {item.media_type || (item.title ? 'Movie' : 'TV')}
                   </span>
                 </div>
