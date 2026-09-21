@@ -1,120 +1,77 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
-import Navbar from '../../components/Navbar';
+// ... أي استيرادات أخرى موجودة لديك
 
 export default function WatchPage() {
   const router = useRouter();
-  const { id, type } = router.query;
+  const { id, season, episode } = router.query; // معرف الفيلم/المسلسل ورقم الموسم والحلقة إن وجد
 
-  const [media, setMedia] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [mediaType, setMediaType] = useState('movie');
+  // 1. ضع حالة السيرفر النشط هنا مع بقية الـ useState
+  const [activeServer, setActiveServer] = useState('vidsrc');
+  const [selectedSeason, setSelectedSeason] = useState(season || 1);
+  const [selectedEpisode, setSelectedEpisode] = useState(episode || 1);
 
-  const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
-  const BASE_URL = 'https://api.themoviedb.org/3';
+  // حدد نوع المحتوى (هل هو فيلم أم مسلسل؟ بناءً على بيانات الـ TMDB لديك)
+  // يمكنك تعديل هذا الشرط بحسب المتغيرات المتوفرة في كودك الحالي
+  const isTvShow = false; // اجعلها true إذا كان مسلسل حسب جلب البيانات
 
-  useEffect(() => {
-    if (!id) return;
-    const detectedType = type || 'movie';
-    setMediaType(detectedType);
-
-    async function fetchMediaDetails() {
-      try {
-        const res = await fetch(`${BASE_URL}/${detectedType}/${id}?api_key=${API_KEY}&language=ar-SA`);
-        const data = await res.json();
-        if (data && !data.success) {
-          setMedia(data);
-        }
-      } catch (err) {
-        console.error("Error fetching media details:", err);
-      } finally {
-        setLoading(false);
-      }
+  // 2. دالة توليد روابط السيرفرات الآمنة
+  const getEmbedUrl = () => {
+    if (!id) return '';
+    if (!isTvShow) {
+      // روابط الأفلام
+      if (activeServer === 'vidsrc') return `https://vidsrc.su/embed/movie/${id}`;
+      if (activeServer === 'embed.su') return `https://embed.su/embed/movie/${id}`;
+      if (activeServer === 'vidlink') return `https://vidlink.pro/movie/${id}`;
+    } else {
+      // روابط المسلسلات
+      if (activeServer === 'vidsrc') return `https://vidsrc.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}`;
+      if (activeServer === 'embed.su') return `https://embed.su/embed/tv/${id}/${selectedSeason}/${selectedEpisode}`;
+      if (activeServer === 'vidlink') return `https://vidlink.pro/tv/${id}/${selectedSeason}/${selectedEpisode}`;
     }
-
-    fetchMediaDetails();
-  }, [id, type]);
-
-  const embedUrl = mediaType === 'tv' 
-    ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=1&episode=1` 
-    : `https://vidsrc.xyz/embed/movie?tmdb=${id}`;
-
-  if (loading) {
-    return (
-      <div style={{ backgroundColor: '#09090b', color: '#fff', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }} dir="rtl">
-        <p>جاري تحميل محتوى الشاشة...</p>
-      </div>
-    );
-  }
-
-  const title = media?.title || media?.name || 'مشاهدة العمل';
-  const overview = media?.overview || 'لا توجد نبذة تعريفية متاحة باللغة العربية لهذا العمل حالياً.';
+  };
 
   return (
-    <div style={{ backgroundColor: '#09090b', color: '#ffffff', minHeight: '100vh', fontFamily: 'sans-serif' }} dir="rtl">
-      <Head>
-        <title>{title} - سينما فيب</title>
-      </Head>
-
-      <Navbar 
-        activeTab={mediaType === 'movie' ? 'movies' : 'tv'}
-        setActiveTab={(tab) => {
-          router.push('/');
-        }}
-      />
-
-      <div style={{ padding: '30px 20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <button 
-          onClick={() => router.back()}
-          style={{ 
-            backgroundColor: '#18181b', 
-            color: '#fff', 
-            border: '1px solid #27272a', 
-            padding: '8px 16px', 
-            borderRadius: '8px', 
-            cursor: 'pointer', 
-            marginBottom: '20px',
-            fontWeight: 'bold'
-          }}
-        >
-          ← عودة 
-        </button>
-
-        <div style={{ 
-          position: 'relative', 
-          width: '100%', 
-          aspectRatio: '16/9', 
-          backgroundColor: '#000', 
-          borderRadius: '12px', 
-          overflow: 'hidden',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
-          marginBottom: '30px',
-          border: '1px solid #27272a'
-        }}>
-          <iframe 
-            src={embedUrl} 
-            style={{ width: '100%', height: '100%', border: 'none' }}
-            allowFullScreen
-            title={title}
-          />
-        </div>
-
-        <div style={{ backgroundColor: '#121215', padding: '24px', borderRadius: '12px', border: '1px solid #27272a' }}>
-          <h1 style={{ fontSize: '26px', fontWeight: 'bold', marginBottom: '12px', color: '#f97316' }}>{title}</h1>
-          
-          <div style={{ display: 'flex', gap: '15px', fontSize: '14px', color: '#a1a1aa', marginBottom: '20px' }}>
-            <span>⭐ التقييم: {media?.vote_average ? media.vote_average.toFixed(1) : 'N/A'}</span>
-            <span>📅 تاريخ الإصدار: {media?.release_date || media?.first_air_date || 'غير متوفر'}</span>
-            <span style={{ textTransform: 'uppercase', backgroundColor: '#27272a', padding: '2px 8px', borderRadius: '4px', color: '#fff' }}>
-              {mediaType === 'movie' ? 'فيلم' : 'مسلسل'}
-            </span>
-          </div>
-
-          <h3 style={{ fontSize: '16px', marginBottom: '8px', color: '#fff' }}>القصة:</h3>
-          <p style={{ fontSize: '15px', lineHeight: '1.8', color: '#d4d4d8', margin: 0 }}>{overview}</p>
-        </div>
+    <div dir="rtl" style={{ backgroundColor: '#09090b', color: '#fff', minHeight: '100vh', padding: '20px' }}>
+      
+      {/* 3. أزرار تبديل السيرفرات (توضع فوق مشغل الفيديو مباشرة) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', backgroundColor: '#121215', padding: '12px 16px', borderRadius: '10px', border: '1px solid #27272a' }}>
+        <span style={{ fontSize: '13px', color: '#a1a1aa', fontWeight: 'bold' }}>اختر سيرفر المشاهدة:</span>
+        {[
+          { id: 'vidsrc', name: 'سيرفر VidSrc (رئيسي)' },
+          { id: 'embed.su', name: 'سيرفر Embed.su (بديل 1)' },
+          { id: 'vidlink', name: 'سيرفر VidLink (بديل 2)' }
+        ].map((server) => (
+          <button
+            key={server.id}
+            onClick={() => setActiveServer(server.id)}
+            style={{
+              backgroundColor: activeServer === server.id ? '#f97316' : '#27272a',
+              color: activeServer === server.id ? '#000' : '#fff',
+              border: 'none',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            {server.name}
+          </button>
+        ))}
       </div>
+
+      {/* 4. إطار مشغل الفيديو (Iframe) الذي يعرض السيرفر المختار */}
+      <div style={{ width: '100%', aspectRatio: '16/9', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden', border: '1px solid #27272a' }}>
+        <iframe
+          src={getEmbedUrl()}
+          style={{ width: '100%', height: '100%', border: 'none' }}
+          allowFullScreen
+          title="Movie Player"
+        ></iframe>
+      </div>
+
     </div>
   );
 }
