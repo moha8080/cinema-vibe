@@ -4,7 +4,7 @@ export default function MediaRow({ title, items, onViewMore }) {
   const router = useRouter();
 
   const handleCardClick = (item) => {
-    const mediaType = item.media_type || (item.title ? 'movie' : 'tv');
+    const mediaType = item.media_type || (item.title || item.original_title ? 'movie' : 'tv');
     router.push(`/watch/${item.id}?type=${mediaType}`);
   };
 
@@ -59,7 +59,8 @@ export default function MediaRow({ title, items, onViewMore }) {
             ? `https://image.tmdb.org/t/p/w500${item.poster_path}` 
             : 'https://via.placeholder.com/500x750?text=No+Image';
           
-          const itemTitle = item.title || item.name || 'بدون عنوان';
+          // فرض العنوان الإنجليزي فقط حصراً
+          const itemTitle = item.original_title || item.original_name || item.title || item.name || 'Title';
           const voteAverage = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
           const releaseYear = (item.release_date || item.first_air_date || '').substring(0, 4);
 
@@ -114,13 +115,15 @@ export default function MediaRow({ title, items, onViewMore }) {
                   display: '-webkit-box',
                   WebkitLineClamp: 1,
                   WebkitBoxOrient: 'vertical',
+                  direction: 'ltr',
+                  textAlign: 'left'
                 }}>
                   {itemTitle}
                 </h3>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#a1a1aa' }}>
                   <span>{releaseYear}</span>
                   <span style={{ textTransform: 'uppercase' }}>
-                    {item.media_type || (item.title ? 'Movie' : 'TV')}
+                    {item.media_type || (item.title || item.original_title ? 'Movie' : 'TV')}
                   </span>
                 </div>
               </div>
