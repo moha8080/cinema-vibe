@@ -6,18 +6,16 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
-  // تحديث التاب النشط بناءً على الـ Query Params عند تغير المسار
   useEffect(() => {
     if (router.query.tab && setActiveTab) {
       setActiveTab(router.query.tab);
     } else if (router.pathname === '/watch/[id]' && setActiveTab) {
-      setActiveTab(''); // لا يوجد تاب رئيسي نشط في صفحة المشاهدة
+      setActiveTab('');
     }
   }, [router.query.tab, router.pathname, setActiveTab]);
 
   const handleNavClick = (tab) => {
     if (setActiveTab) setActiveTab(tab);
-    // التوجيه الذكي للصفحة الرئيسية مع تمرير التاب المطلوب لضمان عمله من أي مكان
     router.push(`/?tab=${tab}`);
   };
 
@@ -30,6 +28,15 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
         router.push(`/?search=${encodeURIComponent(searchQuery)}`);
       }
       setIsMobileSearchOpen(false);
+      setSearchQuery('');
+    }
+  };
+
+  const handleRecClick = () => {
+    if (onOpenRecommendations) {
+      onOpenRecommendations();
+    } else {
+      router.push('/?recommendations=true');
     }
   };
 
@@ -38,68 +45,51 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: '12px 20px',
+      padding: '12px 16px',
       backgroundColor: '#121215',
       borderBottom: '1px solid #27272a',
       position: 'sticky',
       top: 0,
       zIndex: 1000,
-      flexWrap: 'wrap',
-      gap: '12px'
+      gap: '10px'
     }} dir="rtl">
       
-      {/* القسم الأيمن: الشعار وروابط التنقل الرئيسية */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
-        {/* الشعار */}
+      {/* الشعار وروابط التنقل الأساسية */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', minWidth: 0 }}>
         <div 
           onClick={() => router.push('/')} 
-          style={{ fontSize: '20px', fontWeight: 'bold', cursor: 'pointer', letterSpacing: '1px', whiteSpace: 'nowrap' }}
+          style={{ fontSize: '18px', fontWeight: '900', cursor: 'pointer', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}
         >
           <span style={{ color: '#f97316' }}>CINEMA</span> <span style={{ color: '#ffffff' }}>VIBE</span>
         </div>
 
-        {/* روابط التنقل */}
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', fontSize: '14px', whiteSpace: 'nowrap' }}>
           <button 
             onClick={() => handleNavClick('home')}
             style={{
-              background: 'none',
-              border: 'none',
+              background: 'none', border: 'none',
               color: activeTab === 'home' ? '#f97316' : '#d4d4d8',
-              fontSize: '15px',
-              cursor: 'pointer',
-              fontWeight: activeTab === 'home' ? 'bold' : 'normal',
-              padding: '4px 0'
+              cursor: 'pointer', fontWeight: activeTab === 'home' ? 'bold' : 'normal', padding: 0
             }}
           >
             الرئيسية
           </button>
-
           <button 
             onClick={() => handleNavClick('movies')}
             style={{
-              background: 'none',
-              border: 'none',
+              background: 'none', border: 'none',
               color: activeTab === 'movies' ? '#f97316' : '#d4d4d8',
-              fontSize: '15px',
-              cursor: 'pointer',
-              fontWeight: activeTab === 'movies' ? 'bold' : 'normal',
-              padding: '4px 0'
+              cursor: 'pointer', fontWeight: activeTab === 'movies' ? 'bold' : 'normal', padding: 0
             }}
           >
             الأفلام
           </button>
-
           <button 
             onClick={() => handleNavClick('tv')}
             style={{
-              background: 'none',
-              border: 'none',
+              background: 'none', border: 'none',
               color: activeTab === 'tv' ? '#f97316' : '#d4d4d8',
-              fontSize: '15px',
-              cursor: 'pointer',
-              fontWeight: activeTab === 'tv' ? 'bold' : 'normal',
-              padding: '4px 0'
+              cursor: 'pointer', fontWeight: activeTab === 'tv' ? 'bold' : 'normal', padding: 0
             }}
           >
             المسلسلات
@@ -107,107 +97,100 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
         </div>
       </div>
 
-      {/* القسم الأيسر: خانة البحث، زر التوصيات، والأيقونات المتجاوبة للجوال */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      {/* الأدوات اليسرى: زر التوصيات، والبحث للكمبيوتر والجوال */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         
-        {/* زر "سهرتك من توصيتنا" الجذاب */}
+        {/* زر سهرتك من توصيتنا (بدون إيموجي وبإصلاح كامل للوظيفة) */}
         <button
-          onClick={onOpenRecommendations || (() => router.push('/?recommendations=true'))}
+          onClick={handleRecClick}
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
             backgroundColor: 'rgba(249, 115, 22, 0.15)',
             color: '#f97316',
             border: '1px solid rgba(249, 115, 22, 0.4)',
-            padding: '7px 12px',
-            borderRadius: '8px',
+            padding: '6px 10px',
+            borderRadius: '6px',
             cursor: 'pointer',
-            fontSize: '13px',
+            fontSize: '12px',
             fontWeight: 'bold',
             whiteSpace: 'nowrap',
             transition: 'all 0.2s'
           }}
-          title="سهرتك من توصيتنا - اختر التصنيف والمزاج لنقترح عليك الأفضل"
         >
-          <span>🍿</span>
-          <span className="rec-text">سهرتك من توصيتنا</span>
+          سهرتك من توصيتنا
         </button>
 
-        {/* مربع البحث لأجهزة الكمبيوتر */}
-        <form onSubmit={handleSearchSubmit} className="desktop-search" style={{ display: 'flex', gap: '8px' }}>
+        {/* خانة البحث للكمبيوتر والشاشات الكبيرة */}
+        <form onSubmit={handleSearchSubmit} className="desktop-search" style={{ display: 'flex', gap: '6px' }}>
           <input 
             type="text" 
-            placeholder="ابحث عن فيلم أو مسلسل..." 
+            placeholder="بحث..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
-              padding: '7px 12px',
-              borderRadius: '8px',
+              padding: '6px 10px',
+              borderRadius: '6px',
               backgroundColor: '#18181b',
               border: '1px solid #27272a',
               color: '#fff',
               outline: 'none',
-              fontSize: '13px',
-              width: '180px'
+              fontSize: '12px',
+              width: '140px'
             }}
           />
           <button 
             type="submit"
             style={{
-              padding: '7px 12px',
+              padding: '6px 10px',
               backgroundColor: '#f97316',
-              color: '#fff',
+              color: '#000',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '6px',
               cursor: 'pointer',
               fontWeight: 'bold',
-              fontSize: '13px'
+              fontSize: '12px',
+              whiteSpace: 'nowrap'
             }}
           >
             بحث
           </button>
         </form>
 
-        {/* أيقونة البحث للجوالات والأيباد */}
-        <div className="mobile-search-container" style={{ position: 'relative', display: 'none' }}>
+        {/* زر تفعيل نافذة البحث للجوالات والأيباد */}
+        <div className="mobile-search-wrapper" style={{ position: 'relative', display: 'none' }}>
           <button
             onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
             style={{
               backgroundColor: '#f97316',
-              color: '#fff',
+              color: '#000',
               border: 'none',
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              padding: '6px 10px',
+              borderRadius: '6px',
               cursor: 'pointer',
-              fontSize: '16px'
+              fontWeight: 'bold',
+              fontSize: '12px',
+              whiteSpace: 'nowrap'
             }}
-            title="بحث"
           >
-            🔍
+            بحث
           </button>
 
-          {/* نافذة البحث المنبثقة للجوال عند النقر على الأيقونة */}
+          {/* القائمة المنبثقة للبحث على الجوال */}
           {isMobileSearchOpen && (
             <form 
               onSubmit={handleSearchSubmit}
               style={{
                 position: 'absolute',
-                top: '45px',
+                top: '40px',
                 left: 0,
                 backgroundColor: '#18181b',
                 padding: '10px',
-                borderRadius: '10px',
+                borderRadius: '8px',
                 border: '1px solid #27272a',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                boxShadow: '0 8px 20px rgba(0,0,0,0.6)',
                 display: 'flex',
                 gap: '6px',
-                zIndex: 1100,
-                width: '240px'
+                zIndex: 2000,
+                width: '210px'
               }}
             >
               <input 
@@ -217,13 +200,13 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
                 style={{
-                  padding: '6px 10px',
+                  padding: '6px',
                   borderRadius: '6px',
                   backgroundColor: '#09090b',
                   border: '1px solid #27272a',
                   color: '#fff',
                   outline: 'none',
-                  fontSize: '13px',
+                  fontSize: '12px',
                   width: '100%'
                 }}
               />
@@ -232,7 +215,7 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
                 style={{
                   padding: '6px 10px',
                   backgroundColor: '#f97316',
-                  color: '#fff',
+                  color: '#000',
                   border: 'none',
                   borderRadius: '6px',
                   cursor: 'pointer',
@@ -240,7 +223,7 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
                   fontSize: '12px'
                 }}
               >
-                بحث
+                تأكيد
               </button>
             </form>
           )}
@@ -248,17 +231,14 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
 
       </div>
 
-      {/* تنسيقات CSS مدمجة للتحكم بالتجاوب على الأجهزة الذكية */}
+      {/* التنسيق التلقائي للشاشات الصغيرة لتجنب سوء التنسيق */}
       <style jsx>{`
         @media (max-width: 768px) {
           .desktop-search {
             display: none !important;
           }
-          .mobile-search-container {
+          .mobile-search-wrapper {
             display: block !important;
-          }
-          .rec-text {
-            display: none; /* إخفاء النص الطويل في الشاشات الصغيرة جداً وإبقاء الأيقونة مع زر مميز أو اختصار */
           }
         }
       `}</style>
