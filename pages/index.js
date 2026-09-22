@@ -7,7 +7,7 @@ import MediaGrid from '../components/MediaGrid';
 
 export default function Home() {
   const router = useRouter();
-  const { view } = router.query;
+  const { view, search, recommendations } = router.query;
 
   const [currentView, setCurrentView] = useState('home');
 
@@ -25,10 +25,15 @@ export default function Home() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // البحث
-  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
-  const [showSearchBox, setShowSearchBox] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // نافذة سهرتك من توصيتنا
+  const [showRecModal, setShowRecModal] = useState(false);
+  const [recType, setRecType] = useState('movie');
+  const [recGenre, setRecGenre] = useState('28');
+  const [recResults, setRecResults] = useState([]);
+  const [isRecLoading, setIsRecLoading] = useState(false);
 
   const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
   const BASE_URL = 'https://api.themoviedb.org/3';
@@ -45,14 +50,23 @@ export default function Home() {
     { id: '12', name: 'مغامرة' }
   ];
 
-  // مزامنة العرض الحالي مع الـ URL (لحل مشكلة زر الرجوع 404)
+  // مزامنة الحالة مع الـ URL
   useEffect(() => {
     if (view === 'movies' || view === 'tv') {
       setCurrentView(view);
+      setSearchResults(null);
     } else {
       setCurrentView('home');
     }
-  }, [view]);
+
+    if (search) {
+      executeSearch(search);
+    }
+
+    if (recommendations === 'true') {
+      setShowRecModal(true);
+    }
+  }, [view, search, recommendations]);
 
   useEffect(() => {
     async function fetchHomeData() {
@@ -84,7 +98,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (currentView === 'home') return;
+    if (currentView === 'home' || search) return;
 
     async function fetchLibraryData() {
       setLoading(true);
@@ -131,26 +145,29 @@ export default function Home() {
     }
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
+  // تنفيذ البحث
+  const executeSearch = async (query) => {
+    if (!query.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&language=ar-SA&query=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&language=ar-SA&query=${encodeURIComponent(query)}`);
       const data = await res.json();
       if (data && data.results) {
         setSearchResults(data.results);
       }
     } catch (err) {
       console.error("Search error:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  // دالة لتغيير القسم مع تحديث مسار الـ URL لتسجيله في تاريخ المتصفح
+  const handleSearchNav = (query) => {
+    router.push(`/?search=${encodeURIComponent(query)}`);
+  };
+
   const changeTab = (tab) => {
     setSearchResults(null);
-    setSearchQuery('');
     setSelectedGenre('all');
     if (tab === 'home') {
       router.push('/');
@@ -158,6 +175,28 @@ export default function Home() {
       router.push(`/?view=${tab}`);
     }
   };
+
+  // جلب التوصيات الذكية لزر "سهرتك من توصيتنا"
+  const fetchRecommendations = async () => {
+    setIsRecLoading(true);
+    try {
+      const res = await fetch(`${BASE_URL}/discover/${recType}?api_key=${API_KEY}&language=ar-SA&with_genres=${recGenre}&sort_by=vote_average.desc&vote_count.gte=200`);
+      const data = await res.json();
+      if (data && data.results) {
+        setRecResults(data.results);
+      }
+    } catch (err) {
+      console.error("Recommendation error:", err);
+    } finally {
+      setIsRecLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showRecModal) {
+      fetchRecommendations();
+    }
+  }, [recType, recGenre, showRecModal]);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#09090b', color: '#fff' }} dir="rtl">
@@ -168,22 +207,64 @@ export default function Home() {
       <Navbar 
         activeTab={currentView}
         setActiveTab={changeTab}
-        onSearchClick={() => setShowSearchBox(!showSearchBox)}
+        onSearch={handleSearchNav}
+        onOpenRecommendations={() => setShowRecModal(true)}
       />
 
-      {showSearchBox && (
-        <div style={{ padding: '16px 20px', backgroundColor: '#121215', borderBottom: '1px solid #27272a' }}>
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', maxWidth: '600px', margin: '0 auto' }}>
-            <input 
-              type="text" 
-              placeholder="ابحث عن فيلم أو مسلسل..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ flex: 1, padding: '10px 16px', borderRadius: '8px', border: '1px solid #27272a', backgroundColor: '#18181b', color: '#fff', outline: 'none' }}
-              autoFocus
-            />
-            <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#f97316', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>بحث</button>
-          </form>
+      {/* نافذة سهرتك من توصيتنا */}
+      {showRecModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 2000,
+          display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px'
+        }}>
+          <div style={{
+            backgroundColor: '#121215', border: '1px solid #27272a', borderRadius: '12px',
+            width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', padding: '24px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, fontSize: '18px', color: '#f97316' }}>سهرتك من توصيتنا</h2>
+              <button 
+                onClick={() => { setShowRecModal(false); router.push('/'); }}
+                style={{ background: 'none', border: 'none', color: '#a1a1aa', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                إغلاق X
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: '#a1a1aa', marginBottom: '6px' }}>نوع المحتوى:</label>
+                <select 
+                  value={recType} 
+                  onChange={(e) => setRecType(e.target.value)}
+                  style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #27272a', padding: '8px 12px', borderRadius: '6px', outline: 'none' }}
+                >
+                  <option value="movie">أفلام</option>
+                  <option value="tv">مسلسلات</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: '#a1a1aa', marginBottom: '6px' }}>التصنيف:</label>
+                <select 
+                  value={recGenre} 
+                  onChange={(e) => setRecGenre(e.target.value)}
+                  style={{ backgroundColor: '#18181b', color: '#fff', border: '1px solid #27272a', padding: '8px 12px', borderRadius: '6px', outline: 'none' }}
+                >
+                  {genres.filter(g => g.id !== 'all').map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {isRecLoading ? (
+              <p style={{ textAlign: 'center', color: '#a1a1aa', padding: '30px' }}>جاري جلب أفضل التوصيات...</p>
+            ) : (
+              <MediaGrid items={recResults} />
+            )}
+          </div>
         </div>
       )}
 
@@ -192,7 +273,7 @@ export default function Home() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 style={{ fontSize: '20px', borderRight: '4px solid #f97316', paddingRight: '10px', margin: 0 }}>نتائج البحث</h2>
-              <button onClick={() => setSearchResults(null)} style={{ background: '#27272a', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer' }}>إلغاء البحث</button>
+              <button onClick={() => router.push('/')} style={{ background: '#27272a', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer' }}>العودة للرئيسية</button>
             </div>
             <MediaGrid items={searchResults} />
           </div>
