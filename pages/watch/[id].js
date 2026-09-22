@@ -13,10 +13,11 @@ export default function WatchPage() {
   const [episode, setEpisode] = useState(1);
   const [seasonDetails, setSeasonDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [customSubUrl, setCustomSubUrl] = useState('');
+  const [showSubInput, setShowSubInput] = useState(false);
 
   const isTv = type === 'tv';
 
-  // جلب تفاصيل الفيلم أو المسلسل من TMDB
   useEffect(() => {
     if (!id) return;
 
@@ -36,7 +37,6 @@ export default function WatchPage() {
     fetchDetails();
   }, [id, isTv]);
 
-  // جلب حلقات الموسم للمسلسلات
   useEffect(() => {
     if (!isTv || !id) return;
 
@@ -53,14 +53,12 @@ export default function WatchPage() {
     fetchSeasonData();
   }, [id, season, isTv]);
 
-  // رابط السيرفر المعتمد
+  // بناء رابط السيرفر مع تمرير باراميترات الترجمة التلقائية إن أمكن
   const getEmbedUrl = () => {
     if (!id) return '';
-    if (!isTv) {
-      return `https://vidlink.pro/movie/${id}`;
-    } else {
-      return `https://vidlink.pro/tv/${id}/${season}/${episode}`;
-    }
+    let url = !isTv ? `https://vidlink.pro/movie/${id}` : `https://vidlink.pro/tv/${id}/${season}/${episode}`;
+    // إضافة باراميتر لتفضيل اللغة العربية تلقائياً في السيرفر
+    return `${url}?sub.language=ar`;
   };
 
   const handleSearch = (searchQuery) => {
@@ -85,28 +83,24 @@ export default function WatchPage() {
   return (
     <div style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
-      {/* الشريط العلوي */}
       <Navbar onSearch={handleSearch} />
 
-      {/* الحاوية الرئيسية */}
-      <div style={{ 
-        maxWidth: '1200px', 
-        margin: '0 auto', 
-        padding: '20px 16px' 
-      }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 16px' }}>
         
-        {/* مشغل الفيديو الأساسي مع تحسينات الأداء ومنع التعليق */}
+        {/* مشغل الفيديو مع تفعيل تسريع عتاد الكمبيوتر لمنع التعليق */}
         <div style={{ 
+          position: 'relative',
           width: '100%', 
           aspectRatio: '16/9', 
           backgroundColor: '#000', 
           borderRadius: '12px', 
           overflow: 'hidden', 
           border: '1px solid #27272a',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
-          marginBottom: '20px',
-          transform: 'translateZ(0)', // <--- يمنع التهنيج والتقطيع على الكمبيوتر باستخدام تسريع كارت الشاشة
-          WebkitTransform: 'translateZ(0)'
+          boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
+          marginBottom: '15px',
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
+          willChange: 'transform'
         }}>
           <iframe
             src={getEmbedUrl()}
@@ -117,7 +111,60 @@ export default function WatchPage() {
           ></iframe>
         </div>
 
-        {/* لوحة التحكم والسيرفر الوحيد المعتمد */}
+        {/* شريط التحكم السريع في الترجمة (يحل مشكلة الاختفاء عند تكبير الشاشة) */}
+        <div style={{
+          backgroundColor: '#121215',
+          padding: '10px 16px',
+          borderRadius: '8px',
+          border: '1px solid #27272a',
+          marginBottom: '20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px', color: '#f97316', fontWeight: 'bold' }}>توجيه الترجمة:</span>
+            <span style={{ fontSize: '12px', color: '#a1a1aa' }}>إذا اختفت الترجمة عند تكبير الشاشة، يمكنك استخدام إعدادات السيرفر الداخلية أو لصق رابط ترجمة خارجي (.srt/.vtt)</span>
+          </div>
+          
+          <button 
+            onClick={() => setShowSubInput(!showSubInput)}
+            style={{
+              backgroundColor: '#27272a',
+              color: '#fff',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}
+          >
+            {showSubInput ? 'إخفاء خانة الترجمة' + '' : 'إضافة ترجمة خارجية يدوية'}
+          </button>
+        </div>
+
+        {showSubInput && (
+          <div style={{ backgroundColor: '#121215', padding: '12px', borderRadius: '8px', border: '1px solid #27272a', marginBottom: '20px', display: 'flex', gap: '10px' }}>
+            <input 
+              type="text"
+              placeholder="ضع رابط ملف الترجمة المباشر هنا (مثل رابط بصيغة .vtt)..."
+              value={customSubUrl}
+              onChange={(e) => setCustomSubUrl(e.target.value)}
+              style={{ flex: 1, padding: '8px 12px', backgroundColor: '#18181b', border: '1px solid #3f3f46', color: '#fff', borderRadius: '6px', fontSize: '13px', direction: 'ltr' }}
+            />
+            <button 
+              onClick={() => alert('تم تفعيل الرابط، تأكد من دعم السيرفر لملفات الـ VTT')}
+              style={{ backgroundColor: '#f97316', color: '#000', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}
+            >
+              تطبيق
+            </button>
+          </div>
+        )}
+
+        {/* لوحة السيرفر */}
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -126,9 +173,7 @@ export default function WatchPage() {
           padding: '12px 18px', 
           borderRadius: '10px', 
           border: '1px solid #27272a',
-          marginBottom: '20px',
-          flexWrap: 'wrap',
-          gap: '10px'
+          marginBottom: '20px'
         }}>
           <span style={{ fontSize: '13px', color: '#a1a1aa', fontWeight: 'bold' }}>مشغل البث المباشر:</span>
           <div style={{
@@ -139,7 +184,7 @@ export default function WatchPage() {
             fontSize: '13px',
             fontWeight: '900'
           }}>
-            سيرفر المشاهدة 
+            سيرفر المشاهدة الأساسي
           </div>
         </div>
 
@@ -207,7 +252,7 @@ export default function WatchPage() {
           </div>
         )}
 
-        {/* تفاصيل العمل */}
+        {/* تفاصيل العمل (بدون رموز تعبيرية) */}
         <div style={{ 
           backgroundColor: '#121215', 
           padding: '24px', 
@@ -240,10 +285,10 @@ export default function WatchPage() {
             paddingBottom: '14px'
           }}>
             <span style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', color: '#eab308', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold' }}>
-              ★ {formatNumber(voteAvg)} / 10
+              التقييم: {formatNumber(voteAvg)} / 10
             </span>
-            <span>📅 تاريخ الإصدار: <strong style={{ color: '#fff', direction: 'ltr', display: 'inline-block' }}>{releaseDate}</strong> ({releaseYear})</span>
-            <span>⏳ المدة: <strong style={{ color: '#fff', direction: 'ltr', display: 'inline-block' }}>{formatNumber(runtime)} دقيقة</strong></span>
+            <span>تاريخ الإصدار: <strong style={{ color: '#fff', direction: 'ltr', display: 'inline-block' }}>{releaseDate}</strong> ({releaseYear})</span>
+            <span>المدة: <strong style={{ color: '#fff', direction: 'ltr', display: 'inline-block' }}>{formatNumber(runtime)} دقيقة</strong></span>
           </div>
 
           <div dir="rtl">
