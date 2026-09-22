@@ -16,14 +16,13 @@ export default function WatchPage() {
 
   const isTv = type === 'tv';
 
-  // جلب تفاصيل الفيلم أو المسلسل من TMDB (الاسم الإنجليزي، القصة بالعربية، التفاصيل)
+  // جلب تفاصيل الفيلم أو المسلسل من TMDB
   useEffect(() => {
     if (!id) return;
 
     const fetchDetails = async () => {
       try {
         setLoading(true);
-        // جلب الأساسيات باللغة العربية للقصة، بينما الاسم الأصلي سيتم أخذه من الحقل الخاص
         const res = await fetch(`https://api.themoviedb.org/3/${isTv ? 'tv' : 'movie'}/${id}?api_key=${API_KEY}&language=ar-SA`);
         const data = await res.json();
         setMediaData(data);
@@ -37,7 +36,7 @@ export default function WatchPage() {
     fetchDetails();
   }, [id, isTv]);
 
-  // جلب حلقات الموسم للمسلسلات لتنظيم القوائم بشكل دقيق
+  // جلب حلقات الموسم للمسلسلات
   useEffect(() => {
     if (!isTv || !id) return;
 
@@ -54,7 +53,7 @@ export default function WatchPage() {
     fetchSeasonData();
   }, [id, season, isTv]);
 
-  // رابط السيرفر المعتمد (سيرفر المشاهدة)
+  // رابط السيرفر المعتمد
   const getEmbedUrl = () => {
     if (!id) return '';
     if (!isTv) {
@@ -70,7 +69,6 @@ export default function WatchPage() {
     }
   };
 
-  // تنسيق الأرقام بالإنجليزية
   const formatNumber = (num) => {
     if (!num) return '0';
     return Number(num).toLocaleString('en-US');
@@ -90,14 +88,14 @@ export default function WatchPage() {
       {/* الشريط العلوي */}
       <Navbar onSearch={handleSearch} />
 
-      {/* الحاوية الرئيسية المتجاوبة (للكمبيوتر، الأيباد، والجوال) */}
+      {/* الحاوية الرئيسية */}
       <div style={{ 
         maxWidth: '1200px', 
         margin: '0 auto', 
         padding: '20px 16px' 
       }}>
         
-        {/* مشغل الفيديو الأساسي */}
+        {/* مشغل الفيديو الأساسي مع تحسينات الأداء ومنع التعليق */}
         <div style={{ 
           width: '100%', 
           aspectRatio: '16/9', 
@@ -106,12 +104,15 @@ export default function WatchPage() {
           overflow: 'hidden', 
           border: '1px solid #27272a',
           boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
-          marginBottom: '20px'
+          marginBottom: '20px',
+          transform: 'translateZ(0)', // <--- يمنع التهنيج والتقطيع على الكمبيوتر باستخدام تسريع كارت الشاشة
+          WebkitTransform: 'translateZ(0)'
         }}>
           <iframe
             src={getEmbedUrl()}
             style={{ width: '100%', height: '100%', border: 'none' }}
-            allowFullScreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+            allowFullScreen={true}
             title="Media Player"
           ></iframe>
         </div>
@@ -138,11 +139,11 @@ export default function WatchPage() {
             fontSize: '13px',
             fontWeight: '900'
           }}>
-            سيرفر المشاهدة 🎬
+            سيرفر المشاهدة 
           </div>
         </div>
 
-        {/* تنظيم المواسم والحلقات باحترافية (للمسلسلات فقط) */}
+        {/* تنظيم المواسم والحلقات للمسلسلات */}
         {isTv && (
           <div style={{ 
             backgroundColor: '#121215', 
@@ -155,7 +156,6 @@ export default function WatchPage() {
             gap: '12px'
           }}>
             <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-              {/* اختيار الموسم */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1', minWidth: '140px' }}>
                 <label style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>اختر الموسم:</label>
                 <select 
@@ -180,7 +180,6 @@ export default function WatchPage() {
                 </select>
               </div>
 
-              {/* اختيار الحلقة */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1', minWidth: '140px' }}>
                 <label style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>اختر الحلقة:</label>
                 <select 
@@ -208,7 +207,7 @@ export default function WatchPage() {
           </div>
         )}
 
-        {/* تفاصيل العمل (الاسم بالإنجليزية، القصة بالعربية، التقييم، التاريخ، والمدة بالأرقام الإنجليزية) */}
+        {/* تفاصيل العمل */}
         <div style={{ 
           backgroundColor: '#121215', 
           padding: '24px', 
@@ -218,7 +217,6 @@ export default function WatchPage() {
           flexDirection: 'column',
           gap: '16px'
         }}>
-          {/* العنوان بالإنجليزية حصراً وباتجاه LTR */}
           <h1 style={{ 
             fontSize: '26px', 
             fontWeight: '900', 
@@ -231,7 +229,6 @@ export default function WatchPage() {
             {englishTitle || 'Loading...'}
           </h1>
 
-          {/* شريط المعلومات الجانبية (الأرقام بالإنجليزية) */}
           <div style={{ 
             display: 'flex', 
             gap: '15px', 
@@ -249,7 +246,6 @@ export default function WatchPage() {
             <span>⏳ المدة: <strong style={{ color: '#fff', direction: 'ltr', display: 'inline-block' }}>{formatNumber(runtime)} دقيقة</strong></span>
           </div>
 
-          {/* القصة بالعربية */}
           <div dir="rtl">
             <h3 style={{ fontSize: '15px', color: '#f97316', margin: '0 0 8px 0', fontWeight: 'bold' }}>قصة العمل:</h3>
             <p style={{ fontSize: '14px', color: '#d4d4d8', lineHeight: '1.7', margin: 0 }}>
