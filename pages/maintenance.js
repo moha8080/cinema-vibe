@@ -11,87 +11,89 @@ export default function Maintenance() {
       alignItems: 'center',
       justifyContent: 'center',
       fontFamily: 'system-ui, -apple-system, sans-serif',
-      padding: '20px',
-      textAlign: 'center',
-      position: 'relative',
-      overflow: 'hidden'
+      padding: '24px',
+      textAlign: 'center'
     }} dir="rtl">
       
       <Head>
-        <title>الموقع تحت الصيانة - سينما فيب</title>
+        <title>الموقع تحت الصيانة | سينما فيب</title>
       </Head>
 
-      {/* خلفية جمالية مضيئة خفيفة */}
       <div style={{
-        position: 'absolute',
-        width: '300px',
-        height: '300px',
-        backgroundColor: 'rgba(249, 115, 22, 0.08)',
-        borderRadius: '50%',
-        filter: 'blur(80px)',
-        zIndex: 0
-      }} />
-
-      <div style={{
-        maxWidth: '480px',
+        maxWidth: '520px',
         width: '100%',
         backgroundColor: '#121215',
         border: '1px solid #27272a',
-        padding: '45px 30px',
-        borderRadius: '16px',
-        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.9)',
-        position: 'relative',
-        zIndex: 1,
+        padding: '50px 40px',
+        borderRadius: '12px',
+        boxShadow: '0 30px 60px rgba(0, 0, 0, 0.8)',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        gap: '20px'
+        alignItems: 'flex-start',
+        textAlign: 'right'
       }}>
         
-        {/* أيقونة الصيانة بتصميم دائري أنيق */}
-        <div style={{
-          width: '70px',
-          height: '70px',
-          backgroundColor: 'rgba(249, 115, 22, 0.1)',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '32px',
-          border: '1px solid rgba(249, 115, 22, 0.3)',
-          boxShadow: '0 0 20px rgba(249, 115, 22, 0.15)'
+        {/* الشعار */}
+        <h1 style={{ 
+          fontSize: '22px', 
+          fontWeight: '900', 
+          color: '#f97316', 
+          margin: '0 0 24px 0', 
+          letterSpacing: '1px' 
         }}>
-          🛠️
-        </div>
+          CINEMA<span style={{ color: '#ffffff' }}>VIBE</span>
+        </h1>
 
-        {/* عنوان الموقع أو الشعار */}
-        <div>
-          <h2 style={{ fontSize: '15px', fontWeight: 'bold', color: '#f97316', margin: '0 0 5px 0', letterSpacing: '1px' }}>
-            CINEMA VIBE
-          </h2>
-          <h1 style={{ fontSize: '22px', fontWeight: '900', color: '#ffffff', margin: 0 }}>
-            نعمل على تحسين تجربتك
-          </h1>
-        </div>
+        {/* العنوان الرئيسي مع خط جانبي برتقالي متناسق مع باقي الموقع */}
+        <h2 style={{ 
+          fontSize: '20px', 
+          fontWeight: '700', 
+          color: '#ffffff', 
+          margin: '0 0 16px 0',
+          borderRight: '4px solid #f97316',
+          paddingRight: '12px'
+        }}>
+          تحديثات النظام الجارية
+        </h2>
 
-        {/* وصف تفصيلي */}
-        <p style={{ fontSize: '14px', color: '#a1a1aa', lineHeight: '1.7', margin: 0 }}>
-          الموقع خاضع حالياً لتحديثات برمجية شاملة وإضافات جديدة لنقدم لك أفضل أداء ومشاهدة ممتعة. سنعود للعمل قريباً جداً، شكراً لصبرك.
+        {/* النص التوضيحي */}
+        <p style={{ 
+          fontSize: '15px', 
+          color: '#a1a1aa', 
+          lineHeight: '1.8', 
+          margin: '0 0 30px 0' 
+        }}>
+          نعمل في الوقت الحالي على إجراء أعمال صيانة وتطوير شاملة لتحسين أداء المنصة وتقديم تجربة مشاهدة استثنائية. سنعود للعمل بكامل طاقتنا قريباً.
         </p>
 
-        {/* خط فاصل أنيق */}
-        <div style={{ width: '100%', height: '1px', backgroundColor: '#27272a', margin: '5px 0' }} />
-
-        {/* ملاحظة أو حالة */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#71717a' }}>
-          <span style={{ width: '8px', height: '8px', backgroundColor: '#eab308', borderRadius: '50%', display: 'inline-block' }}></span>
-          <span>الصيانة الدورية جارية الآن</span>
+        {/* مؤشر الحالة */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '10px', 
+          backgroundColor: '#18181b', 
+          border: '1px solid #27272a', 
+          padding: '10px 16px', 
+          borderRadius: '8px', 
+          width: '100%',
+          boxSizing: 'border-box'
+        }}>
+          <span style={{ 
+            width: '8px', 
+            height: '8px', 
+            backgroundColor: '#f97316', 
+            borderRadius: '50%', 
+            display: 'inline-block' 
+          }} />
+          <span style={{ fontSize: '13px', color: '#d4d4d8', fontWeight: '500' }}>
+            الحالة: الموقع مغلق مؤقتاً لأعمال التطوير
+          </span>
         </div>
 
       </div>
 
-      {/* الحقوق في الأسفل */}
-      <div style={{ marginTop: '30px', fontSize: '12px', color: '#52525b', zIndex: 1 }}>
+      {/* الحقوق */}
+      <div style={{ marginTop: '24px', fontSize: '13px', color: '#52525b', letterSpacing: '0.5px' }}>
         جميع الحقوق محفوظة &copy; {new Date().getFullYear()} سينما فيب
       </div>
 
