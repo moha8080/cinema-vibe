@@ -9,7 +9,7 @@ export default function App({ Component, pageProps }) {
 
   useEffect(() => {
     // 1. ضع حالة الصيانة هنا: true (يعني الموقع مغلق للصيانة)، false (يعني الموقع يعمل للجميع)
-    const MAINTENANCE_MODE = true; 
+    const MAINTENANCE_MODE = false; 
 
     // 2. المفتاح السري الخاص بك لدخول الموقع أثناء الصيانة
     const SECRET_KEY = 'admin123';
