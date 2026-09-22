@@ -12,13 +12,14 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
   };
 
   return (
-    <header style={{
+    <header dir="rtl" style={{
       backgroundColor: '#121215',
       borderBottom: '1px solid #27272a',
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      padding: '12px 16px'
+      padding: '12px 16px',
+      textAlign: 'right'
     }}>
       <div style={{
         maxWidth: '1400px',
@@ -29,7 +30,7 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
       }}>
         
         {/* الصف الأول: الشعار وزر سهرتك علينا */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', direction: 'rtl' }}>
           <h1 
             style={{ color: '#f97316', fontSize: '20px', fontWeight: 'bold', margin: 0, cursor: 'pointer' }} 
             onClick={() => setActiveTab('home')}
@@ -55,7 +56,7 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
           </button>
         </div>
 
-        {/* الصف الثاني: روابط التنقل وشريط البحث (مرتب ومتناسق بالكامل) */}
+        {/* الصف الثاني: روابط التنقل وشريط البحث */}
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -64,7 +65,8 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
           gap: '10px', 
           flexWrap: 'wrap',
           paddingTop: '6px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+          direction: 'rtl'
         }}>
           <nav style={{ display: 'flex', gap: '15px', fontSize: '13px', fontWeight: '600', alignItems: 'center' }}>
             <span 
@@ -101,7 +103,8 @@ export default function Navbar({ activeTab, setActiveTab, onSearch, onOpenRecomm
                 backgroundColor: '#18181b', 
                 color: '#fff', 
                 outline: 'none',
-                fontSize: '12px'
+                fontSize: '12px',
+                textAlign: 'right'
               }}
             />
             <button 
