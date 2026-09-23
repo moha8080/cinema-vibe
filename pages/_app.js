@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Maintenance from './maintenance';
+import '../styles/globals.css'; // تم إضافة ملف التنسيقات العامة لإزالة الأطراف البيضاء وتثبيت الخطوط
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();
@@ -8,8 +9,8 @@ export default function App({ Component, pageProps }) {
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    // 1. ضع حالة الصيانة هنا: true (يعني الموقع مغلق للصيانة)، false (يعني الموقع يعمل للجميع)
-    const MAINTENANCE_MODE = false; 
+    // 1. ضع حالة الصيانة هنا: true (الموقع مغلق)، false (الموقع يعمل للجميع)
+    const MAINTENANCE_MODE = false;  
 
     // 2. المفتاح السري الخاص بك لدخول الموقع أثناء الصيانة
     const SECRET_KEY = 'admin123';
@@ -17,7 +18,7 @@ export default function App({ Component, pageProps }) {
     // التحقق من وجود المفتاح في رابط المتصفح
     const queryKey = router.query.key;
     
-    // حفظ الصلاحية في التخزين المحلي للمتصفح (Local Storage) لكي لا تبقي الكلمة في الرابط طوال الوقت
+    // حفظ الصلاحية في التخزين المحلي للمتصفح (Local Storage)
     let hasAccess = false;
     if (queryKey === SECRET_KEY) {
       localStorage.setItem('admin_access', 'true');
