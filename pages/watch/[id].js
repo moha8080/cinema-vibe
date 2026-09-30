@@ -14,7 +14,7 @@ export default function WatchPage() {
   const [seasonDetails, setSeasonDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // حالة التبديل بين السيرفرات (server1 الأساسي، server2 البديل VidSrc)
+  // حالة التبديل بين السيرفرات
   const [activeServer, setActiveServer] = useState('server1');
 
   const isTv = type === 'tv';
@@ -54,20 +54,19 @@ export default function WatchPage() {
     fetchSeasonData();
   }, [id, season, isTv]);
 
-  // روابط السيرفرات
+  // روابط السيرفرات مع إصلاح ودعم الترجمة واللغة للسيرفر الأساسي
   const getEmbedUrl = () => {
     if (!id) return '';
     
     if (activeServer === 'server2') {
-      // 🟠 السيرفر البديل المستقر (VidSrc)
       return !isTv 
-        ? `https://vidsrc.xyz/embed/movie?tmdb=${id}` 
-        : `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+        ? `https://vidsrc.cc/v2/embed/movie/${id}` 
+        : `https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}`;
     }
 
-    // السيرفر الأساسي (VidLink)
+    // السيرفر الأساسي مع بارامترات الترجمة واللغة العربية
     let url = !isTv ? `https://vidlink.pro/movie/${id}` : `https://vidlink.pro/tv/${id}/${season}/${episode}`;
-    return `${url}?sub.language=ar`;
+    return `${url}?autoplay=false&sub.language=ar&language=ar`;
   };
 
   const handleSearch = (searchQuery) => {
@@ -83,19 +82,47 @@ export default function WatchPage() {
 
   const englishTitle = mediaData ? (mediaData.original_title || mediaData.original_name || mediaData.title || mediaData.name) : '';
   const releaseDate = mediaData ? (mediaData.release_date || mediaData.first_air_date || '') : '';
-  const releaseYear = releaseDate ? releaseDate.substring(0, 4) : ''; // سنة الإصدار فقط
+  const releaseYear = releaseDate ? releaseDate.substring(0, 4) : '';
   const voteAvg = mediaData && mediaData.vote_average ? mediaData.vote_average.toFixed(1) : 'N/A';
   const runtime = isTv 
     ? (mediaData?.episode_run_time?.[0] || mediaData?.runtime || '45') 
     : (mediaData?.runtime || '120');
 
   return (
-    <div style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative' }}>
       
-      <Navbar onSearch={handleSearch} />
+      {/* حل مشكلة الشريط العلوي عبر رفع الـ zIndex وضمان تفاعله بالكامل */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 1000, backgroundColor: '#09090b' }}>
+        <Navbar onSearch={handleSearch} />
+      </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 16px' }}>
         
+        {/* زر العودة */}
+        <div style={{ marginBottom: '15px' }}>
+          <button
+            onClick={() => router.back()}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              backgroundColor: '#18181b',
+              color: '#f4f4f5',
+              border: '1px solid #27272a',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '13px',
+              transition: '0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#27272a'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#18181b'}
+          >
+            ← العودة للخلف
+          </button>
+        </div>
+
         {/* أزرار التبديل بين السيرفرات */}
         <div style={{ 
           display: 'flex', 
@@ -124,7 +151,7 @@ export default function WatchPage() {
               transition: '0.2s'
             }}
           >
-            سيرفر 1 (الأساسي)
+            سيرفر 1 (الأساسي - مترجم)
           </button>
 
           <button
@@ -141,7 +168,7 @@ export default function WatchPage() {
               transition: '0.2s'
             }}
           >
-            سيرفر 2 (VidSrc السريع)
+            سيرفر 2 (VidSrc الاحتياطي)
           </button>
         </div>
 
@@ -195,7 +222,8 @@ export default function WatchPage() {
                     borderRadius: '8px',
                     outline: 'none',
                     fontSize: '14px',
-                    direction: 'ltr'
+                    direction: 'ltr',
+                    cursor: 'pointer'
                   }}
                 >
                   {mediaData?.seasons?.filter(s => s.season_number > 0).map((s) => (
@@ -219,7 +247,8 @@ export default function WatchPage() {
                     borderRadius: '8px',
                     outline: 'none',
                     fontSize: '14px',
-                    direction: 'ltr'
+                    direction: 'ltr',
+                    cursor: 'pointer'
                   }}
                 >
                   {seasonDetails?.episodes?.map((ep) => (
