@@ -5,9 +5,8 @@ export default function AdBanner({ zoneKey, width, height }) {
 
   useEffect(() => {
     if (containerRef.current && zoneKey) {
-      containerRef.current.innerHTML = ''; // تنظيف الحاوية
+      containerRef.current.innerHTML = '';
 
-      // 1. إنشاء سكريبت الإعدادات الخاص بالمنطقة الإعلانية
       const scriptOption = document.createElement('script');
       scriptOption.type = 'text/javascript';
       scriptOption.text = `
@@ -21,7 +20,6 @@ export default function AdBanner({ zoneKey, width, height }) {
       `;
       containerRef.current.appendChild(scriptOption);
 
-      // 2. إنشاء سكريبت الاستدعاء
       const scriptInvoke = document.createElement('script');
       scriptInvoke.type = 'text/javascript';
       scriptInvoke.async = true;
@@ -33,14 +31,16 @@ export default function AdBanner({ zoneKey, width, height }) {
   return (
     <div style={{
       display: 'flex',
-      justifyContent: 'center',
+      flexDirection: 'column',
       alignItems: 'center',
       margin: '20px auto',
       width: '100%',
-      minHeight: `${height}px`,
       overflow: 'hidden'
     }}>
-      <div ref={containerRef} />
+      <span style={{ fontSize: '11px', color: '#71717a', marginBottom: '4px' }}>
+        إعلان ({width}x{height})
+      </span>
+      <div ref={containerRef} style={{ minHeight: `${height}px`, minWidth: `${width}px` }} />
     </div>
   );
 }
