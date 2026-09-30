@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
+import Navbar from '../../components/Navbar';
 
 const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
@@ -12,31 +12,39 @@ export default function WatchPage() {
   const [season, setSeason] = useState(1);
   const [episode, setEpisode] = useState(1);
   const [seasonDetails, setSeasonDetails] = useState(null);
+  const [similarMedia, setSimilarMedia] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   
-  // حالة التبديل بين السيرفرات (server1, server2, server3)
+  // حالة التبديل بين السيرفرات
   const [activeServer, setActiveServer] = useState('server1');
 
   const isTv = type === 'tv';
 
+  // جلب تفاصيل العمل والمحتوى المشابه
   useEffect(() => {
     if (!id) return;
 
-    const fetchDetails = async () => {
+    const fetchDetailsAndSimilar = async () => {
       try {
         setLoading(true);
+        // جلب تفاصيل العمل
         const res = await fetch(`https://api.themoviedb.org/3/${isTv ? 'tv' : 'movie'}/${id}?api_key=${API_KEY}&language=ar-SA`);
         const data = await res.json();
         setMediaData(data);
+
+        // جلب المحتوى المشابه
+        const similarRes = await fetch(`https://api.themoviedb.org/3/${isTv ? 'tv' : 'movie'}/${id}/similar?api_key=${API_KEY}&language=ar-SA&page=1`);
+        const similarData = await similarRes.json();
+        setSimilarMedia(similarData.results || []);
+
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching media details:', err);
+        console.error('Error fetching data:', err);
         setLoading(false);
       }
     };
 
-    fetchDetails();
+    fetchDetailsAndSimilar();
   }, [id, isTv]);
 
   useEffect(() => {
@@ -55,31 +63,30 @@ export default function WatchPage() {
     fetchSeasonData();
   }, [id, season, isTv]);
 
-  // روابط السيرفرات الثلاثة (VidLink, MultiEmbed, VidSrc)
+  // روابط السيرفرات (تم تحديث السيرفر 2 و 3 بسيرفرات بديلة تعمل بكفاءة عالية)
   const getEmbedUrl = () => {
     if (!id) return '';
     
     if (activeServer === 'server2') {
-      // 🟠 سيرفر MultiEmbed القوي
+      // سيرفر بديل 2 (VidSrc.me)
       return !isTv 
-        ? `https://multembed.mov/?video_id=${id}&tmdb=1` 
-        : `https://multembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
+        ? `https://vidsrc.me/embed/movie?tmdb=${id}` 
+        : `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
     }
 
     if (activeServer === 'server3') {
-      // 🔵 سيرفر VidSrc الاحتياطي
+      // سيرفر بديل 3 (2Embed)
       return !isTv 
-        ? `https://vidsrc.cc/v2/embed/movie/${id}?auto_play=false` 
-        : `https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}?auto_play=false`;
+        ? `https://www.2embed.cc/embed/${id}` 
+        : `https://www.2embed.cc/embedtv/${id}&s=${season}&e=${episode}`;
     }
 
-    // السيرفر الأول (VidLink مع بارامترات الترجمة العربية)
+    // السيرفر الأساسي (VidLink مع دعم الترجمة العربية)
     let url = !isTv ? `https://vidlink.pro/movie/${id}` : `https://vidlink.pro/tv/${id}/${season}/${episode}`;
     return `${url}?autoplay=false&primaryColor=f97316&secondaryColor=18181b&icon=default&sub.language=ar&ds_lang=ar`;
   };
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
+  const handleSearch = (searchQuery) => {
     if (searchQuery.trim()) {
       router.push(`/?search=${encodeURIComponent(searchQuery)}`);
     }
@@ -101,72 +108,8 @@ export default function WatchPage() {
   return (
     <div style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
-      {/* الشريط العلوي المتفاعل بالكامل */}
-      <header style={{ 
-        position: 'sticky', 
-        top: 0, 
-        zIndex: 9999, 
-        backgroundColor: '#09090b', 
-        borderBottom: '1px solid #27272a',
-        padding: '12px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '15px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
-          <Link href="/" style={{ fontSize: '18px', fontWeight: '900', color: '#f97316', textDecoration: 'none' }}>
-            🎬 سهرتك علينا
-          </Link>
-          
-          <nav style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-            <Link href="/" style={{ color: '#a1a1aa', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-              الصفحة الرئيسية
-            </Link>
-            <Link href="/?type=movie" style={{ color: '#a1a1aa', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-              الأفلام
-            </Link>
-            <Link href="/?type=tv" style={{ color: '#a1a1aa', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-              المسلسلات
-            </Link>
-          </nav>
-        </div>
-
-        <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '8px' }}>
-          <input
-            type="text"
-            placeholder="ابحث عن فيلم أو مسلسل..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              padding: '6px 12px',
-              backgroundColor: '#18181b',
-              border: '1px solid #27272a',
-              borderRadius: '6px',
-              color: '#fff',
-              outline: 'none',
-              fontSize: '13px',
-              width: '200px'
-            }}
-          />
-          <button
-            type="submit"
-            style={{
-              padding: '6px 12px',
-              backgroundColor: '#f97316',
-              color: '#000',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontSize: '13px'
-            }}
-          >
-            بحث
-          </button>
-        </form>
-      </header>
+      {/* الشريط العلوي الأصلي تماماً */}
+      <Navbar onSearch={handleSearch} />
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 16px' }}>
         
@@ -193,7 +136,7 @@ export default function WatchPage() {
           </button>
         </div>
 
-        {/* أزرار التبديل بين السيرفرات (الثلاثة سيرفرات) */}
+        {/* أزرار التبديل بين السيرفرات */}
         <div style={{ 
           display: 'flex', 
           gap: '10px', 
@@ -217,11 +160,10 @@ export default function WatchPage() {
               color: activeServer === 'server1' ? '#000' : '#fff',
               fontWeight: 'bold',
               cursor: 'pointer',
-              fontSize: '13px',
-              transition: '0.2s'
+              fontSize: '13px'
             }}
           >
-            سيرفر 1 (VidLink)
+            سيرفر 1 (VidLink - مترجم)
           </button>
 
           <button
@@ -234,11 +176,10 @@ export default function WatchPage() {
               color: activeServer === 'server2' ? '#000' : '#fff',
               fontWeight: 'bold',
               cursor: 'pointer',
-              fontSize: '13px',
-              transition: '0.2s'
+              fontSize: '13px'
             }}
           >
-            سيرفر 2 (MultiEmbed)
+            سيرفر 2 (VidSrc الاحتياطي)
           </button>
 
           <button
@@ -251,11 +192,10 @@ export default function WatchPage() {
               color: activeServer === 'server3' ? '#000' : '#fff',
               fontWeight: 'bold',
               cursor: 'pointer',
-              fontSize: '13px',
-              transition: '0.2s'
+              fontSize: '13px'
             }}
           >
-            سيرفر 3 (VidSrc)
+            سيرفر 3 (2Embed)
           </button>
         </div>
 
@@ -354,7 +294,8 @@ export default function WatchPage() {
           border: '1px solid #27272a',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px'
+          gap: '16px',
+          marginBottom: '30px'
         }}>
           <h1 style={{ 
             fontSize: '26px', 
@@ -392,6 +333,62 @@ export default function WatchPage() {
             </p>
           </div>
         </div>
+
+        {/* قسم المحتوى المشابه */}
+        {similarMedia.length > 0 && (
+          <div style={{ marginTop: '40px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', marginBottom: '20px', borderRight: '4px solid #f97316', paddingRight: '10px' }}>
+              أعمال مشابهة قد تعجبك
+            </h2>
+
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', 
+              gap: '16px' 
+            }}>
+              {similarMedia.slice(0, 10).map((item) => {
+                const itemTitle = item.title || item.name;
+                const itemPoster = item.poster_path 
+                  ? `https://image.tmdb.org/t/p/w500${item.poster_path}` 
+                  : 'https://via.placeholder.com/500x750?text=No+Image';
+                const itemType = isTv ? 'tv' : 'movie';
+
+                return (
+                  <div 
+                    key={item.id}
+                    onClick={() => router.push(`/watch/${item.id}?type=${itemType}`)}
+                    style={{
+                      backgroundColor: '#121215',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      border: '1px solid #27272a',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                    onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    <div style={{ aspectRatio: '2/3', width: '100%', position: 'relative', backgroundColor: '#27272a' }}>
+                      <img 
+                        src={itemPoster} 
+                        alt={itemTitle} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </div>
+                    <div style={{ padding: '10px' }}>
+                      <h4 style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {itemTitle}
+                      </h4>
+                      <span style={{ fontSize: '11px', color: '#a1a1aa' }}>
+                        ⭐ {item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
