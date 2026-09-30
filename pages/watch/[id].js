@@ -14,7 +14,7 @@ export default function WatchPage() {
   const [seasonDetails, setSeasonDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // حالة التبديل بين السيرفرات (server1 الأساسي، server2 الجديد VidTube)
+  // حالة التبديل بين السيرفرات (server1 الأساسي، server2 البديل القوي Embed.su)
   const [activeServer, setActiveServer] = useState('server1');
 
   const isTv = type === 'tv';
@@ -57,10 +57,15 @@ export default function WatchPage() {
   // روابط السيرفرات
   const getEmbedUrl = () => {
     if (!id) return '';
+    
     if (activeServer === 'server2') {
-      return 'https://down.vidtube.one/embed-x178a3y5r14b.html'; // 🟠 السيرفر الجديد
+      // 🟠 السيرفر البديل القوي والمستقر (Embed.su)
+      return !isTv 
+        ? `https://embed.su/embed/movie/${id}` 
+        : `https://embed.su/embed/tv/${id}/${season}/${episode}`;
     }
-    // السيرفر الأساسي
+
+    // السيرفر الأساسي (VidLink)
     let url = !isTv ? `https://vidlink.pro/movie/${id}` : `https://vidlink.pro/tv/${id}/${season}/${episode}`;
     return `${url}?sub.language=ar`;
   };
@@ -91,7 +96,7 @@ export default function WatchPage() {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 16px' }}>
         
-        {/* أزرار التبديل بين السيرفرات فوق المشغل مباشرة لسهولة الوصول */}
+        {/* أزرار التبديل بين السيرفرات */}
         <div style={{ 
           display: 'flex', 
           gap: '10px', 
@@ -136,11 +141,11 @@ export default function WatchPage() {
               transition: '0.2s'
             }}
           >
-            سيرفر 2 (VidTube السريع)
+            سيرفر 2 (البديل السريع)
           </button>
         </div>
 
-        {/* مشغل الفيديو مع تفعيل تسريع عتاد الكمبيوتر لمنع التعليق */}
+        {/* مشغل الفيديو */}
         <div style={{ 
           position: 'relative',
           width: '100%', 
@@ -263,7 +268,6 @@ export default function WatchPage() {
             <span style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', color: '#eab308', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold' }}>
               التقييم: {formatNumber(voteAvg)} / 10
             </span>
-            {/* عرض سنة الإصدار فقط */}
             <span>سنة الإصدار: <strong style={{ color: '#fff', direction: 'ltr', display: 'inline-block' }}>{releaseYear || 'N/A'}</strong></span>
             <span>المدة: <strong style={{ color: '#fff', direction: 'ltr', display: 'inline-block' }}>{formatNumber(runtime)} دقيقة</strong></span>
           </div>
