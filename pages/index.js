@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import MediaRow from '../components/MediaRow';
 import MediaGrid from '../components/MediaGrid';
+import AdBanner from '../components/AdBanner'; // استيراد مكون الإعلان
 
 export default function Home() {
   const router = useRouter();
@@ -210,6 +211,11 @@ export default function Home() {
         onSearch={handleSearchNav}
         onOpenRecommendations={() => setShowRecModal(true)}
       />
+
+      {/* عرض بانر الإعلان في أعلى الصفحة تحت شريط التنقل */}
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 20px' }}>
+        <AdBanner />
+      </div>
 
       {/* نافذة سهرتك من توصيتنا */}
       {showRecModal && (
