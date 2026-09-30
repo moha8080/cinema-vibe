@@ -4,7 +4,8 @@ import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import MediaRow from '../components/MediaRow';
 import MediaGrid from '../components/MediaGrid';
-import AdBanner from '../components/AdBanner'; // استيراد مكون الإعلان
+import AdBanner from '../components/AdBanner'; // الإعلان القديم (160x300)
+import TopAd from '../components/TopAd';       // الإعلانات الجديدة للأعلى
 
 export default function Home() {
   const router = useRouter();
@@ -212,6 +213,11 @@ export default function Home() {
         onOpenRecommendations={() => setShowRecModal(true)}
       />
 
+      {/* 🟢 إعلان جديد في أعلى الصفحة (تحت الناف بار مباشرة بتصميم متناسق) */}
+      <div style={{ maxWidth: '900px', margin: '20px auto', padding: '0 20px' }}>
+        <TopAd scriptUrl="https://pl31594020.profitableratecpmnetwork.com/da/b7/ad/dab7adf74b77570bc2d0a3ec039ee972.js" />
+      </div>
+
       {/* نافذة سهرتك من توصيتنا */}
       {showRecModal && (
         <div style={{
@@ -344,8 +350,20 @@ export default function Home() {
         )}
       </main>
 
-      {/* قسم عرض الإعلان الناجح (160x300) بمنتصف الصفحة قبل الـ Footer */}
-      <div style={{ margin: '40px auto', display: 'flex', justifyContent: 'center', padding: '0 20px' }}>
+      {/* 🟠 قسم الإعلان السفلي (تم تعديل الإطار ليكون مرتباً، متناسقاً وبدون فوضى) */}
+      <div style={{ 
+        maxWidth: '400px', 
+        margin: '50px auto 30px auto', 
+        padding: '16px', 
+        backgroundColor: '#121215', 
+        border: '1px solid #27272a', 
+        borderRadius: '12px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
+      }}>
+        <span style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '10px', fontWeight: '500' }}>إعلان</span>
         <AdBanner zoneKey="6f4d9ccbf2384adbc1c3f6caa8b26cf6" width={160} height={300} />
       </div>
 
