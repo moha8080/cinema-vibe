@@ -1,14 +1,16 @@
 import { useEffect, useRef } from 'react';
 
 export default function AdBanner() {
-  const bannerRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    if (bannerRef.current && !bannerRef.current.hasChildNodes()) {
-      // 1. إنشاء متغير الإعدادات atOptions المطلوب من الشبكة
-      const confScript = document.createElement('script');
-      confScript.type = 'text/javascript';
-      confScript.innerHTML = `
+    if (containerRef.current) {
+      containerRef.current.innerHTML = ''; // تنظيف الحاوية لمنع التكرار
+
+      // إنشاء عنصر السكريبت الأول للإعدادات
+      const scriptOption = document.createElement('script');
+      scriptOption.type = 'text/javascript';
+      scriptOption.text = `
         atOptions = {
           'key' : '5358bd5bf06fe651cb4b33a9d850733c',
           'format' : 'iframe',
@@ -17,14 +19,14 @@ export default function AdBanner() {
           'params' : {}
         };
       `;
-      bannerRef.current.appendChild(confScript);
+      containerRef.current.appendChild(scriptOption);
 
-      // 2. إنشاء سكريبت الاستدعاء (invoke.js)
-      const invokeScript = document.createElement('script');
-      invokeScript.type = 'text/javascript';
-      invokeScript.src = 'https://www.highrevenueformat.com/5358bd5bf06fe651cb4b33a9d850733c/invoke.js';
-      invokeScript.async = true;
-      bannerRef.current.appendChild(invokeScript);
+      // إنشاء عنصر السكريبت الثاني للاستدعاء
+      const scriptInvoke = document.createElement('script');
+      scriptInvoke.type = 'text/javascript';
+      scriptInvoke.async = true;
+      scriptInvoke.src = 'https://www.highrevenueformat.com/5358bd5bf06fe651cb4b33a9d850733c/invoke.js';
+      containerRef.current.appendChild(scriptInvoke);
     }
   }, []);
 
@@ -38,7 +40,7 @@ export default function AdBanner() {
       minHeight: '50px',
       overflow: 'hidden'
     }}>
-      <div ref={bannerRef} />
+      <div ref={containerRef} />
     </div>
   );
 }
