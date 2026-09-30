@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Navbar from '../../components/Navbar';
+import Link from 'next/link';
 
 const API_KEY = '62ba727696f6c4d85d14ec42e701ab38';
 
@@ -13,6 +13,7 @@ export default function WatchPage() {
   const [episode, setEpisode] = useState(1);
   const [seasonDetails, setSeasonDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // حالة التبديل بين السيرفرات
   const [activeServer, setActiveServer] = useState('server1');
@@ -54,22 +55,23 @@ export default function WatchPage() {
     fetchSeasonData();
   }, [id, season, isTv]);
 
-  // روابط السيرفرات مع إصلاح ودعم الترجمة واللغة للسيرفر الأساسي
+  // روابط السيرفرات مع إصلاح الترجمة للسيرفر الأول (VidLink) والسيرفر الثاني (VidSrc)
   const getEmbedUrl = () => {
     if (!id) return '';
     
     if (activeServer === 'server2') {
       return !isTv 
-        ? `https://vidsrc.cc/v2/embed/movie/${id}` 
-        : `https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}`;
+        ? `https://vidsrc.cc/v2/embed/movie/${id}?auto_play=false` 
+        : `https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}?auto_play=false`;
     }
 
-    // السيرفر الأساسي مع بارامترات الترجمة واللغة العربية
+    // السيرفر الأول (مع فرض بارامترات الترجمة العربية المعتمدة)
     let url = !isTv ? `https://vidlink.pro/movie/${id}` : `https://vidlink.pro/tv/${id}/${season}/${episode}`;
-    return `${url}?autoplay=false&sub.language=ar&language=ar`;
+    return `${url}?autoplay=false&primaryColor=f97316&secondaryColor=18181b&icon=default&sub.language=ar&ds_lang=ar`;
   };
 
-  const handleSearch = (searchQuery) => {
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/?search=${encodeURIComponent(searchQuery)}`);
     }
@@ -89,12 +91,74 @@ export default function WatchPage() {
     : (mediaData?.runtime || '120');
 
   return (
-    <div style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative' }}>
+    <div style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
-      {/* حل مشكلة الشريط العلوي عبر رفع الـ zIndex وضمان تفاعله بالكامل */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 1000, backgroundColor: '#09090b' }}>
-        <Navbar onSearch={handleSearch} />
-      </div>
+      {/* الشريط العلوي المدمج والمضمون التفاعل 100% */}
+      <header style={{ 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 9999, 
+        backgroundColor: '#09090b', 
+        borderBottom: '1px solid #27272a',
+        padding: '12px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '15px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+          <Link href="/" style={{ fontSize: '18px', fontWeight: '900', color: '#f97316', textDecoration: 'none' }}>
+            🎬 سهرتك علينا
+          </Link>
+          
+          <nav style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <Link href="/" style={{ color: '#a1a1aa', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
+              الصفحة الرئيسية
+            </Link>
+            <Link href="/?type=movie" style={{ color: '#a1a1aa', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
+              الأفلام
+            </Link>
+            <Link href="/?type=tv" style={{ color: '#a1a1aa', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
+              المسلسلات
+            </Link>
+          </nav>
+        </div>
+
+        <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '8px' }}>
+          <input
+            type="text"
+            placeholder="ابحث عن فيلم أو مسلسل..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: '#18181b',
+              border: '1px solid #27272a',
+              borderRadius: '6px',
+              color: '#fff',
+              outline: 'none',
+              fontSize: '13px',
+              width: '200px'
+            }}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: '6px 12px',
+              backgroundColor: '#f97316',
+              color: '#000',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '13px'
+            }}
+          >
+            بحث
+          </button>
+        </form>
+      </header>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 16px' }}>
         
@@ -116,8 +180,6 @@ export default function WatchPage() {
               fontSize: '13px',
               transition: '0.2s'
             }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#27272a'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#18181b'}
           >
             ← العودة للخلف
           </button>
@@ -182,10 +244,7 @@ export default function WatchPage() {
           overflow: 'hidden', 
           border: '1px solid #27272a',
           boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
-          marginBottom: '20px',
-          transform: 'translateZ(0)',
-          WebkitTransform: 'translateZ(0)',
-          willChange: 'transform'
+          marginBottom: '20px'
         }}>
           <iframe
             src={getEmbedUrl()}
