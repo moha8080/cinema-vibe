@@ -1,38 +1,28 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 export default function TopAd({ scriptUrl }) {
-  const adRef = useRef(null);
-
   useEffect(() => {
-    if (adRef.current && scriptUrl) {
-      adRef.current.innerHTML = ''; // تنظيف الحاوية لمنع التكرار
+    if (!scriptUrl) return;
 
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.async = true;
-      script.src = scriptUrl;
-      
-      adRef.current.appendChild(script);
-    }
+    // التحقق من عدم تكرار السكريبت إذا تم تحميله مسبقاً
+    const existingScript = document.querySelector(`script[src="${scriptUrl}"]`);
+    if (existingScript) return;
+
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.async = true;
+    script.src = scriptUrl;
+    
+    document.body.appendChild(script);
+
+    return () => {
+      // تنظيف عند الخروج إذا لزم الأمر
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
   }, [scriptUrl]);
 
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      margin: '20px auto',
-      padding: '10px',
-      backgroundColor: '#121215',
-      border: '1px solid #27272a',
-      borderRadius: '8px',
-      maxWidth: '100%',
-      overflow: 'hidden',
-      minHeight: '90px'
-    }}>
-      <span style={{ fontSize: '10px', color: '#71717a', marginBottom: '6px' }}>إعلان رعاية</span>
-      <div ref={adRef} style={{ display: 'flex', justifyContent: 'center', width: '100%' }} />
-    </div>
-  );
+  // لا نحتاج لعرض أي مربعات مرئية على الشاشة، السكريبت يعمل بالخلفية لتغطية الصفحة
+  return null;
 }
