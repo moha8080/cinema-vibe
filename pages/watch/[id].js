@@ -14,7 +14,7 @@ export default function WatchPage() {
   const [seasonDetails, setSeasonDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // حالة التبديل بين السيرفرات (server1 الأساسي، server2 البديل القوي Embed.su)
+  // حالة التبديل بين السيرفرات (server1 الأساسي، server2 البديل VidSrc)
   const [activeServer, setActiveServer] = useState('server1');
 
   const isTv = type === 'tv';
@@ -59,10 +59,10 @@ export default function WatchPage() {
     if (!id) return '';
     
     if (activeServer === 'server2') {
-      // 🟠 السيرفر البديل القوي والمستقر (Embed.su)
+      // 🟠 السيرفر البديل المستقر (VidSrc)
       return !isTv 
-        ? `https://embed.su/embed/movie/${id}` 
-        : `https://embed.su/embed/tv/${id}/${season}/${episode}`;
+        ? `https://vidsrc.xyz/embed/movie?tmdb=${id}` 
+        : `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
     }
 
     // السيرفر الأساسي (VidLink)
@@ -141,7 +141,7 @@ export default function WatchPage() {
               transition: '0.2s'
             }}
           >
-            سيرفر 2 (البديل السريع)
+            سيرفر 2 (VidSrc السريع)
           </button>
         </div>
 
