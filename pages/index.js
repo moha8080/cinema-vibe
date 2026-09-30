@@ -212,11 +212,6 @@ export default function Home() {
         onOpenRecommendations={() => setShowRecModal(true)}
       />
 
-      {/* عرض بانر الإعلان الأساسي في أعلى الصفحة */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 20px' }}>
-        <AdBanner zoneKey="5358bd5bf06fe651cb4b33a9d850733c" width={320} height={50} />
-      </div>
-
       {/* نافذة سهرتك من توصيتنا */}
       {showRecModal && (
         <div style={{
@@ -349,30 +344,8 @@ export default function Home() {
         )}
       </main>
 
-      {/* ــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــ */}
-      {/* لوحة اختبار المقاسات الستة للإعلانات (مؤقتة حتى نعرف أيها يعمل) */}
-      {/* ــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــ */}
-      <div style={{ borderTop: '1px solid #27272a', marginTop: '40px', padding: '30px 20px', backgroundColor: '#121215' }}>
-        <p style={{ textAlign: 'center', color: '#f97316', fontSize: '15px', fontWeight: 'bold', marginBottom: '25px' }}>
-          🔍 لوحة اختبار المقاسات الإعلانية الستة:
-        </p>
-        
-        {/* 1. مقاس 320x50 */}
-        <AdBanner zoneKey="5358bd5bf06fe651cb4b33a9d850733c" width={320} height={50} />
-
-        {/* 2. مقاس 728x90 */}
-        <AdBanner zoneKey="5d080f8c99b108e46b2d242f6a661432" width={728} height={90} />
-
-        {/* 3. مقاس 468x60 */}
-        <AdBanner zoneKey="57db868c83acc0eed5435c995e652ca0" width={468} height={60} />
-
-        {/* 4. مقاس 300x250 */}
-        <AdBanner zoneKey="496b708b67ed65cf99afc963a7b29682" width={300} height={250} />
-
-        {/* 5. مقاس 160x600 */}
-        <AdBanner zoneKey="ed821f6c2660378042f68c45997a5360" width={160} height={600} />
-
-        {/* 6. مقاس 160x300 */}
+      {/* قسم عرض الإعلان الناجح (160x300) بمنتصف الصفحة قبل الـ Footer */}
+      <div style={{ margin: '40px auto', display: 'flex', justifyContent: 'center', padding: '0 20px' }}>
         <AdBanner zoneKey="6f4d9ccbf2384adbc1c3f6caa8b26cf6" width={160} height={300} />
       </div>
 
