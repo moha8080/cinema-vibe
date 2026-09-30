@@ -163,7 +163,7 @@ export default function WatchPage() {
               fontSize: '13px'
             }}
           >
-            سيرفر 1 (VidLink - مترجم)
+            سيرفر 1 
           </button>
 
           <button
@@ -179,7 +179,7 @@ export default function WatchPage() {
               fontSize: '13px'
             }}
           >
-            سيرفر 2 (VidSrc الاحتياطي)
+            سيرفر 2 
           </button>
 
           <button
@@ -195,7 +195,7 @@ export default function WatchPage() {
               fontSize: '13px'
             }}
           >
-            سيرفر 3 (2Embed)
+            سيرفر 3 
           </button>
         </div>
 
