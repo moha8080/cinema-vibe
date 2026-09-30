@@ -1,34 +1,34 @@
 import { useEffect, useRef } from 'react';
 
-export default function AdBanner() {
+export default function AdBanner({ zoneKey, width, height }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.innerHTML = ''; // تنظيف الحاوية لمنع التكرار
+    if (containerRef.current && zoneKey) {
+      containerRef.current.innerHTML = ''; // تنظيف الحاوية
 
-      // إنشاء عنصر السكريبت الأول للإعدادات
+      // 1. إنشاء سكريبت الإعدادات الخاص بالمنطقة الإعلانية
       const scriptOption = document.createElement('script');
       scriptOption.type = 'text/javascript';
       scriptOption.text = `
         atOptions = {
-          'key' : '5358bd5bf06fe651cb4b33a9d850733c',
+          'key' : '${zoneKey}',
           'format' : 'iframe',
-          'height' : 50,
-          'width' : 320,
+          'height' : ${height},
+          'width' : ${width},
           'params' : {}
         };
       `;
       containerRef.current.appendChild(scriptOption);
 
-      // إنشاء عنصر السكريبت الثاني للاستدعاء
+      // 2. إنشاء سكريبت الاستدعاء
       const scriptInvoke = document.createElement('script');
       scriptInvoke.type = 'text/javascript';
       scriptInvoke.async = true;
-      scriptInvoke.src = 'https://www.highrevenueformat.com/5358bd5bf06fe651cb4b33a9d850733c/invoke.js';
+      scriptInvoke.src = `https://www.highrevenueformat.com/${zoneKey}/invoke.js`;
       containerRef.current.appendChild(scriptInvoke);
     }
-  }, []);
+  }, [zoneKey, width, height]);
 
   return (
     <div style={{
@@ -37,7 +37,7 @@ export default function AdBanner() {
       alignItems: 'center',
       margin: '20px auto',
       width: '100%',
-      minHeight: '50px',
+      minHeight: `${height}px`,
       overflow: 'hidden'
     }}>
       <div ref={containerRef} />
