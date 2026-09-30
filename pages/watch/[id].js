@@ -15,7 +15,7 @@ export default function WatchPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // حالة التبديل بين السيرفرات
+  // حالة التبديل بين السيرفرات (server1, server2, server3)
   const [activeServer, setActiveServer] = useState('server1');
 
   const isTv = type === 'tv';
@@ -55,17 +55,25 @@ export default function WatchPage() {
     fetchSeasonData();
   }, [id, season, isTv]);
 
-  // روابط السيرفرات مع إصلاح الترجمة للسيرفر الأول (VidLink) والسيرفر الثاني (VidSrc)
+  // روابط السيرفرات الثلاثة (VidLink, MultiEmbed, VidSrc)
   const getEmbedUrl = () => {
     if (!id) return '';
     
     if (activeServer === 'server2') {
+      // 🟠 سيرفر MultiEmbed القوي
+      return !isTv 
+        ? `https://multembed.mov/?video_id=${id}&tmdb=1` 
+        : `https://multembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
+    }
+
+    if (activeServer === 'server3') {
+      // 🔵 سيرفر VidSrc الاحتياطي
       return !isTv 
         ? `https://vidsrc.cc/v2/embed/movie/${id}?auto_play=false` 
         : `https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}?auto_play=false`;
     }
 
-    // السيرفر الأول (مع فرض بارامترات الترجمة العربية المعتمدة)
+    // السيرفر الأول (VidLink مع بارامترات الترجمة العربية)
     let url = !isTv ? `https://vidlink.pro/movie/${id}` : `https://vidlink.pro/tv/${id}/${season}/${episode}`;
     return `${url}?autoplay=false&primaryColor=f97316&secondaryColor=18181b&icon=default&sub.language=ar&ds_lang=ar`;
   };
@@ -93,7 +101,7 @@ export default function WatchPage() {
   return (
     <div style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
-      {/* الشريط العلوي المدمج والمضمون التفاعل 100% */}
+      {/* الشريط العلوي المتفاعل بالكامل */}
       <header style={{ 
         position: 'sticky', 
         top: 0, 
@@ -185,7 +193,7 @@ export default function WatchPage() {
           </button>
         </div>
 
-        {/* أزرار التبديل بين السيرفرات */}
+        {/* أزرار التبديل بين السيرفرات (الثلاثة سيرفرات) */}
         <div style={{ 
           display: 'flex', 
           gap: '10px', 
@@ -213,7 +221,7 @@ export default function WatchPage() {
               transition: '0.2s'
             }}
           >
-            سيرفر 1 (الأساسي - مترجم)
+            سيرفر 1 (VidLink)
           </button>
 
           <button
@@ -230,7 +238,24 @@ export default function WatchPage() {
               transition: '0.2s'
             }}
           >
-            سيرفر 2 (VidSrc الاحتياطي)
+            سيرفر 2 (MultiEmbed)
+          </button>
+
+          <button
+            onClick={() => setActiveServer('server3')}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '6px',
+              border: '1px solid #27272a',
+              backgroundColor: activeServer === 'server3' ? '#f97316' : '#18181b',
+              color: activeServer === 'server3' ? '#000' : '#fff',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '13px',
+              transition: '0.2s'
+            }}
+          >
+            سيرفر 3 (VidSrc)
           </button>
         </div>
 
