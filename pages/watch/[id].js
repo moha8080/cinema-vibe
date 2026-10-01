@@ -63,25 +63,22 @@ export default function WatchPage() {
     fetchSeasonData();
   }, [id, season, isTv]);
 
-  // روابط السيرفرات (تم تحديث السيرفر 2 و 3 بسيرفرات بديلة تعمل بكفاءة عالية)
+  // روابط السيرفرات
   const getEmbedUrl = () => {
     if (!id) return '';
     
     if (activeServer === 'server2') {
-      // سيرفر بديل 2 (VidSrc.me)
       return !isTv 
         ? `https://vidsrc.me/embed/movie?tmdb=${id}` 
         : `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
     }
 
     if (activeServer === 'server3') {
-      // سيرفر بديل 3 (2Embed)
       return !isTv 
         ? `https://www.2embed.cc/embed/${id}` 
         : `https://www.2embed.cc/embedtv/${id}&s=${season}&e=${episode}`;
     }
 
-    // السيرفر الأساسي (VidLink مع دعم الترجمة العربية)
     let url = !isTv ? `https://vidlink.pro/movie/${id}` : `https://vidlink.pro/tv/${id}/${season}/${episode}`;
     return `${url}?autoplay=false&primaryColor=f97316&secondaryColor=18181b&icon=default&sub.language=ar&ds_lang=ar`;
   };
@@ -338,7 +335,7 @@ export default function WatchPage() {
           </div>
         </div>
 
-        {/* قسم المحتوى المشابه (مُعاد تصميمه ليتطابق مع الصفحة الرئيسية) */}
+        {/* قسم المحتوى المشابه (6 أعمال كحد أقصى، التقييم برتقالي وبدون نجمة، التصنيف بالإنجليزي) */}
         {similarMedia.length > 0 && (
           <div style={{ marginTop: '40px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -359,7 +356,7 @@ export default function WatchPage() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', 
               gap: '20px' 
             }}>
-              {similarMedia.slice(0, 10).map((item) => {
+              {similarMedia.slice(0, 6).map((item) => {
                 const itemTitle = item.title || item.name;
                 const itemPoster = item.poster_path 
                   ? `https://image.tmdb.org/t/p/w500${item.poster_path}` 
@@ -397,7 +394,7 @@ export default function WatchPage() {
                         alt={itemTitle} 
                         style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
                       />
-                      {/* شارة التقييم العلوية */}
+                      {/* شارة التقييم العلوية (باللون البرتقالي وبدون نجمة) */}
                       <div style={{
                         position: 'absolute',
                         top: '8px',
@@ -408,10 +405,10 @@ export default function WatchPage() {
                         borderRadius: '6px',
                         fontSize: '12px',
                         fontWeight: 'bold',
-                        color: '#eab308',
-                        border: '1px solid rgba(234, 179, 8, 0.2)'
+                        color: '#f97316',
+                        border: '1px solid rgba(249, 115, 22, 0.2)'
                       }}>
-                        ⭐ {item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}
+                        {item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}
                       </div>
                     </div>
 
@@ -428,7 +425,7 @@ export default function WatchPage() {
                         {itemTitle}
                       </h4>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#a1a1aa' }}>
-                        <span>{itemType === 'tv' ? 'مسلسل' : 'فيلم'}</span>
+                        <span>{itemType === 'tv' ? 'TV Show' : 'Movie'}</span>
                         <span>{itemYear || ''}</span>
                       </div>
                     </div>
