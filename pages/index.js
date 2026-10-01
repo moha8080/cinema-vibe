@@ -260,6 +260,7 @@ export default function Home() {
     >
       <Head>
         <title>سينما فيب - Cinema Vibe</title>
+        <meta name="32b692003e64d5a025f8b7299c1ffad7e27529c2" content="32b692003e64d5a025f8b7299c1ffad7e27529c2" />
       </Head>
 
       <Navbar 
@@ -402,11 +403,11 @@ export default function Home() {
             <MediaRow title="المسلسلات الأكثر مشاهدة" items={popularTv} onViewMore={() => changeTab('tv')} />
             
             {/* الأقسام المدمجة (أفلام ومسلسلات معاً) */}
-            <MediaRow title="أفلام ومسلسلات الأكشن " items={actionMedia} onViewMore={() => changeTab('movies')} />
-            <MediaRow title="أفلام ومسلسلات الرعب " items={horrorMedia} onViewMore={() => changeTab('movies')} />
-            <MediaRow title="أفلام ومسلسلات الدراما " items={dramaMedia} onViewMore={() => changeTab('movies')} />
-            <MediaRow title="أفلام ومسلسلات الإثارة " items={thrillerMedia} onViewMore={() => changeTab('movies')} />
-            <MediaRow title="أفلام ومسلسلات الغموض " items={mysteryMedia} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="أفلام ومسلسلات الأكشن" items={actionMedia} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="أفلام ومسلسلات الرعب" items={horrorMedia} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="أفلام ومسلسلات الدراما" items={dramaMedia} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="أفلام ومسلسلات الإثارة" items={thrillerMedia} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="أفلام ومسلسلات الغموض" items={mysteryMedia} onViewMore={() => changeTab('movies')} />
           </div>
         )}
       </main>
