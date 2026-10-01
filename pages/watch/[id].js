@@ -108,7 +108,7 @@ export default function WatchPage() {
   return (
     <div style={{ backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
-      {/* الشريط العلوي الأصلي تماماً */}
+      {/* الشريط العلوي */}
       <Navbar onSearch={handleSearch} />
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 16px' }}>
@@ -329,22 +329,35 @@ export default function WatchPage() {
           <div dir="rtl">
             <h3 style={{ fontSize: '15px', color: '#f97316', margin: '0 0 8px 0', fontWeight: 'bold' }}>قصة العمل:</h3>
             <p style={{ fontSize: '14px', color: '#d4d4d8', lineHeight: '1.7', margin: 0 }}>
-              {mediaData?.overview || 'جاري تحميل قصة العمل باللغة العربية...'}
+              {loading 
+                ? 'جاري تحميل قصة العمل...' 
+                : (mediaData?.overview && mediaData.overview.trim() !== '' 
+                    ? mediaData.overview 
+                    : 'قصة العمل غير متوفرة')}
             </p>
           </div>
         </div>
 
-        {/* قسم المحتوى المشابه */}
+        {/* قسم المحتوى المشابه (مُعاد تصميمه ليتطابق مع الصفحة الرئيسية) */}
         {similarMedia.length > 0 && (
           <div style={{ marginTop: '40px' }}>
-            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', marginBottom: '20px', borderRight: '4px solid #f97316', paddingRight: '10px' }}>
-              أعمال مشابهة قد تعجبك
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h2 style={{ 
+                fontSize: '20px', 
+                fontWeight: 'bold', 
+                color: '#fff', 
+                margin: 0,
+                borderRight: '4px solid #f97316', 
+                paddingRight: '12px' 
+              }}>
+                أعمال مشابهة قد تعجبك
+              </h2>
+            </div>
 
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', 
-              gap: '16px' 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', 
+              gap: '20px' 
             }}>
               {similarMedia.slice(0, 10).map((item) => {
                 const itemTitle = item.title || item.name;
@@ -352,6 +365,7 @@ export default function WatchPage() {
                   ? `https://image.tmdb.org/t/p/w500${item.poster_path}` 
                   : 'https://via.placeholder.com/500x750?text=No+Image';
                 const itemType = isTv ? 'tv' : 'movie';
+                const itemYear = (item.release_date || item.first_air_date || '').substring(0, 4);
 
                 return (
                   <div 
@@ -359,29 +373,64 @@ export default function WatchPage() {
                     onClick={() => router.push(`/watch/${item.id}?type=${itemType}`)}
                     style={{
                       backgroundColor: '#121215',
-                      borderRadius: '8px',
+                      borderRadius: '12px',
                       overflow: 'hidden',
                       border: '1px solid #27272a',
                       cursor: 'pointer',
-                      transition: 'transform 0.2s',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                      display: 'flex',
+                      flexDirection: 'column'
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
-                    onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-6px)';
+                      e.currentTarget.style.borderColor = '#f97316';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.borderColor = '#27272a';
+                    }}
                   >
-                    <div style={{ aspectRatio: '2/3', width: '100%', position: 'relative', backgroundColor: '#27272a' }}>
+                    <div style={{ aspectRatio: '2/3', width: '100%', position: 'relative', backgroundColor: '#18181b', overflow: 'hidden' }}>
                       <img 
                         src={itemPoster} 
                         alt={itemTitle} 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
                       />
+                      {/* شارة التقييم العلوية */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                        backdropFilter: 'blur(4px)',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        color: '#eab308',
+                        border: '1px solid rgba(234, 179, 8, 0.2)'
+                      }}>
+                        ⭐ {item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}
+                      </div>
                     </div>
-                    <div style={{ padding: '10px' }}>
-                      <h4 style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+
+                    <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, justifyContent: 'space-between' }}>
+                      <h4 style={{ 
+                        fontSize: '14px', 
+                        fontWeight: 'bold', 
+                        color: '#fff', 
+                        margin: 0, 
+                        whiteSpace: 'nowrap', 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis' 
+                      }}>
                         {itemTitle}
                       </h4>
-                      <span style={{ fontSize: '11px', color: '#a1a1aa' }}>
-                        ⭐ {item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}
-                      </span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#a1a1aa' }}>
+                        <span>{itemType === 'tv' ? 'مسلسل' : 'فيلم'}</span>
+                        <span>{itemYear || ''}</span>
+                      </div>
                     </div>
                   </div>
                 );
