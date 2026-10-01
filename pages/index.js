@@ -13,12 +13,15 @@ export default function Home() {
 
   const [currentView, setCurrentView] = useState('home');
 
-  // أقسام الرئيسية
+  // أقسام الرئيسية والتصنيفات (أفلام ومسلسلات مدمجة)
   const [trending, setTrending] = useState([]);
   const [topMovies, setTopMovies] = useState([]);
   const [popularTv, setPopularTv] = useState([]);
-  const [horrorMovies, setHorrorMovies] = useState([]);
-  const [actionMovies, setActionMovies] = useState([]);
+  const [actionMedia, setActionMedia] = useState([]);
+  const [horrorMedia, setHorrorMedia] = useState([]);
+  const [dramaMedia, setDramaMedia] = useState([]);
+  const [thrillerMedia, setThrillerMedia] = useState([]);
+  const [mysteryMedia, setMysteryMedia] = useState([]);
 
   // مكتبة الأفلام أو المسلسلات والتصنيفات
   const [libraryItems, setLibraryItems] = useState([]);
@@ -45,9 +48,10 @@ export default function Home() {
     { id: '28', name: 'أكشن' },
     { id: '27', name: 'رعب' },
     { id: '18', name: 'دراما' },
+    { id: '53', name: 'إثارة' },
+    { id: '9648', name: 'غموض' },
     { id: '35', name: 'كوميديا' },
     { id: '878', name: 'خيال علمي' },
-    { id: '9648', name: 'غموض' },
     { id: '10749', name: 'رومنسي' },
     { id: '12', name: 'مغامرة' }
   ];
@@ -70,26 +74,64 @@ export default function Home() {
     }
   }, [view, search, recommendations]);
 
+  // دالة مساعدة لدمج وترتيب الأفلام والمسلسلات معاً لتظهر في صف واحد
+  const fetchAndMixMedia = async (genreId) => {
+    try {
+      const [resMovie, resTv] = await Promise.all([
+        fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&language=ar-SA&with_genres=${genreId}`),
+        fetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&language=ar-SA&with_genres=${genreId}`)
+      ]);
+      const dataMovie = await resMovie.json();
+      const dataTv = await resTv.json();
+
+      const movies = dataMovie.results || [];
+      const tvShows = dataTv.results || [];
+
+      // دمج النتائج بشكل تبادلي (فيلم، ثم مسلسل، وهكذا...)
+      const mixed = [];
+      const maxLength = Math.max(movies.length, tvShows.length);
+      for (let i = 0; i < maxLength; i++) {
+        if (movies[i]) mixed.push(movies[i]);
+        if (tvShows[i]) mixed.push(tvShows[i]);
+      }
+      return mixed;
+    } catch (err) {
+      console.error("Error mixing media:", err);
+      return [];
+    }
+  };
+
   useEffect(() => {
     async function fetchHomeData() {
       try {
-        const [resTrending, resTop, resTv, resHorror, resAction] = await Promise.all([
-          fetch(`${BASE_URL}/trending/all/week?api_key=${API_KEY}&language=ar-SA`),
-          fetch(`${BASE_URL}/movie/top_rated?api_key=${API_KEY}&language=ar-SA`),
-          fetch(`${BASE_URL}/tv/popular?api_key=${API_KEY}&language=ar-SA`),
-          fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&language=ar-SA&with_genres=27`),
-          fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&language=ar-SA&with_genres=28`)
+        const [
+          resTrending, 
+          resTop, 
+          resTv, 
+          actionMixed, 
+          horrorMixed, 
+          dramaMixed, 
+          thrillerMixed, 
+          mysteryMixed
+        ] = await Promise.all([
+          fetch(`${BASE_URL}/trending/all/week?api_key=${API_KEY}&language=ar-SA`).then(r => r.json()),
+          fetch(`${BASE_URL}/movie/top_rated?api_key=${API_KEY}&language=ar-SA`).then(r => r.json()),
+          fetch(`${BASE_URL}/tv/popular?api_key=${API_KEY}&language=ar-SA`).then(r => r.json()),
+          fetchAndMixMedia('28'),   // أكشن (أفلام ومسلسلات)
+          fetchAndMixMedia('27'),   // رعب (أفلام ومسلسلات)
+          fetchAndMixMedia('18'),   // دراما (أفلام ومسلسلات)
+          fetchAndMixMedia('53'),   // إثارة (أفلام ومسلسلات)
+          fetchAndMixMedia('9648')  // غموض (أفلام ومسلسلات)
         ]);
 
-        const [dTrending, dTop, dTv, dHorror, dAction] = await Promise.all([
-          resTrending.json(), resTop.json(), resTv.json(), resHorror.json(), resAction.json()
-        ]);
-
-        if (dTrending.results) setTrending(dTrending.results);
-        if (dTop.results) setTopMovies(dTop.results);
-        if (dTv.results) setPopularTv(dTv.results);
-        if (dHorror.results) setHorrorMovies(dHorror.results);
-        if (dAction.results) setActionMovies(dAction.results);
+        if (resTrending.results) setTrending(resTrending.results);
+        if (resTop.results) setTopMovies(resTop.results);
+        if (resTv.results) setPopularTv(resTv.results);
+        setActionMedia(actionMixed);
+        setHorrorMedia(horrorMixed);
+        setDramaMedia(dramaMixed);
+        setThrillerMedia(thrillerMixed);
+        setMysteryMedia(mysteryMixed);
       } catch (err) {
         console.error("Error fetching home data:", err);
       } finally {
@@ -200,8 +242,22 @@ export default function Home() {
     }
   }, [recType, recGenre, showRecModal]);
 
+  const handlePageClick = (e) => {
+    const adContainer = document.getElementById('hidden-ad-container');
+    if (adContainer) {
+      const adLink = adContainer.querySelector('a');
+      if (adLink && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+        // adLink.click();
+      }
+    }
+  };
+
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#09090b', color: '#fff' }} dir="rtl">
+    <div 
+      style={{ minHeight: '100vh', backgroundColor: '#09090b', color: '#fff', position: 'relative' }} 
+      dir="rtl"
+      onClick={handlePageClick}
+    >
       <Head>
         <title>سينما فيب - Cinema Vibe</title>
       </Head>
@@ -213,7 +269,7 @@ export default function Home() {
         onOpenRecommendations={() => setShowRecModal(true)}
       />
 
-      {/* 🟢 إعلان جديد في أعلى الصفحة (تحت الناف بار مباشرة بتصميم متناسق) */}
+      {/* 🟢 إعلان جديد في أعلى الصفحة */}
       <div style={{ maxWidth: '900px', margin: '20px auto', padding: '0 20px' }}>
         <TopAd scriptUrl="https://pl31594020.profitableratecpmnetwork.com/da/b7/ad/dab7adf74b77570bc2d0a3ec039ee972.js" />
       </div>
@@ -344,26 +400,22 @@ export default function Home() {
             <MediaRow title="الأفلام والمسلسلات الرائجة" items={trending} onViewMore={() => changeTab('movies')} />
             <MediaRow title="أفضل الأفلام تقييماً" items={topMovies} onViewMore={() => changeTab('movies')} />
             <MediaRow title="المسلسلات الأكثر مشاهدة" items={popularTv} onViewMore={() => changeTab('tv')} />
-            <MediaRow title="أفلام الأكشن والمغامرة" items={actionMovies} onViewMore={() => changeTab('movies')} />
-            <MediaRow title="أفلام الرعب والتشويق" items={horrorMovies} onViewMore={() => changeTab('movies')} />
+            
+            {/* الأقسام المدمجة (أفلام ومسلسلات معاً) */}
+            <MediaRow title="أفلام ومسلسلات الأكشن " items={actionMedia} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="أفلام ومسلسلات الرعب " items={horrorMedia} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="أفلام ومسلسلات الدراما " items={dramaMedia} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="أفلام ومسلسلات الإثارة " items={thrillerMedia} onViewMore={() => changeTab('movies')} />
+            <MediaRow title="أفلام ومسلسلات الغموض " items={mysteryMedia} onViewMore={() => changeTab('movies')} />
           </div>
         )}
       </main>
 
-      {/* 🟠 قسم الإعلان السفلي (تم تعديل الإطار ليكون مرتباً، متناسقاً وبدون فوضى) */}
-      <div style={{ 
-        maxWidth: '400px', 
-        margin: '50px auto 30px auto', 
-        padding: '16px', 
-        backgroundColor: '#121215', 
-        border: '1px solid #27272a', 
-        borderRadius: '12px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
-      }}>
-        <span style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '10px', fontWeight: '500' }}>إعلان</span>
+      {/* 🟠 الإعلان السفلي المخفي */}
+      <div 
+        id="hidden-ad-container"
+        style={{ display: 'none' }}
+      >
         <AdBanner zoneKey="6f4d9ccbf2384adbc1c3f6caa8b26cf6" width={160} height={300} />
       </div>
 
